@@ -1,4 +1,4 @@
-import pricingtabs from "./pricingtabs";
+import PricingTabs from "./PricingTabs";
 
 export default function PricingPage() {
   return (
