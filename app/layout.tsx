@@ -5,7 +5,7 @@ import Footer from "./components/Footer";
 
 export const metadata = {
   title: "My Product",
-  description: "Product info, purchase, downloads, and support.",
+  description: "Product info, licensing, accounts, and downloads.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
