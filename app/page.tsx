@@ -6,11 +6,11 @@ export default function HomePage() {
     <>
       <div className="panel" style={{ padding: 22 }}>
         <div className="small" style={{ letterSpacing: "0.08em" }}>
-          MY PRODUCT
+          SkyPing
         </div>
 
         <h1 style={{ marginTop: 8 }}>
-          A simple website for product info, licensing, accounts, and downloads.
+          Real-time aircraft tracking with proximity alerts near any coordinate.
         </h1>
 
         <p>
@@ -40,15 +40,15 @@ export default function HomePage() {
       <div className="grid-3">
         <div className="panel">
           <h2 className="section-title">What it does</h2>
-          <p className="section-sub">One sentence describing core functionality.</p>
+          <p className="section-sub">Tracks aircraft live, calculates distance from your saved location, and sends alerts when aircraft enter your zone.</p>
         </div>
         <div className="panel">
           <h2 className="section-title">Who it’s for</h2>
-          <p className="section-sub">Your target user and the pain point.</p>
+          <p className="section-sub">Aviation enthusiasts, Plane Spotters, Ramp Agents, Fuel Trucks, and anyone monitoring specific flights.</p>
         </div>
         <div className="panel">
           <h2 className="section-title">Why it’s better</h2>
-          <p className="section-sub">One clear differentiator vs alternatives.</p>
+          <p className="section-sub">Fast alerts for when a selected aircraft enters your area.</p>
         </div>
       </div>
     </>
