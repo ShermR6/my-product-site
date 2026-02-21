@@ -8,7 +8,7 @@ export default function Navbar() {
         <div className="nav-inner">
           <Link className="brand" href="/">
             <span className="dot" />
-            <span>My Product</span>
+            <span>SkyPing</span>
           </Link>
 
           <nav className="nav-links">
