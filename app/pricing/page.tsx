@@ -1,11 +1,15 @@
+// app/pricing/page.tsx
 import PricingTabs from "./PricingTabs";
 
 export default function PricingPage() {
   return (
     <main className="page">
       <div className="container">
-        <h1>Purchase a License</h1>
-        <p>Choose a plan that fits how you’ll use SkyPing. (Stripe later.)</p>
+        <PricingTabs />
+      </div>
+    </main>
+  );
+}
 
         {/* PERSONAL */}
         <section style={{ marginTop: 22 }}>
