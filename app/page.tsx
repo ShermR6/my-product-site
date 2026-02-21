@@ -14,8 +14,7 @@ export default function HomePage() {
         </h1>
 
         <p>
-          Replace this text with what your product does and the main benefit. Keep it short:
-          who it’s for, what it fixes, and why it’s better.
+          Get live notifications on your device when your aircraft enters your defined proximity zone. Great for knowing how far away the plane is and when it will arrive.
         </p>
 
         <div className="btn-row">
