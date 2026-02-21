@@ -1,49 +1,110 @@
-// app/pricing/page.tsx
 export default function PricingPage() {
   return (
-    <>
-      <h1>Purchase a License</h1>
-      <p>Placeholder page. Later, these buttons will start Stripe Checkout.</p>
+    <main className="page">
+      <div className="container">
+        <h1>Purchase a License</h1>
+        <p>Choose a plan that fits how you’ll use SkyPing. (Stripe later.)</p>
 
-      <div className="grid-2" style={{ marginTop: 18 }}>
-        <div className="panel-white">
-          <h2 style={{ marginBottom: 2 }}>Personal</h2>
-          <p style={{ marginTop: 0, color: "#333" }}>Best for individuals.</p>
+        {/* PERSONAL */}
+        <section style={{ marginTop: 22 }}>
+          <h2 className="section-title">Personal</h2>
+          <p className="section-sub">For individuals tracking flights and getting alerts.</p>
 
-          <div style={{ fontSize: 32, fontWeight: 800, margin: "10px 0" }}>$XX</div>
+          <div className="grid-3">
+            <div className="panel-white">
+              <h2>Starter</h2>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>$9</div>
+              <p className="small">per month</p>
+              <ul>
+                <li>Track up to 3 aircraft</li>
+                <li>1 saved coordinate</li>
+                <li>Basic distance alerts</li>
+              </ul>
+              <div className="btn-row">
+                <button className="btn btn-solid">Buy Starter (Stripe later)</button>
+              </div>
+            </div>
 
-          <ul style={{ margin: 0, paddingLeft: 18, color: "#111", fontSize: 13, lineHeight: 1.7 }}>
-            <li>1 device</li>
-            <li>Updates for 12 months</li>
-            <li>Email support</li>
-          </ul>
+            <div className="panel-white">
+              <h2>Plus</h2>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>$19</div>
+              <p className="small">per month</p>
+              <ul>
+                <li>Track up to 10 aircraft</li>
+                <li>5 saved coordinates</li>
+                <li>Smart alerts + filters</li>
+              </ul>
+              <div className="btn-row">
+                <button className="btn btn-outline">Buy Plus (Stripe later)</button>
+              </div>
+            </div>
 
-          <div style={{ height: 14 }} />
+            <div className="panel-white">
+              <h2>Pro</h2>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>$39</div>
+              <p className="small">per month</p>
+              <ul>
+                <li>Unlimited aircraft</li>
+                <li>Unlimited coordinates</li>
+                <li>Advanced alert rules</li>
+              </ul>
+              <div className="btn-row">
+                <button className="btn btn-outline">Buy Pro (Stripe later)</button>
+              </div>
+            </div>
+          </div>
+        </section>
 
-          <button className="btn btn-solid" style={{ width: "100%" }}>
-            Buy Personal (Stripe later)
-          </button>
-        </div>
+        {/* TEAM */}
+        <section style={{ marginTop: 28 }}>
+          <h2 className="section-title">Team</h2>
+          <p className="section-sub">For groups managing shared tracking and alerts.</p>
 
-        <div className="panel-white">
-          <h2 style={{ marginBottom: 2 }}>Team</h2>
-          <p style={{ marginTop: 0, color: "#333" }}>Best for small teams.</p>
+          <div className="grid-3">
+            <div className="panel-white">
+              <h2>Team Starter</h2>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>$49</div>
+              <p className="small">per month</p>
+              <ul>
+                <li>Up to 5 seats</li>
+                <li>Shared lists + coordinates</li>
+                <li>Standard support</li>
+              </ul>
+              <div className="btn-row">
+                <button className="btn btn-solid">Buy Team Starter (Stripe later)</button>
+              </div>
+            </div>
 
-          <div style={{ fontSize: 32, fontWeight: 800, margin: "10px 0" }}>$XX</div>
+            <div className="panel-white">
+              <h2>Team Plus</h2>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>$99</div>
+              <p className="small">per month</p>
+              <ul>
+                <li>Up to 15 seats</li>
+                <li>Roles/permissions</li>
+                <li>Priority support</li>
+              </ul>
+              <div className="btn-row">
+                <button className="btn btn-outline">Buy Team Plus (Stripe later)</button>
+              </div>
+            </div>
 
-          <ul style={{ margin: 0, paddingLeft: 18, color: "#111", fontSize: 13, lineHeight: 1.7 }}>
-            <li>Up to 5 seats</li>
-            <li>Updates for 12 months</li>
-            <li>Priority support</li>
-          </ul>
-
-          <div style={{ height: 14 }} />
-
-          <button className="btn btn-outline" style={{ width: "100%" }}>
-            Buy Team (Stripe later)
-          </button>
-        </div>
+            <div className="panel-white">
+              <h2>Team Pro</h2>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>$199</div>
+              <p className="small">per month</p>
+              <ul>
+                <li>Unlimited seats</li>
+                <li>Org controls + audit logs</li>
+                <li>Dedicated support</li>
+              </ul>
+              <div className="btn-row">
+                <button className="btn btn-outline">Buy Team Pro (Stripe later)</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-    </>
+    </main>
   );
 }
