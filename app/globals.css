@@ -6,10 +6,17 @@
   --panel-2: #141414;
   --text: #ffffff;
   --muted: #bdbdbd;
+
   --border: rgba(255, 255, 255, 0.14);
   --border-strong: rgba(255, 255, 255, 0.22);
+
   --white: #ffffff;
   --black: #000000;
+
+  /* Pricing / tabs */
+  --accent: #ffbf00; /* warm yellow button like the screenshot */
+  --accent-hover: #e8ae00;
+  --table-border: rgba(0, 0, 0, 0.10);
 }
 
 * { box-sizing: border-box; }
@@ -172,7 +179,7 @@ p {
   .grid-2 { grid-template-columns: 1fr; }
 }
 
-/* Buttons (your requested styles) */
+/* Buttons */
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 10px; }
 
 .btn {
@@ -256,3 +263,272 @@ textarea { min-height: 110px; resize: vertical; }
 /* Section spacing */
 .section-title { margin-bottom: 6px; }
 .section-sub { margin-bottom: 18px; }
+
+/* =========================================================
+   Pricing (Personal / Team tabs + table-style plans)
+   Use these classes in your /pricing page markup.
+   ========================================================= */
+
+/* Wrapper */
+.pricing-wrap {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.pricing-hero {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.pricing-hero h1 {
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.pricing-hero p {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Tabs above plans */
+.plan-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+}
+
+.plan-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.plan-tab:hover {
+  color: var(--text);
+  border-color: var(--border);
+  background: rgba(255,255,255,0.06);
+}
+
+.plan-tab-active {
+  color: #111;
+  background: var(--white);
+  border-color: rgba(255,255,255,0.55);
+}
+
+/* Table container */
+.pricing-table {
+  margin-top: 16px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+
+/* Grid for 1 feature column + N plan columns (default 4 plans) */
+.pricing-grid-4 {
+  display: grid;
+  grid-template-columns: 260px repeat(4, minmax(0, 1fr));
+}
+
+/* If you do 3 tiers instead of 4, use this */
+.pricing-grid-3 {
+  display: grid;
+  grid-template-columns: 260px repeat(3, minmax(0, 1fr));
+}
+
+/* Row and cell */
+.pricing-row {
+  display: contents;
+}
+
+.pricing-cell {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.pricing-cell:last-child {
+  border-right: none;
+}
+
+.pricing-row:last-child .pricing-cell {
+  border-bottom: none;
+}
+
+/* Header row */
+.pricing-head {
+  background: rgba(255,255,255,0.03);
+}
+
+.plan-head {
+  text-align: center;
+}
+
+.plan-name {
+  color: var(--text);
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.plan-price {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.plan-was {
+  color: var(--muted);
+  text-decoration: line-through;
+  font-size: 13px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.plan-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Yellow CTA button like screenshot */
+.plan-cta {
+  margin: 12px auto 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+  color: #111;
+  background: var(--accent);
+  border: 1px solid rgba(0,0,0,0.12);
+  text-decoration: none;
+  cursor: pointer;
+  min-width: 150px;
+  transition: background 0.15s ease, transform 0.03s ease;
+}
+
+.plan-cta:hover { background: var(--accent-hover); }
+.plan-cta:active { transform: translateY(1px); }
+
+/* Feature column */
+.feature-name {
+  color: var(--text);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.feature-hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Table body cells */
+.plan-val {
+  text-align: center;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* Check / X badges */
+.badge-ok,
+.badge-no {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.badge-ok {
+  background: rgba(34, 197, 94, 0.20);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  color: rgb(34, 197, 94);
+}
+
+.badge-no {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: rgb(239, 68, 68);
+}
+
+/* Refund note row */
+.refund-note {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.refund-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: rgba(34, 197, 94, 0.8);
+}
+
+/* Responsive: turn table into stacked cards */
+@media (max-width: 980px) {
+  .pricing-grid-4,
+  .pricing-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-cell {
+    border-right: none;
+  }
+
+  .pricing-head .pricing-cell {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .feature-name,
+  .feature-hint {
+    text-align: left;
+  }
+
+  .plan-head {
+    text-align: left;
+  }
+
+  .plan-cta {
+    margin: 12px 0 0;
+  }
+
+  .plan-val {
+    text-align: left;
+  }
+
+  /* Make it feel like stacked sections */
+  .pricing-table {
+    border-radius: 16px;
+  }
+}
+
+/* Optional: little divider spacing when you render Personal vs Team blocks */
+.pricing-section-gap {
+  margin-top: 18px;
+}

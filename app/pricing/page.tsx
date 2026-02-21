@@ -1,3 +1,5 @@
+import PricingTabs from "./PricingTabs";
+
 export default function PricingPage() {
   return (
     <main className="page">
