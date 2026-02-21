@@ -6,17 +6,10 @@
   --panel-2: #141414;
   --text: #ffffff;
   --muted: #bdbdbd;
-
   --border: rgba(255, 255, 255, 0.14);
   --border-strong: rgba(255, 255, 255, 0.22);
-
   --white: #ffffff;
   --black: #000000;
-
-  /* Pricing / tabs */
-  --accent: #ffbf00; /* warm yellow button like the screenshot */
-  --accent-hover: #e8ae00;
-  --table-border: rgba(0, 0, 0, 0.10);
 }
 
 * { box-sizing: border-box; }
@@ -205,9 +198,7 @@ p {
   border-color: #000;
 }
 
-.btn-solid:hover {
-  background: #111;
-}
+.btn-solid:hover { background: #111; }
 
 .btn-outline {
   background: #fff;
@@ -215,9 +206,7 @@ p {
   border-color: #000;
 }
 
-.btn-outline:hover {
-  background: #f1f1f1;
-}
+.btn-outline:hover { background: #f1f1f1; }
 
 /* Chips */
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
@@ -264,271 +253,179 @@ textarea { min-height: 110px; resize: vertical; }
 .section-title { margin-bottom: 6px; }
 .section-sub { margin-bottom: 18px; }
 
-/* =========================================================
-   Pricing (Personal / Team tabs + table-style plans)
-   Use these classes in your /pricing page markup.
-   ========================================================= */
+/* =========================
+   Pricing Tabs + Comparison
+   ========================= */
 
 /* Wrapper */
 .pricing-wrap {
-  max-width: 1060px;
-  margin: 0 auto;
-  padding: 0 20px;
+  margin-top: 18px;
 }
 
-.pricing-hero {
-  text-align: center;
-  margin-bottom: 18px;
-}
-
-.pricing-hero h1 {
-  font-size: 34px;
-  margin-bottom: 10px;
-}
-
-.pricing-hero p {
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-/* Tabs above plans */
-.plan-tabs {
+/* Tabs (Personal / Team) */
+.pricing-tabs {
   display: inline-flex;
   gap: 6px;
   padding: 6px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,0.03);
 }
 
-.plan-tab {
+.pricing-tab {
   appearance: none;
   border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 9px 14px;
+  padding: 10px 14px;
   border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.plan-tab:hover {
+.pricing-tab:hover {
   color: var(--text);
   border-color: var(--border);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.04);
 }
 
-.plan-tab-active {
-  color: #111;
-  background: var(--white);
-  border-color: rgba(255,255,255,0.55);
+.pricing-tab-active {
+  color: #000;
+  background: #fff;
+  border-color: rgba(0,0,0,0.1);
 }
 
-/* Table container */
-.pricing-table {
-  margin-top: 16px;
-  border-radius: 14px;
-  overflow: hidden;
+/* Table container (horizontal scroll on small screens) */
+.pricing-table-wrap {
+  margin-top: 14px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.02);
+  overflow: hidden;
 }
 
-/* Grid for 1 feature column + N plan columns (default 4 plans) */
-.pricing-grid-4 {
-  display: grid;
-  grid-template-columns: 260px repeat(4, minmax(0, 1fr));
+.pricing-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* If you do 3 tiers instead of 4, use this */
-.pricing-grid-3 {
-  display: grid;
-  grid-template-columns: 260px repeat(3, minmax(0, 1fr));
+.pricing-table {
+  width: 100%;
+  min-width: 860px; /* forces scroll on smaller screens */
+  border-collapse: collapse;
 }
 
-/* Row and cell */
-.pricing-row {
-  display: contents;
-}
-
-.pricing-cell {
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-}
-
-.pricing-cell:last-child {
-  border-right: none;
-}
-
-.pricing-row:last-child .pricing-cell {
-  border-bottom: none;
-}
-
-/* Header row */
-.pricing-head {
+/* header row */
+.pricing-head th {
   background: rgba(255,255,255,0.03);
-}
-
-.plan-head {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 14px;
   text-align: center;
+  vertical-align: top;
 }
 
+/* first column */
+.pricing-head th:first-child,
+.pricing-row td:first-child {
+  text-align: left;
+  width: 240px;
+  position: sticky;
+  left: 0;
+  background: rgba(15,15,15,0.92);
+  backdrop-filter: blur(8px);
+  border-right: 1px solid var(--border);
+  z-index: 2;
+}
+
+/* plan cards in header */
 .plan-name {
-  color: var(--text);
-  font-weight: 800;
   font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
   margin-bottom: 6px;
 }
 
 .plan-price {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 900;
+  letter-spacing: -0.02em;
   color: var(--text);
   line-height: 1.1;
 }
 
-.plan-was {
-  color: var(--muted);
-  text-decoration: line-through;
-  font-size: 13px;
+.plan-old {
   margin-left: 8px;
-  font-weight: 600;
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  text-decoration: line-through;
+  font-weight: 700;
 }
 
-.plan-sub {
-  color: var(--muted);
-  font-size: 12px;
+.plan-tagline {
   margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-/* Yellow CTA button like screenshot */
 .plan-cta {
-  margin: 12px auto 0;
+  margin-top: 12px;
+}
+
+/* Make CTA buttons more “AppSumo-like” when inside table */
+.plan-cta .btn {
+  width: 100%;
+  border-radius: 999px;
+  padding: 11px 14px;
+}
+
+/* body rows */
+.pricing-row td {
+  border-bottom: 1px solid var(--border);
+  padding: 14px;
+  text-align: center;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.pricing-row td:first-child {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* last row border cleanup */
+.pricing-row:last-child td {
+  border-bottom: none;
+}
+
+/* check / x icons */
+.check, .x {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 13px;
-  color: #111;
-  background: var(--accent);
-  border: 1px solid rgba(0,0,0,0.12);
-  text-decoration: none;
-  cursor: pointer;
-  min-width: 150px;
-  transition: background 0.15s ease, transform 0.03s ease;
-}
-
-.plan-cta:hover { background: var(--accent-hover); }
-.plan-cta:active { transform: translateY(1px); }
-
-/* Feature column */
-.feature-name {
-  color: var(--text);
-  font-weight: 800;
-  font-size: 13px;
-}
-
-.feature-hint {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-/* Table body cells */
-.plan-val {
-  text-align: center;
-  color: var(--text);
-  font-weight: 800;
-  font-size: 14px;
-}
-
-/* Check / X badges */
-.badge-ok,
-.badge-no {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   font-size: 13px;
   font-weight: 900;
 }
 
-.badge-ok {
-  background: rgba(34, 197, 94, 0.20);
-  border: 1px solid rgba(34, 197, 94, 0.45);
-  color: rgb(34, 197, 94);
+.check {
+  background: rgba(46, 204, 113, 0.18);
+  border: 1px solid rgba(46, 204, 113, 0.45);
+  color: #2ecc71;
 }
 
-.badge-no {
-  background: rgba(239, 68, 68, 0.18);
-  border: 1px solid rgba(239, 68, 68, 0.45);
-  color: rgb(239, 68, 68);
+.x {
+  background: rgba(231, 76, 60, 0.18);
+  border: 1px solid rgba(231, 76, 60, 0.45);
+  color: #e74c3c;
 }
 
-/* Refund note row */
-.refund-note {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  align-items: center;
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.refund-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: rgba(34, 197, 94, 0.8);
-}
-
-/* Responsive: turn table into stacked cards */
-@media (max-width: 980px) {
-  .pricing-grid-4,
-  .pricing-grid-3 {
-    grid-template-columns: 1fr;
-  }
-
-  .pricing-cell {
-    border-right: none;
-  }
-
-  .pricing-head .pricing-cell {
-    border-bottom: 1px solid var(--border);
-  }
-
-  .feature-name,
-  .feature-hint {
-    text-align: left;
-  }
-
-  .plan-head {
-    text-align: left;
-  }
-
-  .plan-cta {
-    margin: 12px 0 0;
-  }
-
-  .plan-val {
-    text-align: left;
-  }
-
-  /* Make it feel like stacked sections */
-  .pricing-table {
-    border-radius: 16px;
-  }
-}
-
-/* Optional: little divider spacing when you render Personal vs Team blocks */
-.pricing-section-gap {
-  margin-top: 18px;
+/* Mobile: let the sticky first column be smaller */
+@media (max-width: 860px) {
+  .pricing-table { min-width: 760px; }
+  .pricing-head th:first-child,
+  .pricing-row td:first-child { width: 190px; }
 }
