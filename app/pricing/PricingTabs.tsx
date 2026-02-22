@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 type Plan = {
   name: string;
+  tier: string;
   price: string;
   oldPrice?: string;
   tagline: string;
@@ -24,18 +25,40 @@ function XIcon() {
 
 export default function PricingTabs() {
   const [mode, setMode] = useState<"personal" | "team">("personal");
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  const handleBuy = async (tier: string) => {
+    setLoadingTier(tier);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoadingTier(null);
+    }
+  };
 
   const data = useMemo(() => {
     const personalPlans: Plan[] = [
-      { name: "License Tier 1", price: "$39", oldPrice: "$275", tagline: "Lifetime access", cta: "Buy now" },
-      { name: "License Tier 2", price: "$69", oldPrice: "$448", tagline: "Lifetime access", cta: "Buy now" },
-      { name: "License Tier 3", price: "$139", oldPrice: "$950", tagline: "Lifetime access", cta: "Buy now" },
+      { name: "Starter", tier: "starter", price: "$39", oldPrice: "$275", tagline: "Lifetime access", cta: "Buy now" },
+      { name: "Premium", tier: "premium", price: "$69", oldPrice: "$448", tagline: "Lifetime access", cta: "Buy now" },
+      { name: "Pro", tier: "pro", price: "$139", oldPrice: "$950", tagline: "Lifetime access", cta: "Buy now" },
     ];
 
     const teamPlans: Plan[] = [
-      { name: "Team Tier 1", price: "$99", oldPrice: "$599", tagline: "Team license", cta: "Buy now" },
-      { name: "Team Tier 2", price: "$199", oldPrice: "$999", tagline: "Team license", cta: "Buy now" },
-      { name: "Team Tier 3", price: "$399", oldPrice: "$1,999", tagline: "Team license", cta: "Buy now" },
+      { name: "Team Starter", tier: "team-starter", price: "$99", oldPrice: "$599", tagline: "Team license", cta: "Buy now" },
+      { name: "Team Premium", tier: "team-premium", price: "$199", oldPrice: "$999", tagline: "Team license", cta: "Buy now" },
+      { name: "Team Pro", tier: "team-pro", price: "$399", oldPrice: "$1,999", tagline: "Team license", cta: "Buy now" },
     ];
 
     const personalFeatures: FeatureRow[] = [
@@ -57,64 +80,51 @@ export default function PricingTabs() {
     ];
 
     return mode === "personal"
-      ? { title: "Personal", plans: personalPlans, features: personalFeatures }
-      : { title: "Team", plans: teamPlans, features: teamFeatures };
+      ? { plans: personalPlans, features: personalFeatures }
+      : { plans: teamPlans, features: teamFeatures };
   }, [mode]);
 
   return (
     <div>
       <div className="pricing-head">
-        <h1>Choose the plan that’s right for you</h1>
+        <h1>Choose the plan that's right for you</h1>
         <p className="pricing-sub">Feel secure in your purchase with a 60 day money-back guarantee.</p>
 
-        <div className="tabbar" role="tablist" aria-label="Pricing mode">
-          <button
-            className={`tab ${mode === "personal" ? "active" : ""}`}
-            onClick={() => setMode("personal")}
-            role="tab"
-            aria-selected={mode === "personal"}
-          >
-            Personal
-          </button>
-          <button
-            className={`tab ${mode === "team" ? "active" : ""}`}
-            onClick={() => setMode("team")}
-            role="tab"
-            aria-selected={mode === "team"}
-          >
-            Team
-          </button>
+        <div className="tabbar" role="tablist">
+          <button className={`tab ${mode === "personal" ? "active" : ""}`} onClick={() => setMode("personal")} role="tab">Personal</button>
+          <button className={`tab ${mode === "team" ? "active" : ""}`} onClick={() => setMode("team")} role="tab">Team</button>
         </div>
       </div>
 
       <div className="pricing-table">
-        {/* header row */}
         <div className="pt-row pt-header">
           <div className="pt-cell pt-left" />
           {data.plans.map((p) => (
             <div className="pt-cell pt-plan" key={p.name}>
               <div className="pt-plan-title">{p.name}</div>
-
               <div className="pt-price">
                 <span className="pt-price-now">{p.price}</span>
-                {p.oldPrice ? <span className="pt-price-old">{p.oldPrice}</span> : null}
+                {p.oldPrice && <span className="pt-price-old">{p.oldPrice}</span>}
               </div>
-
-              <button className="pt-cta">{p.cta}</button>
+              <button
+                className="pt-cta"
+                onClick={() => handleBuy(p.tier)}
+                disabled={loadingTier === p.tier}
+              >
+                {loadingTier === p.tier ? "Loading..." : p.cta}
+              </button>
               <div className="pt-tagline">{p.tagline}</div>
             </div>
           ))}
         </div>
 
-        {/* feature rows */}
         {data.features.map((row) => (
           <div className="pt-row" key={row.label}>
             <div className="pt-cell pt-left">
               <span className="pt-feature">{row.label}</span>
             </div>
-
             {row.values.map((v, i) => (
-              <div className="pt-cell pt-value" key={`${row.label}-${i}`}>
+              <div className="pt-cell pt-value" key={i}>
                 {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
               </div>
             ))}
