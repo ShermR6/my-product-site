@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { Resend } from "resend";
 import crypto from "crypto";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 const prisma = new PrismaClient();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
