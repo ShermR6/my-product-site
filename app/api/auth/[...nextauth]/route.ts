@@ -32,7 +32,7 @@ const handler = NextAuth({
   ],
   pages: {
     signIn: "/login",
-    verifyRequest: "/login?verify=1",
+    verifyRequest: "/login/verify",
   },
   callbacks: {
     async session({ session, user }) {
