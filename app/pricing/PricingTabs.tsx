@@ -50,15 +50,15 @@ export default function PricingTabs() {
 
   const data = useMemo(() => {
     const personalPlans: Plan[] = [
-      { name: "Starter", tier: "starter", price: "$39", oldPrice: "$275", tagline: "Lifetime access", cta: "Buy now" },
-      { name: "Premium", tier: "premium", price: "$69", oldPrice: "$448", tagline: "Lifetime access", cta: "Buy now" },
-      { name: "Pro", tier: "pro", price: "$139", oldPrice: "$950", tagline: "Lifetime access", cta: "Buy now" },
+      { name: "Starter", tier: "starter", price: "$14.99", oldPrice: "$49.99", tagline: "Monthly Access", cta: "Buy now" },
+      { name: "Premium", tier: "premium", price: "$24.99", oldPrice: "$74.99", tagline: "Monthly Access", cta: "Buy now" },
+      { name: "Pro", tier: "pro", price: "$49.99", oldPrice: "$119.99", tagline: "Monthly Access", cta: "Buy now" },
     ];
 
     const teamPlans: Plan[] = [
-      { name: "Team Starter", tier: "team-starter", price: "$99", oldPrice: "$599", tagline: "Team license", cta: "Buy now" },
-      { name: "Team Premium", tier: "team-premium", price: "$199", oldPrice: "$999", tagline: "Team license", cta: "Buy now" },
-      { name: "Team Pro", tier: "team-pro", price: "$399", oldPrice: "$1,999", tagline: "Team license", cta: "Buy now" },
+      { name: "Team Starter", tier: "team-starter", price: "$19.99", oldPrice: "$54.99", tagline: "Monthly Team License", cta: "Buy now" },
+      { name: "Team Premium", tier: "team-premium", price: "$34.99", oldPrice: "$89.99", tagline: "Monthly Team License", cta: "Buy now" },
+      { name: "Team Pro", tier: "team-pro", price: "$69.99", oldPrice: "$139.99", tagline: "Monthly Team License", cta: "Buy now" },
     ];
 
     const personalFeatures: FeatureRow[] = [
@@ -88,7 +88,7 @@ export default function PricingTabs() {
     <div>
       <div className="pricing-head">
         <h1>Choose the plan that's right for you</h1>
-        <p className="pricing-sub">Feel secure in your purchase with a 60 day money-back guarantee.</p>
+        <p className="pricing-sub">Feel secure in your purchase with a 30 day money-back guarantee.</p>
 
         <div className="tabbar" role="tablist">
           <button className={`tab ${mode === "personal" ? "active" : ""}`} onClick={() => setMode("personal")} role="tab">Personal</button>
@@ -133,7 +133,7 @@ export default function PricingTabs() {
       </div>
 
       <div className="pricing-foot">
-        <span className="refund">Refundable up to 60 days</span>
+        <span className="refund">Refundable up to 30 days</span>
       </div>
     </div>
   );
