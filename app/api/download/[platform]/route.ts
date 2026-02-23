@@ -9,14 +9,15 @@ const DOWNLOAD_URLS: Record<string, string> = {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   const session = await getServerSession();
   if (!session?.user?.email) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const url = DOWNLOAD_URLS[params.platform];
+  const { platform } = await params;
+  const url = DOWNLOAD_URLS[platform];
   if (!url || url === "#") {
     return NextResponse.json({ error: "Not available" }, { status: 404 });
   }
