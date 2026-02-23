@@ -9,6 +9,9 @@ const PRICE_MAP: Record<string, string> = {
   starter: process.env.STRIPE_PRICE_STARTER!,
   premium: process.env.STRIPE_PRICE_PREMIUM!,
   pro: process.env.STRIPE_PRICE_PRO!,
+  "team-starter": process.env.STRIPE_PRICE_TEAM_STARTER!,
+  "team-premium": process.env.STRIPE_PRICE_TEAM_PREMIUM!,
+  "team-pro": process.env.STRIPE_PRICE_TEAM_PRO!,
 };
 
 export async function POST(req: NextRequest) {
