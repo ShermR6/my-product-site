@@ -82,10 +82,10 @@ export default async function DashboardPage() {
             <div className="small" style={{ marginBottom: 12, letterSpacing: "0.07em" }}>DOWNLOAD THE APP</div>
             <div className="grid-3">
               {[
-                { os: "Windows", ext: ".exe installer", icon: "🪟", url: process.env.DOWNLOAD_URL_WINDOWS ?? "#" },
-                { os: "macOS", ext: ".dmg installer", icon: "🍎", url: process.env.DOWNLOAD_URL_MAC ?? "#" },
-                { os: "Linux", ext: "AppImage / .deb", icon: "🐧", url: process.env.DOWNLOAD_URL_LINUX ?? "#" },
-              ].map(({ os, ext, icon, url }) => (
+  { os: "Windows", ext: ".exe installer", icon: "🪟", url: process.env.NEXT_PUBLIC_DOWNLOAD_URL_WINDOWS ?? "#" },
+  { os: "macOS", ext: ".dmg installer", icon: "🍎", url: process.env.NEXT_PUBLIC_DOWNLOAD_URL_MAC ?? "#" },
+  { os: "Linux", ext: "AppImage / .deb", icon: "🐧", url: process.env.NEXT_PUBLIC_DOWNLOAD_URL_LINUX ?? "#" },
+].map(({ os, ext, icon, url }) => (
                 <div key={os} style={{
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid var(--border)",
