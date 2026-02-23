@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
           <div style="font-size:14px;color:#bdbdbd;margin-bottom:24px;">Real-time aircraft tracking</div>
           <p style="font-size:15px;margin-bottom:16px;">Hi${name ? ` ${name}` : ""},</p>
           <p style="font-size:15px;margin-bottom:16px;">Thanks for reaching out! We received your message and will get back to you within 1 business day.</p>
+          <p style="font-size:13px;color:#bdbdbd;margin-bottom:16px;">Please check your spam or junk folder for our reply, and consider adding support@skyping.xyz to your contacts.</p>
           <p style="font-size:13px;color:#999;margin-top:24px;">— The SkyPing Team</p>
         </div>
       `,

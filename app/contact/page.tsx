@@ -42,6 +42,9 @@ export default function ContactPage() {
               <p style={{ color: "#555", fontSize: 14 }}>
                 We'll get back to you within 1 business day.
               </p>
+              <p style={{ color: "#888", fontSize: 12, marginTop: 8 }}>
+                Please check your spam or junk folder if you don't see our reply.
+              </p>
               <button
                 className="btn btn-outline"
                 style={{ marginTop: 16 }}
