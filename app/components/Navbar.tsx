@@ -1,9 +1,10 @@
 // app/components/Navbar.tsx
 import Link from "next/link";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function Navbar() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   return (
     <header className="nav">
