@@ -4,8 +4,8 @@
 import { useState } from "react";
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [form, setForm] = useState({ name: "", email: "", message: "", website: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "ratelimited">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,9 +18,14 @@ export default function ContactPage() {
         body: JSON.stringify(form),
       });
 
+      if (res.status === 429) {
+        setStatus("ratelimited");
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to send");
       setStatus("sent");
-      setForm({ name: "", email: "", message: "" });
+      setForm({ name: "", email: "", message: "", website: "" });
     } catch {
       setStatus("error");
     }
@@ -83,6 +88,20 @@ export default function ContactPage() {
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   required
                   rows={5}
+                  maxLength={5000}
+                />
+              </div>
+
+              {/* Honeypot field — hidden from real users, bots will fill it in */}
+              <div style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                <label>Website</label>
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
                 />
               </div>
 
@@ -97,6 +116,20 @@ export default function ContactPage() {
                   marginBottom: 14,
                 }}>
                   Something went wrong. Please try again.
+                </div>
+              )}
+
+              {status === "ratelimited" && (
+                <div style={{
+                  padding: "10px 14px",
+                  background: "rgba(245,158,11,0.1)",
+                  border: "1px solid rgba(245,158,11,0.3)",
+                  borderRadius: 8,
+                  color: "#b45309",
+                  fontSize: 13,
+                  marginBottom: 14,
+                }}>
+                  You've sent too many messages. Please try again in a few minutes.
                 </div>
               )}
 

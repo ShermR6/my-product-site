@@ -3,13 +3,66 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// In-memory rate limiter: max 3 submissions per IP per 15 minutes
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return true;
+  }
+
+  entry.count++;
+  return false;
+}
+
+// Clean up old entries every 30 minutes to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(ip);
+  }
+}, 30 * 60 * 1000);
+
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, message } = await req.json();
+    // Rate limit by IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many messages. Please try again later." },
+        { status: 429 }
+      );
+    }
+
+    const { name, email, message, website } = await req.json();
+
+    // Honeypot: if the hidden "website" field is filled in, it's a bot
+    if (website) {
+      // Silently accept so bots think it worked
+      return NextResponse.json({ success: true });
+    }
 
     if (!email || !message) {
       return NextResponse.json(
         { error: "Email and message are required." },
+        { status: 400 }
+      );
+    }
+
+    // Basic input length limits
+    if (message.length > 5000 || email.length > 254 || (name && name.length > 100)) {
+      return NextResponse.json(
+        { error: "Input too long." },
         { status: 400 }
       );
     }
