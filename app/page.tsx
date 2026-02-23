@@ -43,12 +43,12 @@ const steps = [
   {
     num: "02",
     title: "Activate & Configure",
-    desc: "Enter your license key, set your airport location or coordinates, and connect Discord/Slack/Teams.",
+    desc: "Enter your license key, set your airport location coordinates, and connect Discord/Slack/Teams.",
   },
   {
     num: "03",
     title: "Add Aircraft",
-    desc: "Add tail numbers or ICAO24 codes for the aircraft you want to monitor.",
+    desc: "Add tail numbers and ICAO24 codes for the aircraft you want to monitor.",
   },
   {
     num: "04",
@@ -148,32 +148,6 @@ export default function HomePage() {
           <span className="chip">License keys</span>
           <span className="chip">Updates</span>
           <span className="chip">Support</span>
-        </div>
-      </div>
-
-      <div style={{ height: 18 }} />
-
-      {/* What / Who / Why */}
-      <div className="grid-3">
-        <div className="panel">
-          <h2 className="section-title">What it does</h2>
-          <p className="section-sub">
-            Tracks aircraft live, calculates distance from your saved location,
-            and sends alerts when aircraft enter your zone.
-          </p>
-        </div>
-        <div className="panel">
-          <h2 className="section-title">Who it&apos;s for</h2>
-          <p className="section-sub">
-            Aviation enthusiasts, Plane Spotters, Ramp Agents, Fuel Trucks, and
-            anyone monitoring specific flights.
-          </p>
-        </div>
-        <div className="panel">
-          <h2 className="section-title">Why it&apos;s better</h2>
-          <p className="section-sub">
-            Fast alerts for when a selected aircraft enters your area.
-          </p>
         </div>
       </div>
 
