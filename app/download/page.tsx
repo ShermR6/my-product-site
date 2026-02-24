@@ -7,7 +7,7 @@ export default function DownloadPage() {
       <div className="grid-3" style={{ marginTop: 18 }}>
         {/* Windows — available */}
         <div className="panel-white">
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🪟</div>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🖥️</div>
           <h2 style={{ marginBottom: 4 }}>Windows</h2>
           <p style={{ marginTop: 0, color: "#333", fontSize: 13 }}>.exe installer</p>
           <a
