@@ -132,8 +132,8 @@ export default function PricingTabs() {
               {p.popular && (
                 <span style={{
                   position: "absolute",
-                  top: 8,
-                  right: 8,
+                  top: 12,
+                  right: 12,
                   fontSize: 10,
                   fontWeight: 800,
                   letterSpacing: "0.06em",
