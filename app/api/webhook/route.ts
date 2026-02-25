@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     await prisma.license.create({
       data: {
         purchaseEmail: customerEmail,
-        userId: user?.id ?? null,
+        userId: user?.id ?? undefined,
         licenseKey,
         tier,
         status: "inactive", // becomes "active" when activated in desktop app
