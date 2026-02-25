@@ -41,7 +41,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  license       License?
+  licenses      License[]
 }
 
 model VerificationToken {
@@ -53,12 +53,15 @@ model VerificationToken {
 }
 
 model License {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  licenseKey      String   @unique
-  tier            String   // "starter" | "premium" | "pro"
+  id              String    @id @default(cuid())
+  purchaseEmail   String                        // email from Stripe checkout
+  userId          String?                       // linked when user logs into website (optional)
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  licenseKey      String    @unique
+  tier            String                        // "starter" | "premium" | "pro" etc.
+  status          String    @default("inactive") // "inactive" | "active" | "expired"
   stripeSessionId String?
-  createdAt       DateTime @default(now())
-  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())      // when purchased
+  activatedAt     DateTime?                      // when activated in desktop app (timer starts)
+  expiresAt       DateTime?                      // activatedAt + 30 days (set on activation)
 }

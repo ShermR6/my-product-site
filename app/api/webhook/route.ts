@@ -11,7 +11,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
 
 function generateLicenseKey(): string {
-  // 16 random uppercase alphanumeric characters in groups of 4
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const segments = Array.from({ length: 4 }, () =>
     Array.from({ length: 4 }, () => chars[crypto.randomInt(chars.length)]).join("")
@@ -67,28 +66,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No email" }, { status: 400 });
     }
 
-    // Find or create user in website database
-    let user = await prisma.user.findUnique({ where: { email: customerEmail } });
-    if (!user) {
-      user = await prisma.user.create({ data: { email: customerEmail } });
-    }
+    // Always generate a new unique license key for every purchase
+    const licenseKey = generateLicenseKey();
 
-    // Check if user already has a license
-    let license = await prisma.license.findUnique({ where: { userId: user.id } });
-    if (!license) {
-      const licenseKey = generateLicenseKey();
-      license = await prisma.license.create({
-        data: {
-          userId: user.id,
-          licenseKey,
-          tier,
-          stripeSessionId: session.id,
-        },
-      });
+    // Optionally link to existing user if they have an account
+    const user = await prisma.user.findUnique({ where: { email: customerEmail } });
 
-      // Also create the license in the FastAPI backend database
-      await createLicenseInBackend(licenseKey, tier, customerEmail);
-    }
+    await prisma.license.create({
+      data: {
+        purchaseEmail: customerEmail,
+        userId: user?.id ?? null,
+        licenseKey,
+        tier,
+        status: "inactive", // becomes "active" when activated in desktop app
+        stripeSessionId: session.id,
+      },
+    });
+
+    // Also create the license in the FastAPI backend database
+    await createLicenseInBackend(licenseKey, tier, customerEmail);
 
     const tierLabel = tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : "Starter";
 
@@ -105,24 +101,27 @@ export async function POST(req: NextRequest) {
           <p style="font-size:15px;margin-bottom:8px;">Thanks for your purchase! Here is your <strong>${tierLabel}</strong> license key:</p>
 
           <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;text-align:center;margin:20px 0;">
-            <div style="font-size:22px;font-weight:900;letter-spacing:0.08em;color:#f5b400;">${license.licenseKey}</div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:0.08em;color:#f5b400;">${licenseKey}</div>
           </div>
 
-          <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">
+          <p style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">
             To activate, open the SkyPing desktop app, enter this key and your email address (<strong>${customerEmail}</strong>).
+          </p>
+          <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">
+            Your 30-day access period begins when you activate — not when you purchase.
           </p>
 
           <a href="https://skyping.xyz/download" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Download the app</a>
 
           <p style="font-size:12px;color:#555;margin-top:28px;">
-            You can also view your license at any time by logging into <a href="https://skyping.xyz/dashboard" style="color:#f5b400;">skyping.xyz/dashboard</a>.
+            You can also view your licenses by logging into <a href="https://skyping.xyz/dashboard" style="color:#f5b400;">skyping.xyz/dashboard</a>.
             <br />Please check your spam or junk folder for future emails, and consider adding noreply@skyping.xyz to your contacts.
           </p>
         </div>
       `,
     });
 
-    console.log(`License created for ${customerEmail}: ${license.licenseKey}`);
+    console.log(`License created for ${customerEmail}: ${licenseKey}`);
   }
 
   return NextResponse.json({ received: true });
