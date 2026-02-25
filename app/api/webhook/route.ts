@@ -8,12 +8,41 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01
 const prisma = new PrismaClient();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-function generateLicenseKey(tier: string): string {
-  const prefix = tier === "pro" ? "PRO" : tier === "premium" ? "PRM" : "STR";
+const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
+
+function generateLicenseKey(): string {
+  // 16 random uppercase alphanumeric characters in groups of 4
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const segments = Array.from({ length: 4 }, () =>
-    crypto.randomBytes(2).toString("hex").toUpperCase()
+    Array.from({ length: 4 }, () => chars[crypto.randomInt(chars.length)]).join("")
   );
-  return `${prefix}-${segments.join("-")}`;
+  return segments.join("-");
+}
+
+async function createLicenseInBackend(licenseKey: string, tier: string, email: string) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/licenses/provision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "skyping-internal-secret",
+      },
+      body: JSON.stringify({
+        license_key: licenseKey,
+        tier,
+        email,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Backend license creation failed:", errorText);
+    } else {
+      console.log(`Backend license created for ${email}`);
+    }
+  } catch (err) {
+    console.error("Failed to reach backend for license creation:", err);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -38,16 +67,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No email" }, { status: 400 });
     }
 
-    // Find or create user
+    // Find or create user in website database
     let user = await prisma.user.findUnique({ where: { email: customerEmail } });
     if (!user) {
       user = await prisma.user.create({ data: { email: customerEmail } });
     }
 
-    // Check if already has license — if so, just resend
+    // Check if user already has a license
     let license = await prisma.license.findUnique({ where: { userId: user.id } });
     if (!license) {
-      const licenseKey = generateLicenseKey(tier);
+      const licenseKey = generateLicenseKey();
       license = await prisma.license.create({
         data: {
           userId: user.id,
@@ -56,6 +85,9 @@ export async function POST(req: NextRequest) {
           stripeSessionId: session.id,
         },
       });
+
+      // Also create the license in the FastAPI backend database
+      await createLicenseInBackend(licenseKey, tier, customerEmail);
     }
 
     const tierLabel = tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : "Starter";
@@ -83,7 +115,8 @@ export async function POST(req: NextRequest) {
           <a href="https://skyping.xyz/download" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Download the app</a>
 
           <p style="font-size:12px;color:#555;margin-top:28px;">
-            You can also view your license at any time by logging into <a href="https://skyping.xyz/dashboard" style="color:#f5b400;">skyping.xyz/dashboard</a>
+            You can also view your license at any time by logging into <a href="https://skyping.xyz/dashboard" style="color:#f5b400;">skyping.xyz/dashboard</a>.
+            <br />Please check your spam or junk folder for future emails, and consider adding noreply@skyping.xyz to your contacts.
           </p>
         </div>
       `,
