@@ -134,10 +134,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="panel" style={{ marginBottom: 14, padding: 22 }}>
-        <div className="small" style={{ marginBottom: 12, letterSpacing: "0.07em" }}>DOWNLOAD THE APP</div>
-        <div className="grid-3">
-          {[
+              {[
             { os: "Windows", ext: ".exe installer", icon: "🪟", url: process.env.NEXT_PUBLIC_DOWNLOAD_URL_WINDOWS ?? "#", available: true },
             { os: "macOS", ext: ".dmg installer", icon: "🍎", url: "#", available: false },
             { os: "Linux", ext: "AppImage / .deb", icon: "🐧", url: "#", available: false },
