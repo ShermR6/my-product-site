@@ -63,7 +63,7 @@ export default async function DashboardPage() {
       {licenses.length === 0 ? (
         <div className="panel" style={{ marginBottom: 18, textAlign: "center", padding: 32 }}>
           <h2 style={{ marginBottom: 8 }}>No licenses found</h2>
-          <p>You don't have any licenses yet.</p>
+          <p>You don&apos;t have any licenses yet.</p>
           <Link className="btn btn-outline" href="/pricing">Purchase a License</Link>
         </div>
       ) : (
@@ -133,47 +133,6 @@ export default async function DashboardPage() {
           })}
         </div>
       )}
-
-              {[
-            { os: "Windows", ext: ".exe installer", icon: "🪟", url: process.env.NEXT_PUBLIC_DOWNLOAD_URL_WINDOWS ?? "#", available: true },
-            { os: "macOS", ext: ".dmg installer", icon: "🍎", url: "#", available: false },
-            { os: "Linux", ext: "AppImage / .deb", icon: "🐧", url: "#", available: false },
-          ].map(({ os, ext, icon, url, available }) => (
-            <div key={os} style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-              padding: 16,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              opacity: available ? 1 : 0.5,
-            }}>
-              <div style={{ fontSize: 24 }}>{icon}</div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{os}</div>
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>{ext}</div>
-              {available ? (
-                <a href={url} className="btn btn-solid" style={{ marginTop: 4, fontSize: 12 }}>
-                  Download
-                </a>
-              ) : (
-                <div style={{
-                  marginTop: 4,
-                  textAlign: "center",
-                  padding: "8px 14px",
-                  borderRadius: 10,
-                  border: "1px solid var(--border)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--muted)",
-                }}>
-                  Coming Soon
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
       <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
         <Link href="/pricing" className="btn btn-outline" style={{ fontSize: 12 }}>
