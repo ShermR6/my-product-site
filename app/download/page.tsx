@@ -2,7 +2,7 @@ export default function DownloadPage() {
   return (
     <>
       <h1>Download</h1>
-      <p>Download the SkyPing desktop app for your platform.</p>
+      <p>Download the FinalPing desktop app for your platform.</p>
 
       <div className="grid-3" style={{ marginTop: 18 }}>
         {/* Windows — available */}
@@ -117,7 +117,7 @@ export default function DownloadPage() {
               {
                 num: "3",
                 title: "Activate with your license key",
-                desc: "Open SkyPing and enter the license key from your purchase confirmation email along with the email you used to purchase.",
+                desc: "Open FinalPing and enter the license key from your purchase confirmation email along with the email you used to purchase.",
               },
               {
                 num: "4",
