@@ -110,11 +110,11 @@ export default function TopoBackground() {
 
       // Draw multiple contour levels — slowly shift over time for subtle animation
       const levels = [-0.6, -0.35, -0.1, 0.15, 0.4, 0.65];
-      const baseOpacity = isDark() ? 0.22 : 0.18;
+      const baseOpacity = isDark() ? 0.16 : 0.12;
 
       levels.forEach((level, i) => {
         const opacity = baseOpacity - i * 0.008;
-        drawContours(level, t, Math.max(opacity, 0.06));
+        drawContours(level, t, Math.max(opacity, 0.04));
       });
 
       t += 0.004; // very slow drift
