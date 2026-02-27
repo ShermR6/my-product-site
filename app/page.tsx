@@ -53,18 +53,18 @@ const steps = [
   {
     num: "04",
     title: "Get Alerts",
-    desc: "SkyPing runs in the background and sends you real-time notifications as aircraft enter your zones.",
+    desc: "FinalPing runs in the background and sends you real-time notifications as aircraft enter your zones.",
   },
 ];
 
 const faqs = [
   {
-    q: "What data source does SkyPing use?",
-    a: "SkyPing uses ADS-B (Automatic Dependent Surveillance-Broadcast) data, which is publicly broadcast by aircraft transponders. This is the same data used by services like FlightAware and Flightradar24.",
+    q: "What data source does FinalPing use?",
+    a: "FinalPing uses ADS-B (Automatic Dependent Surveillance-Broadcast) data, which is publicly broadcast by aircraft transponders. This is the same data used by services like FlightAware and Flightradar24.",
   },
   {
     q: "Does it work outside the United States?",
-    a: "Yes — SkyPing works with any coordinates worldwide. As long as ADS-B coverage exists in your area, you can track aircraft near any location on the globe.",
+    a: "Yes — FinalPing works with any coordinates worldwide. As long as ADS-B coverage exists in your area, you can track aircraft near any location on the globe.",
   },
   {
     q: "How many aircraft can I track?",
@@ -76,7 +76,7 @@ const faqs = [
   },
   {
     q: "What platforms are supported?",
-    a: "SkyPing is currently available as a Windows desktop application. macOS and Linux support are planned for future releases.",
+    a: "FinalPing is currently available as a Windows desktop application. macOS and Linux support are planned for future releases.",
   },
   {
     q: "Can I customize the alert messages?",
@@ -121,7 +121,7 @@ export default function HomePage() {
       {/* Hero */}
       <div className="panel" style={{ padding: 22 }}>
         <div className="small" style={{ letterSpacing: "0.08em" }}>
-          SkyPing
+          FinalPing
         </div>
 
         <h1 style={{ marginTop: 8 }}>
@@ -157,7 +157,7 @@ export default function HomePage() {
           <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>FEATURES</div>
           <h2 style={{ fontSize: 26 }}>Everything you need to track aircraft</h2>
           <p style={{ maxWidth: 520, margin: "8px auto 0" }}>
-            SkyPing combines live ADS-B data with customizable alerts and team integrations — all in one lightweight desktop app.
+            FinalPing combines live ADS-B data with customizable alerts and team integrations — all in one lightweight desktop app.
           </p>
         </div>
         <div className="grid-3">
@@ -208,7 +208,7 @@ export default function HomePage() {
           <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>USE CASES</div>
           <h2 style={{ fontSize: 26 }}>Built for people who need to know</h2>
           <p style={{ maxWidth: 520, margin: "8px auto 0" }}>
-            Whether you&apos;re on the ramp, in the tower, or just watching the skies — SkyPing keeps you informed.
+            Whether you&apos;re on the ramp, in the tower, or just watching the skies — FinalPing keeps you informed.
           </p>
         </div>
         <div className="grid-2">
@@ -248,7 +248,7 @@ export default function HomePage() {
         <div className="panel" style={{ padding: 32, textAlign: "center" }}>
           <h2 style={{ fontSize: 24, marginBottom: 6 }}>Ready to start tracking?</h2>
           <p style={{ maxWidth: 440, margin: "0 auto 18px", fontSize: 14 }}>
-            Get SkyPing today and never miss an aircraft arrival again.
+            Get FinalPing today and never miss an aircraft arrival again.
           </p>
           <div className="btn-row" style={{ justifyContent: "center" }}>
             <Link className="btn btn-outline" href="/pricing">
