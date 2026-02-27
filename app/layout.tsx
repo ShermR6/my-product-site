@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { ThemeProvider } from "./components/ThemeProvider";
+import PageBackground from "./components/PageBackground";
 
 export const metadata = {
   title: "FinalPing",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>
+          <PageBackground />
           <Navbar />
           <main className="page">
             <div className="container">{children}</div>

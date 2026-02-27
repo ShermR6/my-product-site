@@ -80,7 +80,7 @@ export default function HomePage() {
             padding: "13px 28px", borderRadius: "999px", fontSize: 14,
             boxShadow: "0 0 32px rgba(14,165,233,0.3)",
           }}>
-            Download Free Trial
+            Download Now
           </Link>
           <Link href="/pricing" className="btn btn-outline" style={{ padding: "13px 28px", borderRadius: "999px", fontSize: 14 }}>
             View Pricing
