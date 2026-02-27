@@ -24,7 +24,7 @@ async function createLicenseInBackend(licenseKey: string, tier: string, email: s
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "skyping-internal-secret",
+        "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "finalping-internal-secret",
       },
       body: JSON.stringify({
         license_key: licenseKey,
@@ -90,12 +90,12 @@ export async function POST(req: NextRequest) {
 
     // Send license key email
     await resend.emails.send({
-      from: "SkyPing <noreply@skyping.xyz>",
+      from: "FinalPing <noreply@finalpingapp.com>",
       to: customerEmail,
-      subject: `Your SkyPing ${tierLabel} License Key`,
+      subject: `Your FinalPing ${tierLabel} License Key`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
-          <div style="font-size:22px;font-weight:700;margin-bottom:4px;">SkyPing</div>
+          <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
           <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
 
           <p style="font-size:15px;margin-bottom:8px;">Thanks for your purchase! Here is your <strong>${tierLabel}</strong> license key:</p>
@@ -105,17 +105,17 @@ export async function POST(req: NextRequest) {
           </div>
 
           <p style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">
-            To activate, open the SkyPing desktop app, enter this key and your email address (<strong>${customerEmail}</strong>).
+            To activate, open the FinalPing desktop app, enter this key and your email address (<strong>${customerEmail}</strong>).
           </p>
           <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">
             Your 30-day access period begins when you activate — not when you purchase.
           </p>
 
-          <a href="https://skyping.xyz/download" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Download the app</a>
+          <a href="https://finalpingapp.com/download" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Download the app</a>
 
           <p style="font-size:12px;color:#555;margin-top:28px;">
-            You can also view your licenses by logging into <a href="https://skyping.xyz/dashboard" style="color:#f5b400;">skyping.xyz/dashboard</a>.
-            <br />Please check your spam or junk folder for future emails, and consider adding noreply@skyping.xyz to your contacts.
+            You can also view your licenses by logging into <a href="https://finalpingapp.com/dashboard" style="color:#f5b400;">finalpingapp.com/dashboard</a>.
+            <br />Please check your spam or junk folder for future emails, and consider adding noreply@finalpingapp.com to your contacts.
           </p>
         </div>
       `,

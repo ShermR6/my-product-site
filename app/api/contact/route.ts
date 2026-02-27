@@ -68,10 +68,10 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: "SkyPing Contact Form <support@skyping.xyz>",
+      from: "FinalPing Contact Form <support@finalpingapp.com>",
       to: "andrew.p.sherman21@gmail.com",
       replyTo: email,
-      subject: `[SkyPing] New message from ${name || "Anonymous"}`,
+      subject: `[FinalPing] New message from ${name || "Anonymous"}`,
       html: `
         <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;">
           <div style="font-size:18px;font-weight:700;margin-bottom:16px;color:#111;">New Contact Form Submission</div>
@@ -89,24 +89,24 @@ export async function POST(req: NextRequest) {
               <td style="padding:8px 12px;color:#111;white-space:pre-wrap;">${message}</td>
             </tr>
           </table>
-          <div style="margin-top:20px;font-size:12px;color:#9ca3af;">Sent from the SkyPing contact form at skyping.xyz</div>
+          <div style="margin-top:20px;font-size:12px;color:#9ca3af;">Sent from the FinalPing contact form at finalpingapp.com</div>
         </div>
       `,
     });
 
     // Send confirmation to the customer
     await resend.emails.send({
-      from: "SkyPing <support@skyping.xyz>",
+      from: "FinalPing <support@finalpingapp.com>",
       to: email,
-      subject: "We received your message — SkyPing",
+      subject: "We received your message — FinalPing",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
-          <div style="font-size:20px;font-weight:700;margin-bottom:8px;">SkyPing</div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:8px;">FinalPing</div>
           <div style="font-size:14px;color:#bdbdbd;margin-bottom:24px;">Real-time aircraft tracking</div>
           <p style="font-size:15px;margin-bottom:16px;">Hi${name ? ` ${name}` : ""},</p>
           <p style="font-size:15px;margin-bottom:16px;">Thanks for reaching out! We received your message and will get back to you within 1 business day.</p>
-          <p style="font-size:13px;color:#bdbdbd;margin-bottom:16px;">Please check your spam or junk folder for our reply, and consider adding support@skyping.xyz to your contacts.</p>
-          <p style="font-size:13px;color:#999;margin-top:24px;">— The SkyPing Team</p>
+          <p style="font-size:13px;color:#bdbdbd;margin-bottom:16px;">Please check your spam or junk folder for our reply, and consider adding support@finalpingapp.com to your contacts.</p>
+          <p style="font-size:13px;color:#999;margin-top:24px;">— The FinalPing Team</p>
         </div>
       `,
     });
