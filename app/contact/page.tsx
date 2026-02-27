@@ -150,7 +150,7 @@ export default function ContactPage() {
 
           <div style={{ fontSize: 13, lineHeight: 1.7 }}>
             <div style={{ fontWeight: 700, marginTop: 10 }}>Email</div>
-            <div>support@skyping.xyz</div>
+            <div>support@finalpingapp.com</div>
 
             <div style={{ fontWeight: 700, marginTop: 10 }}>Hours</div>
             <div>Mon–Fri, 9am–5pm CT</div>

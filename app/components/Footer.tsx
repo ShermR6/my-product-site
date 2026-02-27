@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="container">
         <div className="footer-inner">
-          <div>© {new Date().getFullYear()} SkyPing</div>
+          <div>© {new Date().getFullYear()} FinalPing</div>
           <div className="footer-links">
             <Link href="/contact">Support</Link>
             <Link href="/download">Download</Link>

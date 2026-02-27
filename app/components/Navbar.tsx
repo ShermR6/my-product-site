@@ -12,7 +12,7 @@ export default async function Navbar() {
         <div className="nav-inner">
           <Link className="brand" href="/">
             <span className="dot" />
-            <span>SkyPing</span>
+            <span>FinalPing</span>
           </Link>
 
           <nav className="nav-links">
