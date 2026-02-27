@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Plan = {
   name: string;
@@ -54,6 +55,7 @@ const faqs = [
 export default function PricingTabs() {
   const [mode, setMode] = useState<"personal" | "team">("personal");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleBuy = async (tier: string) => {
     setLoadingTier(tier);
@@ -64,6 +66,13 @@ export default function PricingTabs() {
         body: JSON.stringify({ tier }),
       });
       const data = await res.json();
+
+      // If not logged in, redirect to login then back to pricing
+      if (res.status === 401 || data.requireLogin) {
+        router.push("/login?callbackUrl=/pricing");
+        return;
+      }
+
       if (data.url) {
         window.location.href = data.url;
       } else {
