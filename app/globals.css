@@ -437,3 +437,8 @@ textarea { min-height: 110px; resize: vertical; }
   .pt-cell { border-right: none; }
   .pt-value { justify-content: center; }
 }
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.6; }
+  50% { transform: translateX(-50%) translateY(6px); opacity: 0.9; }
+}

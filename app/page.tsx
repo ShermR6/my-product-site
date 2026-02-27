@@ -93,6 +93,31 @@ export default function HomePage() {
           <span className="chip">Updates</span>
           <span className="chip">Support</span>
         </div>
+
+        {/* Scroll indicator */}
+        <div style={{
+          position: "absolute",
+          bottom: 32,
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          color: "var(--muted)",
+          fontSize: 11,
+          fontWeight: 500,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          animation: "scrollBounce 2s ease-in-out infinite",
+          cursor: "pointer",
+          opacity: 0.6,
+        }}>
+          <span>Scroll to explore</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12l7 7 7-7"/>
+          </svg>
+        </div>
       </section>
 
       {/* FEATURES */}
