@@ -14,6 +14,8 @@ export default function LoginForm() {
     await signIn("email", { email, redirect: false, callbackUrl: "/dashboard" });
     setSent(true);
     setLoading(false);
+    // redirect: false keeps us on the login page to show the "check your email" message
+    // The callbackUrl in the email itself will redirect to /dashboard after clicking
   };
 
   if (sent) {

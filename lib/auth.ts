@@ -12,7 +12,11 @@ export const authOptions: NextAuthOptions = {
   providers: [
     EmailProvider({
       from: "noreply@finalpingapp.com",
-      sendVerificationRequest: async ({ identifier: email, url }) => {
+      sendVerificationRequest: async ({ identifier: email, url: rawUrl }) => {
+        // Force redirect to /dashboard after clicking the magic link
+        const url = rawUrl.includes("callbackUrl")
+          ? rawUrl.replace(/callbackUrl=[^&]+/, "callbackUrl=%2Fdashboard")
+          : `${rawUrl}&callbackUrl=%2Fdashboard`;
         await resend.emails.send({
           from: "FinalPing <noreply@finalpingapp.com>",
           to: email,
