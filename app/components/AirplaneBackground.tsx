@@ -15,7 +15,7 @@ export default function AirplaneBackground() {
     let planes: any[] = [];
     let animId: number;
     const PLANE_COUNT = 7;
-    const SPEED_MULT = 3.5;
+    const SPEED_MULT = 2.0;
     const TRAIL_LENGTH = 55;
 
     const isDark = () => document.documentElement.getAttribute("data-theme") !== "light";

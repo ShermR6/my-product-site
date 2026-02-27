@@ -41,7 +41,7 @@ export default function TopoBackground() {
         : `rgba(14,100,190,${lineOpacity})`;
 
       ctx!.strokeStyle = color;
-      ctx!.lineWidth = 0.75;
+      ctx!.lineWidth = 1.2;
       ctx!.beginPath();
 
       for (let x = 0; x < W + step; x += step) {
@@ -110,11 +110,11 @@ export default function TopoBackground() {
 
       // Draw multiple contour levels — slowly shift over time for subtle animation
       const levels = [-0.6, -0.35, -0.1, 0.15, 0.4, 0.65];
-      const baseOpacity = isDark() ? 0.09 : 0.07;
+      const baseOpacity = isDark() ? 0.22 : 0.18;
 
       levels.forEach((level, i) => {
         const opacity = baseOpacity - i * 0.008;
-        drawContours(level, t, Math.max(opacity, 0.02));
+        drawContours(level, t, Math.max(opacity, 0.06));
       });
 
       t += 0.004; // very slow drift
