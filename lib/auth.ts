@@ -11,18 +11,18 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
-      from: "noreply@skyping.xyz",
+      from: "noreply@finalpingapp.com",
       sendVerificationRequest: async ({ identifier: email, url }) => {
         await resend.emails.send({
-          from: "SkyPing <noreply@skyping.xyz>",
+          from: "FinalPing <noreply@finalpingapp.com>",
           to: email,
-          subject: "Sign in to SkyPing",
+          subject: "Sign in to FinalPing",
           html: `
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
-              <div style="font-size:20px;font-weight:700;margin-bottom:8px;">SkyPing</div>
+              <div style="font-size:20px;font-weight:700;margin-bottom:8px;">FinalPing</div>
               <div style="font-size:14px;color:#bdbdbd;margin-bottom:24px;">Real-time aircraft tracking</div>
               <p style="font-size:15px;margin-bottom:24px;">Click the button below to sign in. This link expires in 24 hours.</p>
-              <a href="${url}" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Sign in to SkyPing</a>
+              <a href="${url}" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Sign in to FinalPing</a>
               <p style="font-size:12px;color:#666;margin-top:24px;">If you didn't request this, you can safely ignore this email.</p>
             </div>
           `,
