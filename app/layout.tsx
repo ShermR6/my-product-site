@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 export const metadata = {
-  title: "SkyPing",
+  title: "FinalPing",
   description: "Real-time aircraft tracking with proximity alerts.",
 };
 
