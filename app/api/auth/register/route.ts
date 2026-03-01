@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+const bcrypt = require("bcryptjs");
 
 export async function POST(req: NextRequest) {
   try {
