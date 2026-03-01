@@ -1,9 +1,8 @@
-import { getToken } from "next-auth/jwt";
-import { headers, cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { NextRequest } from "next/server";
 
 function getLicenseStatus(license: { status: string; activatedAt: Date | null; expiresAt: Date | null }) {
   if (license.status === "expired") return { label: "Expired", color: "#ef4444" };
@@ -30,15 +29,10 @@ const tierLabels: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
-  const cookieStore = cookies();
-  const token = await getToken({
-    req: { headers: Object.fromEntries(headers()), cookies: Object.fromEntries(cookieStore.getAll().map(c => [c.name, c.value])) } as unknown as NextRequest,
-    secret: process.env.NEXTAUTH_SECRET!,
-  });
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) redirect("/login");
 
-  if (!token?.email) redirect("/login");
-
-  const email = token.email as string;
+  const email = session.user.email;
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (user) {
