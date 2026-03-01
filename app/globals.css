@@ -58,9 +58,13 @@ body {
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-[data-theme="dark"] body,
+[data-theme="dark"] body {
+  background: var(--bg);
+}
+
 [data-theme="dark"] .page {
-  background: radial-gradient(1200px 600px at 50% -10%, #1a1a1a 0%, var(--bg) 55%);
+  background: radial-gradient(ellipse 120% 60% at 50% -5%, #1e2a3a 0%, var(--bg) 60%);
+  min-height: 100vh;
 }
 
 .container {
