@@ -1,8 +1,9 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { NextRequest } from "next/server";
 
 function getLicenseStatus(license: { status: string; activatedAt: Date | null; expiresAt: Date | null }) {
   if (license.status === "expired") return { label: "Expired", color: "#ef4444" };
@@ -11,7 +12,6 @@ function getLicenseStatus(license: { status: string; activatedAt: Date | null; e
   if (license.expiresAt) {
     const now = new Date();
     if (now > license.expiresAt) return { label: "Expired", color: "#ef4444" };
-
     const msLeft = license.expiresAt.getTime() - now.getTime();
     const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
     return { label: `Active — ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`, color: "#23c76b" };
@@ -30,26 +30,26 @@ const tierLabels: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) redirect("/login");
+  const cookieStore = cookies();
+  const token = await getToken({
+    req: { headers: Object.fromEntries(headers()), cookies: Object.fromEntries(cookieStore.getAll().map(c => [c.name, c.value])) } as unknown as NextRequest,
+    secret: process.env.NEXTAUTH_SECRET!,
+  });
 
-  // Link any unlinked licenses purchased with this email to this user
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+  if (!token?.email) redirect("/login");
+
+  const email = token.email as string;
+
+  const user = await prisma.user.findUnique({ where: { email } });
   if (user) {
     await prisma.license.updateMany({
-      where: {
-        purchaseEmail: session.user.email,
-        userId: null,
-      },
-      data: {
-        userId: user.id,
-      },
+      where: { purchaseEmail: email, userId: null },
+      data: { userId: user.id },
     });
   }
 
-  // Fetch all licenses for this email
   const licenses = await prisma.license.findMany({
-    where: { purchaseEmail: session.user.email },
+    where: { purchaseEmail: email },
     orderBy: { createdAt: "desc" },
   });
 
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
     <>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ marginBottom: 4 }}>Dashboard</h1>
-        <p style={{ margin: 0 }}>Signed in as {session.user.email}</p>
+        <p style={{ margin: 0 }}>Signed in as {email}</p>
       </div>
 
       {licenses.length === 0 ? (
@@ -76,21 +76,8 @@ export default async function DashboardPage() {
                   <div className="small" style={{ letterSpacing: "0.07em" }}>
                     {tierLabels[license.tier] ?? license.tier} LICENSE
                   </div>
-                  <span style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: statusInfo.color,
-                  }}>
-                    <span style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: "50%",
-                      background: statusInfo.color,
-                      display: "inline-block",
-                    }} />
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: statusInfo.color }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: statusInfo.color, display: "inline-block" }} />
                     {statusInfo.label}
                   </span>
                 </div>
@@ -98,16 +85,7 @@ export default async function DashboardPage() {
                 <div style={{ display: "flex", gap: 32, flexWrap: "wrap", marginTop: 14 }}>
                   <div>
                     <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>License Key</div>
-                    <div style={{
-                      fontFamily: "monospace",
-                      fontSize: 15,
-                      fontWeight: 700,
-                      background: "rgba(255,255,255,0.06)",
-                      padding: "4px 10px",
-                      borderRadius: 6,
-                      border: "1px solid var(--border)",
-                      letterSpacing: "0.05em",
-                    }}>
+                    <div style={{ fontFamily: "monospace", fontSize: 15, fontWeight: 700, background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", letterSpacing: "0.05em" }}>
                       {license.licenseKey}
                     </div>
                   </div>
@@ -135,12 +113,8 @@ export default async function DashboardPage() {
       )}
 
       <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-        <Link href="/pricing" className="btn btn-outline" style={{ fontSize: 12 }}>
-          Purchase another license
-        </Link>
-        <Link href="/api/auth/signout" className="btn btn-outline" style={{ fontSize: 12 }}>
-          Sign out
-        </Link>
+        <Link href="/pricing" className="btn btn-outline" style={{ fontSize: 12 }}>Purchase another license</Link>
+        <Link href="/api/auth/signout" className="btn btn-outline" style={{ fontSize: 12 }}>Sign out</Link>
       </div>
     </>
   );

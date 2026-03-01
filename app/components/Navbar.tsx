@@ -12,8 +12,11 @@ export default function Navbar() {
       <div className="container">
         <div className="nav-inner">
           <Link className="brand" href="/">
-            <span className="dot" />
-            <span>FinalPing</span>
+            <div className="brand-logo">
+              <span className="brand-logo-top">Aircraft Alerts</span>
+              <span className="brand-logo-main">FinalPing</span>
+              <span className="brand-logo-line" />
+            </div>
           </Link>
 
           <nav className="nav-links">
