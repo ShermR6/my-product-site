@@ -156,7 +156,7 @@ export default function PricingTabs() {
       { label: "Saved coordinates", values: ["1", "5", "Unlimited"] },
       { label: "Distance alerts", values: [true, true, true] },
       { label: "Notification channels", values: ["1 channel", "3 channels", "Unlimited"] },
-      { label: "Priority support", values: [false, false, true] },
+      { label: "Priority support", values: [false, true, true] },
     ];
 
     const teamFeatures: FeatureRow[] = [
