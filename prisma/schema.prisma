@@ -39,6 +39,8 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?                            // hashed password for credentials login
+  createdAt     DateTime  @default(now())
   accounts      Account[]
   sessions      Session[]
   licenses      License[]
