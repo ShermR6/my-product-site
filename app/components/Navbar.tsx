@@ -1,12 +1,11 @@
 // app/components/Navbar.tsx
+"use client";
+
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { useSession } from "next-auth/react";
 
-export const dynamic = "force-dynamic";
-
-export default async function Navbar() {
-  const session = await getServerSession(authOptions);
+export default function Navbar() {
+  const { data: session } = useSession();
 
   return (
     <header className="nav">
