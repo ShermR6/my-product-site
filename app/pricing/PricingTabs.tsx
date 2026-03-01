@@ -7,6 +7,7 @@ type Plan = {
   name: string;
   tier: string;
   price: string;
+  perMonth?: string;
   oldPrice?: string;
   tagline: string;
   cta: string;
@@ -40,7 +41,7 @@ const faqs = [
   },
   {
     q: "What happens when my subscription renews?",
-    a: "Your subscription renews automatically each month. You'll receive an email receipt from Stripe, and your access continues uninterrupted.",
+    a: "Your subscription renews automatically each month or year depending on your billing cycle. You'll receive an email receipt from Stripe, and your access continues uninterrupted.",
   },
   {
     q: "Can I cancel anytime?",
@@ -54,6 +55,7 @@ const faqs = [
 
 export default function PricingTabs() {
   const [mode, setMode] = useState<"personal" | "team">("personal");
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const router = useRouter();
 
@@ -63,11 +65,10 @@ export default function PricingTabs() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
+        body: JSON.stringify({ tier, billing }),
       });
       const data = await res.json();
 
-      // If not logged in, redirect to login then back to pricing
       if (res.status === 401 || data.requireLogin) {
         router.push("/login?callbackUrl=/pricing");
         return;
@@ -86,16 +87,68 @@ export default function PricingTabs() {
   };
 
   const data = useMemo(() => {
+    const yearly = billing === "yearly";
+
     const personalPlans: Plan[] = [
-      { name: "Starter", tier: "starter", price: "$14.99", oldPrice: "$49.99", tagline: "Monthly Access", cta: "Buy now" },
-      { name: "Premium", tier: "premium", price: "$24.99", oldPrice: "$74.99", tagline: "Monthly Access", cta: "Buy now", popular: true },
-      { name: "Pro", tier: "pro", price: "$49.99", oldPrice: "$119.99", tagline: "Monthly Access", cta: "Buy now" },
+      {
+        name: "Starter",
+        tier: yearly ? "starter-yearly" : "starter",
+        price: yearly ? "$149/yr" : "$14.99",
+        perMonth: yearly ? "$12.42/mo" : undefined,
+        oldPrice: yearly ? undefined : "$49.99",
+        tagline: yearly ? "Billed annually" : "Monthly Access",
+        cta: "Buy now",
+      },
+      {
+        name: "Premium",
+        tier: yearly ? "premium-yearly" : "premium",
+        price: yearly ? "$249/yr" : "$24.99",
+        perMonth: yearly ? "$20.75/mo" : undefined,
+        oldPrice: yearly ? undefined : "$74.99",
+        tagline: yearly ? "Billed annually" : "Monthly Access",
+        cta: "Buy now",
+        popular: true,
+      },
+      {
+        name: "Pro",
+        tier: yearly ? "pro-yearly" : "pro",
+        price: yearly ? "$499/yr" : "$49.99",
+        perMonth: yearly ? "$41.58/mo" : undefined,
+        oldPrice: yearly ? undefined : "$119.99",
+        tagline: yearly ? "Billed annually" : "Monthly Access",
+        cta: "Buy now",
+      },
     ];
 
     const teamPlans: Plan[] = [
-      { name: "Team Starter", tier: "team-starter", price: "$19.99", oldPrice: "$54.99", tagline: "Monthly Team License", cta: "Buy now" },
-      { name: "Team Premium", tier: "team-premium", price: "$34.99", oldPrice: "$89.99", tagline: "Monthly Team License", cta: "Buy now", popular: true },
-      { name: "Team Pro", tier: "team-pro", price: "$69.99", oldPrice: "$139.99", tagline: "Monthly Team License", cta: "Buy now" },
+      {
+        name: "Team Starter",
+        tier: yearly ? "team-starter-yearly" : "team-starter",
+        price: yearly ? "$199/yr" : "$19.99",
+        perMonth: yearly ? "$16.58/mo" : undefined,
+        oldPrice: yearly ? undefined : "$54.99",
+        tagline: yearly ? "Billed annually" : "Monthly Team License",
+        cta: "Buy now",
+      },
+      {
+        name: "Team Premium",
+        tier: yearly ? "team-premium-yearly" : "team-premium",
+        price: yearly ? "$349/yr" : "$34.99",
+        perMonth: yearly ? "$29.08/mo" : undefined,
+        oldPrice: yearly ? undefined : "$89.99",
+        tagline: yearly ? "Billed annually" : "Monthly Team License",
+        cta: "Buy now",
+        popular: true,
+      },
+      {
+        name: "Team Pro",
+        tier: yearly ? "team-pro-yearly" : "team-pro",
+        price: yearly ? "$699/yr" : "$69.99",
+        perMonth: yearly ? "$58.25/mo" : undefined,
+        oldPrice: yearly ? undefined : "$139.99",
+        tagline: yearly ? "Billed annually" : "Monthly Team License",
+        cta: "Buy now",
+      },
     ];
 
     const personalFeatures: FeatureRow[] = [
@@ -118,7 +171,7 @@ export default function PricingTabs() {
     return mode === "personal"
       ? { plans: personalPlans, features: personalFeatures }
       : { plans: teamPlans, features: teamFeatures };
-  }, [mode]);
+  }, [mode, billing]);
 
   return (
     <div>
@@ -126,9 +179,59 @@ export default function PricingTabs() {
         <h1>Choose the plan that&apos;s right for you</h1>
         <p className="pricing-sub">Feel secure in your purchase with a 30 day money-back guarantee.</p>
 
+        {/* Personal / Team toggle */}
         <div className="tabbar" role="tablist">
           <button className={`tab ${mode === "personal" ? "active" : ""}`} onClick={() => setMode("personal")} role="tab">Personal</button>
           <button className={`tab ${mode === "team" ? "active" : ""}`} onClick={() => setMode("team")} role="tab">Team</button>
+        </div>
+
+        {/* Monthly / Yearly toggle */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "20px" }}>
+          <span style={{
+            fontSize: "14px",
+            fontWeight: billing === "monthly" ? 600 : 400,
+            color: billing === "monthly" ? "var(--text)" : "var(--muted)",
+            transition: "color 0.2s",
+          }}>
+            Monthly
+          </span>
+
+          <div
+            onClick={() => setBilling(b => b === "monthly" ? "yearly" : "monthly")}
+            style={{
+              width: "48px", height: "26px", borderRadius: "13px",
+              background: billing === "yearly" ? "var(--accent)" : "rgba(255,255,255,0.12)",
+              cursor: "pointer", position: "relative", transition: "background 0.25s",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{
+              position: "absolute", top: "3px",
+              left: billing === "yearly" ? "25px" : "3px",
+              width: "20px", height: "20px", borderRadius: "50%",
+              background: "#fff", transition: "left 0.25s",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+            }} />
+          </div>
+
+          <span style={{
+            fontSize: "14px",
+            fontWeight: billing === "yearly" ? 600 : 400,
+            color: billing === "yearly" ? "var(--text)" : "var(--muted)",
+            transition: "color 0.2s",
+            display: "flex", alignItems: "center", gap: "8px",
+          }}>
+            Yearly
+            <span style={{
+              fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em",
+              padding: "2px 8px", borderRadius: "999px",
+              background: "rgba(14,165,233,0.15)",
+              border: "1px solid rgba(14,165,233,0.3)",
+              color: "var(--accent)",
+            }}>
+              2 MONTHS FREE
+            </span>
+          </span>
         </div>
       </div>
 
@@ -139,17 +242,10 @@ export default function PricingTabs() {
             <div className="pt-cell pt-plan" key={p.name} style={{ position: "relative" }}>
               {p.popular && (
                 <span style={{
-                  position: "absolute",
-                  top: -2,
-                  right: -2,
-                  fontSize: 10,
-                  fontWeight: 800,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  padding: "3px 10px",
-                  borderRadius: 999,
-                  background: "var(--accent)",
-                  color: "#000",
+                  position: "absolute", top: -2, right: -2,
+                  fontSize: 10, fontWeight: 800, letterSpacing: "0.06em",
+                  textTransform: "uppercase", padding: "3px 10px",
+                  borderRadius: 999, background: "var(--accent)", color: "#000",
                 }}>
                   Most Popular
                 </span>
@@ -159,6 +255,11 @@ export default function PricingTabs() {
                 <span className="pt-price-now">{p.price}</span>
                 {p.oldPrice && <span className="pt-price-old">{p.oldPrice}</span>}
               </div>
+              {p.perMonth && (
+                <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "10px", marginTop: "-4px" }}>
+                  {p.perMonth}
+                </div>
+              )}
               <button
                 className="pt-cta"
                 onClick={() => handleBuy(p.tier)}
