@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import ThemeToggle from "./ThemeToggle";
+
+export const dynamic = "force-dynamic";
 
 export default async function Navbar() {
   const session = await getServerSession(authOptions);
@@ -12,11 +13,8 @@ export default async function Navbar() {
       <div className="container">
         <div className="nav-inner">
           <Link className="brand" href="/">
-            <div className="brand-logo">
-              <span className="brand-logo-top">Aircraft Alerts</span>
-              <span className="brand-logo-main">FinalPing</span>
-              <span className="brand-logo-line" />
-            </div>
+            <span className="dot" />
+            <span>FinalPing</span>
           </Link>
 
           <nav className="nav-links">
@@ -24,7 +22,6 @@ export default async function Navbar() {
             <Link className="nav-link" href="/pricing">Purchase</Link>
             <Link className="nav-link" href="/download">Download</Link>
             <Link className="nav-link" href="/contact">Contact Us</Link>
-            <ThemeToggle />
             {session ? (
               <Link className="nav-link btn btn-outline" href="/dashboard">Dashboard</Link>
             ) : (
