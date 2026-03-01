@@ -102,8 +102,7 @@ export default function PricingTabs() {
       { label: "Tracked aircraft", values: ["3", "10", "Unlimited"] },
       { label: "Saved coordinates", values: ["1", "5", "Unlimited"] },
       { label: "Distance alerts", values: [true, true, true] },
-      { label: "Notification channels", values: ["Email", "Email + SMS", "Email + SMS + Push"] },
-      { label: "Advanced filters", values: [false, true, true] },
+      { label: "Notification channels", values: ["1 channel", "3 channels", "Unlimited"] },
       { label: "Priority support", values: [false, false, true] },
     ];
 
