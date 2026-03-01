@@ -49,7 +49,7 @@ const faqs = [
   },
   {
     q: "What's the difference between Personal and Team plans?",
-    a: "Personal plans are for individual users. Team plans include shared aircraft lists, shared coordinates, and (on higher tiers) role-based permissions so your whole crew can stay in sync.",
+    a: "Personal plans are for individual users tracking their own aircraft. Team plans are built for businesses like FBOs, fuel services, and flight schools — multiple team members can log in and monitor a shared fleet, with much higher limits on tracked aircraft and notification channels.",
   },
 ];
 
@@ -160,12 +160,13 @@ export default function PricingTabs() {
     ];
 
     const teamFeatures: FeatureRow[] = [
-      { label: "Seats", values: ["5", "15", "Unlimited"] },
-      { label: "Shared aircraft lists", values: [true, true, true] },
-      { label: "Shared coordinates", values: [true, true, true] },
-      { label: "Roles & permissions", values: [false, true, true] },
-      { label: "Org-wide alert rules", values: [false, true, true] },
-      { label: "Priority support", values: [true, true, true] },
+      { label: "Operator seats", values: ["3", "10", "Unlimited"] },
+      { label: "Tracked aircraft", values: ["25", "75", "Unlimited"] },
+      { label: "Saved coordinates", values: ["5", "20", "Unlimited"] },
+      { label: "Notification channels", values: ["3 channels", "10 channels", "Unlimited"] },
+      { label: "Shared aircraft list", values: [true, true, true] },
+      { label: "Distance alerts", values: [true, true, true] },
+      { label: "Priority support", values: [false, false, true] },
     ];
 
     return mode === "personal"
