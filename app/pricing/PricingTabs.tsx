@@ -222,14 +222,6 @@ export default function PricingTabs() {
             display: "flex", alignItems: "center", gap: "8px",
           }}>
             Yearly
-            <span style={{
-              fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em",
-              padding: "2px 8px", borderRadius: "999px",
-              background: "rgba(14,165,233,0.15)",
-              border: "1px solid rgba(14,165,233,0.3)",
-              color: "var(--accent)",
-            }}>
-              2 MONTHS FREE
             </span>
           </span>
         </div>
