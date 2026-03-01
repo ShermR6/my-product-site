@@ -222,7 +222,6 @@ export default function PricingTabs() {
             display: "flex", alignItems: "center", gap: "8px",
           }}>
             Yearly
-            </span>
           </span>
         </div>
       </div>
