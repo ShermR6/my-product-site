@@ -84,7 +84,7 @@ export default function DownloadPage() {
           <div style={{ display: "flex", gap: 32, flexWrap: "wrap", fontSize: 13 }}>
             <div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 2 }}>Version</div>
-              <div style={{ fontWeight: 700 }}>1.0.0</div>
+              <div style={{ fontWeight: 700 }}>1.0.3</div>
             </div>
             <div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 2 }}>Platform</div>
