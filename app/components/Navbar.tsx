@@ -25,7 +25,10 @@ export default function Navbar() {
             <Link className="nav-link" href="/download">Download</Link>
             <Link className="nav-link" href="/contact">Contact Us</Link>
             {session ? (
-              <Link className="nav-link btn btn-outline" href="/dashboard">Dashboard</Link>
+              <>
+                <Link className="nav-link" href="/alerts">Alerts</Link>
+                <Link className="nav-link btn btn-outline" href="/dashboard">Dashboard</Link>
+              </>
             ) : (
               <Link className="nav-link btn btn-outline" href="/login">Log in</Link>
             )}
