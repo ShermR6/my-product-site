@@ -24,7 +24,7 @@
     ],
     "directories": {
       "buildResources": "assets",
-      "output": "C:\\FinalPing-Builds"
+      "output": "../../FinalPing-Builds"
     },
     "extraMetadata": {
       "main": "build/electron.js"
