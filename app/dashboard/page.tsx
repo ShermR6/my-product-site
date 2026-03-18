@@ -2,7 +2,6 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 type License = {
   id: string;
@@ -102,17 +101,22 @@ export default function DashboardPage() {
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>Signed in as {email}</p>
       </div>
 
-      {/* Quick links */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
-        <Link href="/alerts" className="btn btn-outline" style={{ fontSize: 13 }}>
-          📋 Alert History
-        </Link>
-        <Link href="/download" className="btn btn-outline" style={{ fontSize: 13 }}>
-          ⬇️ Download App
-        </Link>
-        <Link href="/pricing" className="btn btn-outline" style={{ fontSize: 13 }}>
-          ➕ Purchase License
-        </Link>
+      {/* Manage Subscription */}
+      <div className="panel" style={{ padding: 22, marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <p style={{ margin: 0, fontSize: 14, color: "var(--muted)" }}>
+          Manage your subscription, update payment methods, or view invoices.
+        </p>
+        {portalError && (
+          <p style={{ fontSize: 13, color: "#ef4444", margin: 0, width: "100%" }}>{portalError}</p>
+        )}
+        <button
+          onClick={handleManageBilling}
+          disabled={portalLoading}
+          className="btn btn-outline"
+          style={{ fontSize: 13, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer", flexShrink: 0 }}
+        >
+          {portalLoading ? "Opening..." : "Manage Subscription →"}
+        </button>
       </div>
 
       {/* Licenses */}
@@ -170,25 +174,6 @@ export default function DashboardPage() {
           })}
         </div>
       )}
-
-      {/* Billing */}
-      <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Billing</h2>
-      <div className="panel" style={{ padding: 22, marginBottom: 28 }}>
-        <p style={{ margin: "0 0 16px 0", fontSize: 14, color: "var(--muted)" }}>
-          Manage your subscription, update payment methods, or view invoices via the Stripe billing portal.
-        </p>
-        {portalError && (
-          <p style={{ fontSize: 13, color: "#ef4444", marginBottom: 12 }}>{portalError}</p>
-        )}
-        <button
-          onClick={handleManageBilling}
-          disabled={portalLoading}
-          className="btn btn-outline"
-          style={{ fontSize: 13, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer" }}
-        >
-          {portalLoading ? "Opening..." : "Manage Subscription →"}
-        </button>
-      </div>
 
       {/* Account actions */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
