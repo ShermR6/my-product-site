@@ -183,7 +183,17 @@ export default function PricingTabs() {
         {/* Personal / Team toggle */}
         <div className="tabbar" role="tablist">
           <button className={`tab ${mode === "personal" ? "active" : ""}`} onClick={() => setMode("personal")} role="tab">Personal</button>
-          <button className={`tab ${mode === "team" ? "active" : ""}`} onClick={() => setMode("team")} role="tab">Team</button>
+          <button className={`tab ${mode === "team" ? "active" : ""}`} onClick={() => setMode("team")} role="tab" style={{ position: "relative" }}>
+            Team
+            <span style={{
+              marginLeft: 8, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
+              textTransform: "uppercase", padding: "2px 7px", borderRadius: 999,
+              background: "rgba(255,165,0,0.2)", color: "#f59e0b",
+              border: "1px solid rgba(245,158,11,0.3)",
+            }}>
+              Coming Soon
+            </span>
+          </button>
         </div>
 
         {/* Monthly / Yearly toggle */}
@@ -254,10 +264,11 @@ export default function PricingTabs() {
               )}
               <button
                 className="pt-cta"
-                onClick={() => handleBuy(p.tier)}
-                disabled={loadingTier === p.tier}
+                onClick={() => mode === "personal" && handleBuy(p.tier)}
+                disabled={loadingTier === p.tier || mode === "team"}
+                style={mode === "team" ? { opacity: 0.5, cursor: "not-allowed" } : {}}
               >
-                {loadingTier === p.tier ? "Loading..." : p.cta}
+                {mode === "team" ? "Coming Soon" : loadingTier === p.tier ? "Loading..." : p.cta}
               </button>
               <div className="pt-tagline">{p.tagline}</div>
             </div>
