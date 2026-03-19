@@ -14,6 +14,12 @@ const PRICE_MAP: Record<string, string> = {
   "team-starter": process.env.STRIPE_PRICE_TEAM_STARTER!,
   "team-premium": process.env.STRIPE_PRICE_TEAM_PREMIUM!,
   "team-pro": process.env.STRIPE_PRICE_TEAM_PRO!,
+  "starter-yearly": process.env.STRIPE_PRICE_STARTER_YEARLY!,
+  "premium-yearly": process.env.STRIPE_PRICE_PREMIUM_YEARLY!,
+  "pro-yearly": process.env.STRIPE_PRICE_PRO_YEARLY!,
+  "team-starter-yearly": process.env.STRIPE_PRICE_TEAM_STARTER_YEARLY!,
+  "team-premium-yearly": process.env.STRIPE_PRICE_TEAM_PREMIUM_YEARLY!,
+  "team-pro-yearly": process.env.STRIPE_PRICE_TEAM_PRO_YEARLY!,
 };
 
 export async function POST(req: NextRequest) {
