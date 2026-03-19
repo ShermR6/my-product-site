@@ -138,7 +138,6 @@ export default function PricingTabs() {
         oldPrice: yearly ? undefined : "$89.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
         cta: "Buy now",
-        popular: true,
       },
       {
         name: "Team Pro",
