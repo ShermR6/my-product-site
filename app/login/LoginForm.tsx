@@ -11,7 +11,6 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -186,28 +185,6 @@ export default function LoginForm() {
             <span
               onClick={() => setRememberMe(r => !r)}
               style={{ fontSize: "13px", color: "#9ca3af", cursor: "pointer", userSelect: "none" as const }}
-            >
-              Remember me for 30 days
-            </span>
-          </div>
-        )}
-
-        {tab === "signin" && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px", marginTop: "-8px" }}>
-            <div
-              onClick={() => setRememberMe(r => !r)}
-              style={{
-                width: 18, height: 18, borderRadius: 5, border: "1px solid #374151",
-                background: rememberMe ? "#0ea5e9" : "#111827",
-                cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background 0.15s",
-              }}
-            >
-              {rememberMe && <span style={{ color: "#fff", fontSize: 12, fontWeight: 800, lineHeight: 1 }}>✓</span>}
-            </div>
-            <span
-              onClick={() => setRememberMe(r => !r)}
-              style={{ fontSize: 13, color: "#9ca3af", cursor: "pointer", userSelect: "none" }}
             >
               Remember me for 30 days
             </span>
