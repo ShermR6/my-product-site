@@ -19,26 +19,18 @@ export default function DownloadPage() {
           </a>
         </div>
 
-        {/* macOS — coming soon */}
-        <div className="panel-white" style={{ opacity: 0.55 }}>
+        {/* macOS — available */}
+        <div className="panel-white">
           <div style={{ fontSize: 28, marginBottom: 8 }}>🍎</div>
           <h2 style={{ marginBottom: 4 }}>macOS</h2>
           <p style={{ marginTop: 0, color: "#333", fontSize: 13 }}>.dmg installer</p>
-          <div
-            style={{
-              width: "100%",
-              textAlign: "center",
-              marginTop: 12,
-              padding: "10px 14px",
-              borderRadius: 10,
-              border: "1px solid rgba(0,0,0,0.12)",
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#999",
-            }}
+          <a
+            className="btn btn-solid"
+            style={{ width: "100%", display: "block", textAlign: "center", marginTop: 12 }}
+            href={process.env.NEXT_PUBLIC_DOWNLOAD_URL_MAC ?? "#"}
           >
-            Coming Soon
-          </div>
+            Download for macOS
+          </a>
         </div>
 
         {/* Linux — coming soon */}
@@ -88,7 +80,7 @@ export default function DownloadPage() {
             </div>
             <div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 2 }}>Platform</div>
-              <div style={{ fontWeight: 700 }}>Windows 10/11</div>
+              <div style={{ fontWeight: 700 }}>Windows 10/11 · macOS 12+</div>
             </div>
             <div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 2 }}>Size</div>
@@ -107,12 +99,12 @@ export default function DownloadPage() {
               {
                 num: "1",
                 title: "Download the installer",
-                desc: "Click the download button above to get the .exe installer file.",
+                desc: "Click the download button above for your platform to get the installer file.",
               },
               {
                 num: "2",
                 title: "Run the installer",
-                desc: "Double-click the downloaded file and follow the setup wizard. Windows may show a SmartScreen warning — click \"More info\" then \"Run anyway\" to proceed.",
+                desc: "Windows: Double-click the .exe and follow the setup wizard. You may need to click \"More info\" then \"Run anyway\" for SmartScreen. macOS: Open the .dmg and drag FinalPing to your Applications folder.",
               },
               {
                 num: "3",
@@ -158,7 +150,7 @@ export default function DownloadPage() {
           <h2 style={{ fontSize: 16, marginBottom: 16 }}>System Requirements</h2>
           <div className="grid-2" style={{ gap: 12 }}>
             {[
-              { label: "Operating System", value: "Windows 10 or later (64-bit)" },
+              { label: "Operating System", value: "Windows 10+ (64-bit) or macOS 12+" },
               { label: "RAM", value: "4 GB minimum" },
               { label: "Disk Space", value: "~200 MB" },
               { label: "Internet", value: "Required for live tracking and alerts" },
