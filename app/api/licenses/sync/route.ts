@@ -10,16 +10,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { license_key, activated_at, expires_at } = await req.json();
+  const { license_key, activated_at, expires_at, tier, email } = await req.json();
 
   if (!license_key) {
     return NextResponse.json({ error: "Missing license_key" }, { status: 400 });
   }
 
   try {
-    await prisma.license.update({
+    await prisma.license.upsert({
       where: { licenseKey: license_key },
-      data: {
+      update: {
+        status: "active",
+        activatedAt: new Date(activated_at),
+        expiresAt: new Date(expires_at),
+      },
+      create: {
+        licenseKey: license_key,
+        tier: tier || "starter",
+        purchaseEmail: email || "",
         status: "active",
         activatedAt: new Date(activated_at),
         expiresAt: new Date(expires_at),
