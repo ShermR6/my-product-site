@@ -39,11 +39,34 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?                            // hashed password for credentials login
+  password      String?
   createdAt     DateTime  @default(now())
   accounts      Account[]
   sessions      Session[]
   licenses      License[]
+
+  // 2FA - email
+  twoFactorEmailEnabled   Boolean   @default(false)
+
+  // 2FA - SMS
+  twoFactorSmsEnabled     Boolean   @default(false)
+  twoFactorPhone          String?
+
+  // 2FA - TOTP (authenticator app)
+  twoFactorTotpEnabled    Boolean   @default(false)
+  twoFactorTotpSecret     String?
+
+  // Pending 2FA setup verification
+  pendingTwoFactorCode    String?
+  pendingTwoFactorExpiry  DateTime?
+  pendingTwoFactorMethod  String?
+  pendingTwoFactorPhone   String?
+
+  // Pending password change
+  pendingPasswordHash     String?
+  pendingPasswordCode     String?
+  pendingPasswordExpiry   DateTime?
+  pendingPasswordMethod   String?
 }
 
 model VerificationToken {
@@ -56,14 +79,14 @@ model VerificationToken {
 
 model License {
   id              String    @id @default(cuid())
-  purchaseEmail   String                        // email from Stripe checkout
-  userId          String?                       // linked when user logs into website (optional)
+  purchaseEmail   String
+  userId          String?
   user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   licenseKey      String    @unique
-  tier            String                        // "starter" | "premium" | "pro" etc.
-  status          String    @default("inactive") // "inactive" | "active" | "expired"
+  tier            String
+  status          String    @default("inactive")
   stripeSessionId String?
-  createdAt       DateTime  @default(now())      // when purchased
-  activatedAt     DateTime?                      // when activated in desktop app (timer starts)
-  expiresAt       DateTime?                      // activatedAt + 30 days (set on activation)
+  createdAt       DateTime  @default(now())
+  activatedAt     DateTime?
+  expiresAt       DateTime?
 }
