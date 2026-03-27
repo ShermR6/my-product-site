@@ -36,7 +36,11 @@ function getLicenseStatus(license: License) {
 }
 function formatAlertType(type: string) { return type === "landing" ? "🛬 Landing" : `📍 ${type} out`; }
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short", day: "numeric", year: "numeric",
+    hour: "numeric", minute: "2-digit",
+    timeZone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined,
+  });
 }
 function exportToTxt(logs: NotificationLog[]) {
   const header = `FinalPing Alert History Export\nExported: ${new Date().toLocaleString()}\nTotal Alerts: ${logs.length}\n${"=".repeat(80)}\n\n`;
@@ -71,13 +75,25 @@ function CodeInput({ value, onChange, onSubmit }: { value: string; onChange: (v:
 }
 
 function AccountTab({ email, session }: { email: string; session: any }) {
+  const [memberSince, setMemberSince] = useState<string>("—");
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then(r => r.json())
+      .then(data => {
+        if (data?.createdAt) {
+          setMemberSince(new Date(data.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
+        }
+      })
+      .catch(() => {});
+  }, []);
   return (
     <div>
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Account Information</h2><p style={styles.tabSub}>Your profile and account details</p></div>
       <div style={styles.card}>
         <div style={styles.infoRow}><span style={styles.infoLabel}>Email Address</span><span style={styles.infoValue}>{email}</span></div>
         <div style={styles.infoRowLast}><span style={styles.infoLabel}>Member Since</span>
-          <span style={styles.infoValue}>{session?.user?.createdAt ? new Date(session.user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—"}</span>
+          <span style={styles.infoValue}>{memberSince}</span>
         </div>
       </div>
       <div style={{ marginTop: 16 }}>
