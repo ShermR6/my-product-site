@@ -2,6 +2,7 @@
 // app/dashboard/page.tsx
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState, useCallback } from "react";
 
@@ -530,7 +531,10 @@ const NAV_ITEMS = [
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState("account");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "account";
+  const setActiveTab = (tab: string) => router.push(`/dashboard?tab=${tab}`, { scroll: false });
   const [licenses, setLicenses] = useState<License[]>([]);
   const [licensesLoading, setLicensesLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
