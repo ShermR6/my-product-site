@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 type NotificationLog = {
   id: string;
   aircraft_tail: string;
@@ -33,12 +35,25 @@ function formatAlertType(type: string) {
   return `📍 ${type} out`;
 }
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
-    month: "short", day: "numeric", year: "numeric",
-    hour: "numeric", minute: "2-digit",
-  });
+function formatDate(iso: string, timeZone?: string) {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true,
+      ...(timeZone ? { timeZone } : {}),
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+function LocalDate({ iso }: { iso: string }) {
+  const [formatted, setFormatted] = useState<string>("—");
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setFormatted(formatDate(iso, tz));
+  }, [iso]);
+  return <>{formatted}</>;
 }
 
 function exportToTxt(logs: NotificationLog[]) {
@@ -157,7 +172,7 @@ export default function AlertsTable({ logs }: { logs: NotificationLog[] }) {
               </span>
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)" }}>
-              {formatDate(log.sent_at)}
+              <LocalDate iso={log.sent_at} />
             </div>
           </div>
         ))}
