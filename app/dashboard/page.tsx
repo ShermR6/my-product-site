@@ -60,7 +60,9 @@ function LocalDate({ iso }: { iso: string }) {
   useEffect(() => {
     if (isClient) {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      setFormatted(formatDate(iso, tz));
+      // Ensure timestamp is treated as UTC by appending Z if missing
+      const utcIso = iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z";
+      setFormatted(formatDate(utcIso, tz));
     }
   }, [isClient, iso]);
   return <>{formatted}</>;

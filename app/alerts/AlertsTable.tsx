@@ -51,7 +51,8 @@ function LocalDate({ iso }: { iso: string }) {
   const [formatted, setFormatted] = useState<string>("—");
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setFormatted(formatDate(iso, tz));
+    const utcIso = iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z";
+    setFormatted(formatDate(utcIso, tz));
   }, [iso]);
   return <>{formatted}</>;
 }
