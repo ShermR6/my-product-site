@@ -36,11 +36,27 @@ function getLicenseStatus(license: License) {
 }
 function formatAlertType(type: string) { return type === "landing" ? "🛬 Landing" : `📍 ${type} out`; }
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short", day: "numeric", year: "numeric",
-    hour: "numeric", minute: "2-digit",
-    timeZone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined,
-  });
+  // Always format in the user's local timezone on the client
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true,
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+function useIsClient() {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => { setIsClient(true); }, []);
+  return isClient;
+}
+
+function LocalDate({ iso }: { iso: string }) {
+  const isClient = useIsClient();
+  if (!isClient) return <span style={{ color: "var(--muted)" }}>—</span>;
+  return <>{formatDate(iso)}</>;
 }
 function exportToTxt(logs: NotificationLog[]) {
   const header = `FinalPing Alert History Export\nExported: ${new Date().toLocaleString()}\nTotal Alerts: ${logs.length}\n${"=".repeat(80)}\n\n`;
@@ -171,7 +187,7 @@ function AlertsTab({ email }: { email: string }) {
                 <div style={{ fontSize: 12, fontWeight: 600 }}>{formatAlertType(log.alert_type)}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span>{CHANNEL_ICONS[log.integration_type] ?? "🔔"}</span><span style={{ fontSize: 11, fontWeight: 700, color: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", textTransform: "capitalize" as const }}>{log.integration_type}</span></div>
                 <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#23c76b" : "#ef4444", border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
-                <div style={{ fontSize: 12, color: "var(--muted)" }}>{formatDate(log.sent_at)}</div>
+                <div style={{ fontSize: 12, color: "var(--muted)" }}><LocalDate iso={log.sent_at} /></div>
               </div>
             ))}
           </div>}
