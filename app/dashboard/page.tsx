@@ -36,12 +36,12 @@ function getLicenseStatus(license: License) {
   return { label: "Active", color: "#23c76b" };
 }
 function formatAlertType(type: string) { return type === "landing" ? "🛬 Landing" : `📍 ${type} out`; }
-function formatDate(iso: string) {
-  // Always format in the user's local timezone on the client
+function formatDate(iso: string, timeZone?: string) {
   try {
     return new Intl.DateTimeFormat("en-US", {
       month: "short", day: "numeric", year: "numeric",
       hour: "numeric", minute: "2-digit", hour12: true,
+      ...(timeZone ? { timeZone } : {}),
     }).format(new Date(iso));
   } catch {
     return iso;
@@ -56,8 +56,14 @@ function useIsClient() {
 
 function LocalDate({ iso }: { iso: string }) {
   const isClient = useIsClient();
-  if (!isClient) return <span style={{ color: "var(--muted)" }}>—</span>;
-  return <>{formatDate(iso)}</>;
+  const [formatted, setFormatted] = useState<string>("—");
+  useEffect(() => {
+    if (isClient) {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setFormatted(formatDate(iso, tz));
+    }
+  }, [isClient, iso]);
+  return <>{formatted}</>;
 }
 function exportToTxt(logs: NotificationLog[]) {
   const header = `FinalPing Alert History Export\nExported: ${new Date().toLocaleString()}\nTotal Alerts: ${logs.length}\n${"=".repeat(80)}\n\n`;
