@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 
 type License = {
   id: string; licenseKey: string; tier: string; status: string;
@@ -529,7 +529,7 @@ const NAV_ITEMS = [
   { id: "security", label: "Security", icon: "🔒" },
 ];
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -579,5 +579,13 @@ export default function DashboardPage() {
         {activeTab === "security" && <SecurityTab email={email} />}
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, color: "var(--muted)", fontSize: 14 }}>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
