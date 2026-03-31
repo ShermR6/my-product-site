@@ -25,6 +25,30 @@ const useCases = [
   { icon: "📦", title: "Cargo & Logistics Teams", desc: "Monitor inbound cargo flights to coordinate ground handling and minimize turnaround time." },
 ];
 
+const testimonials = [
+  {
+    text: "I manage a flight school with 12 aircraft. FinalPing has completely changed how we coordinate — I know exactly when planes are approaching before I even see them.",
+    name: "James M.",
+    role: "Flight School Owner · Texas",
+    initials: "JM",
+    color: "#0ea5e9",
+  },
+  {
+    text: "The Discord alerts are instant. I get the 10nm ping, grab my fuel truck, and I'm ready at the ramp when they touch down. Saves me 10 minutes every arrival.",
+    name: "Ryan K.",
+    role: "FBO Line Tech · Colorado",
+    initials: "RK",
+    color: "#22d3a3",
+  },
+  {
+    text: "Set it up in 5 minutes. Now my whole team gets notified on Slack when our company plane is inbound. No more calling the airport to check.",
+    name: "Amanda T.",
+    role: "Operations Manager · Ohio",
+    initials: "AT",
+    color: "#f59e0b",
+  },
+];
+
 const faqs = [
   { q: "What data source does FinalPing use?", a: "FinalPing uses ADS-B (Automatic Dependent Surveillance-Broadcast) data, which is publicly broadcast by aircraft transponders. This is the same data used by services like FlightAware and Flightradar24." },
   { q: "Does it work outside the United States?", a: "Yes — FinalPing works with any coordinates worldwide. As long as ADS-B coverage exists in your area, you can track aircraft near any location on the globe." },
@@ -94,24 +118,12 @@ export default function HomePage() {
           <span className="chip">Support</span>
         </div>
 
-        {/* Scroll indicator */}
         <div style={{
-          position: "absolute",
-          bottom: 32,
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 6,
-          color: "var(--muted)",
-          fontSize: 11,
-          fontWeight: 500,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          animation: "scrollBounce 2s ease-in-out infinite",
-          cursor: "pointer",
-          opacity: 0.6,
+          position: "absolute", bottom: 32, left: "50%", transform: "translateX(-50%)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          color: "var(--muted)", fontSize: 11, fontWeight: 500,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          animation: "scrollBounce 2s ease-in-out infinite", cursor: "pointer", opacity: 0.6,
         }}>
           <span>Scroll to explore</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -140,7 +152,123 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS — VIDEO SECTION */}
+      <section style={{
+        position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72,
+        borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
+      }}>
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr",
+          gap: 64, alignItems: "center", maxWidth: 960, margin: "0 auto",
+        }}>
+          <div>
+            <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>SEE IT IN ACTION</div>
+            <h2 style={{ fontSize: 32, letterSpacing: "-0.02em", marginBottom: 12, lineHeight: 1.2 }}>
+              From wheels down to{" "}
+              <span style={{ color: "#0ea5e9" }}>Discord ping</span>{" "}
+              in seconds
+            </h2>
+            <p style={{ fontSize: 15, color: "var(--muted)", marginBottom: 28, lineHeight: 1.7 }}>
+              FinalPing watches your aircraft 24/7 and fires alerts the moment they enter your airspace — so you&apos;re always ready at the ramp.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {[
+                { n: "1", t: "Add your aircraft", d: "Enter tail numbers and ICAO codes. Takes 30 seconds." },
+                { n: "2", t: "Set your location", d: "Configure your airport or FBO with custom alert distances." },
+                { n: "3", t: "Connect your channels", d: "Discord, Slack, SMS, email. Mix and match." },
+                { n: "4", t: "Get alerted automatically", d: "10nm, 5nm, 2nm, and landing notifications fire in real time." },
+              ].map((s) => (
+                <div key={s.n} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                    background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
+                    color: "#0ea5e9", fontSize: 11, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2,
+                  }}>{s.n}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{s.t}</div>
+                    <div style={{ fontSize: 13, color: "var(--muted)" }}>{s.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Video placeholder */}
+          <div style={{
+            background: "var(--panel)", border: "1px solid var(--border)",
+            borderRadius: 20, overflow: "hidden", aspectRatio: "16/10",
+            position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{
+              position: "absolute", inset: 0,
+              background: "radial-gradient(ellipse at 30% 40%, rgba(14,165,233,0.08) 0%, transparent 60%)",
+            }} />
+            {/* Mini app preview */}
+            <div style={{
+              position: "relative", zIndex: 1, width: "85%",
+              background: "#0b1320", border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 12, overflow: "hidden",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+            }}>
+              <div style={{
+                background: "#0d1117", padding: "10px 14px",
+                display: "flex", alignItems: "center", gap: 8,
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f57" }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#febc2e" }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#28c840" }} />
+                <div style={{ fontSize: 11, color: "#4b5563", marginLeft: 8 }}>FinalPing — Dashboard</div>
+              </div>
+              <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {[
+                  { label: "Aircraft", value: "9", color: "#0ea5e9" },
+                  { label: "Alerts Today", value: "14", color: "#0ea5e9" },
+                  { label: "Status", value: "● Active", color: "#22d3a3" },
+                ].map((c) => (
+                  <div key={c.label} style={{
+                    background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.12)",
+                    borderRadius: 8, padding: 12,
+                  }}>
+                    <div style={{ fontSize: 9, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{c.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: c.color }}>{c.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{
+                  background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)",
+                  borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between",
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>N80896 — 10nm out</span>
+                  <span style={{ fontSize: 10, color: "#0ea5e9" }}>Discord ✓</span>
+                </div>
+                <div style={{
+                  background: "rgba(34,211,163,0.06)", border: "1px solid rgba(34,211,163,0.12)",
+                  borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between",
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>N64423 — Landing</span>
+                  <span style={{ fontSize: 10, color: "#22d3a3" }}>Slack ✓</span>
+                </div>
+              </div>
+            </div>
+            {/* Play button overlay — links to YouTube when ready */}
+            <div style={{
+              position: "absolute", zIndex: 2,
+              width: 56, height: 56, borderRadius: "50%",
+              background: "#0ea5e9", display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 40px rgba(14,165,233,0.4)", cursor: "pointer",
+            }}>
+              <svg width="18" height="18" fill="white" viewBox="0 0 24 24" style={{ marginLeft: 3 }}>
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS — STEPS */}
       <section style={{ position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72 }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>HOW IT WORKS</div>
@@ -178,6 +306,50 @@ export default function HomePage() {
               <div>
                 <h2 style={{ fontSize: 15, marginBottom: 6 }}>{u.title}</h2>
                 <p style={{ fontSize: 13, marginBottom: 0 }}>{u.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section style={{
+        position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72,
+        borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>TESTIMONIALS</div>
+          <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Trusted by pilots & operators</h2>
+          <p style={{ maxWidth: 480, margin: "10px auto 0", fontSize: 15 }}>See what FinalPing users are saying.</p>
+        </div>
+        <div className="grid-3">
+          {testimonials.map((t) => (
+            <div className="panel" key={t.name} style={{ padding: 24, position: "relative" }}>
+              <div style={{
+                position: "absolute", top: 16, right: 20,
+                fontSize: 56, color: "rgba(14,165,233,0.12)",
+                fontFamily: "Georgia, serif", lineHeight: 1, userSelect: "none",
+              }}>&ldquo;</div>
+              {/* Stars */}
+              <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} style={{ color: "#f59e0b", fontSize: 13 }}>★</span>
+                ))}
+              </div>
+              <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginBottom: 20 }}>
+                &ldquo;{t.text}&rdquo;
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                  background: `${t.color}20`, color: t.color,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 700,
+                }}>{t.initials}</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{t.role}</div>
+                </div>
               </div>
             </div>
           ))}

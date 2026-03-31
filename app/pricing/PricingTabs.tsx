@@ -292,6 +292,63 @@ export default function PricingTabs() {
         <span className="refund">Refundable up to 30 days</span>
       </div>
 
+      {/* COMPARISON TABLE */}
+      <section style={{ marginTop: 48 }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>COMPARE</div>
+          <h2 style={{ fontSize: 26 }}>Everything at a glance</h2>
+          <p style={{ maxWidth: 480, margin: "8px auto 0" }}>
+            Full feature breakdown across all {mode === "personal" ? "personal" : "team"} plans.
+          </p>
+        </div>
+
+        <div style={{ maxWidth: 800, margin: "0 auto", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden" }}>
+          {/* Table header */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: mode === "personal" ? "2fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr",
+            background: "rgba(255,255,255,0.03)", borderBottom: "1px solid var(--border)",
+          }}>
+            <div style={{ padding: "20px 20px" }} />
+            {data.plans.map((p) => (
+              <div key={p.name} style={{ padding: "20px 16px", textAlign: "center" }}>
+                {p.popular && (
+                  <div style={{
+                    fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
+                    color: "var(--accent)", marginBottom: 4,
+                  }}>★ Popular</div>
+                )}
+                <div style={{ fontSize: 13, fontWeight: 700, color: p.popular ? "var(--accent)" : "var(--text)" }}>{p.name}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{p.price}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Feature rows */}
+          {data.features.map((row, ri) => (
+            <div key={row.label} style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr 1fr",
+              borderBottom: ri < data.features.length - 1 ? "1px solid var(--border)" : "none",
+              background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
+              alignItems: "center",
+            }}>
+              <div style={{ padding: "14px 20px", fontSize: 13, color: "var(--muted)" }}>{row.label}</div>
+              {row.values.map((v, i) => (
+                <div key={i} style={{ padding: "14px 16px", textAlign: "center", fontSize: 13, fontWeight: 600 }}>
+                  {typeof v === "boolean"
+                    ? v
+                      ? <span style={{ color: "#22d3a3", fontSize: 16 }}>✓</span>
+                      : <span style={{ color: "#374151", fontSize: 16 }}>—</span>
+                    : <span style={{ color: "var(--text)" }}>{v}</span>
+                  }
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* FAQ */}
       <section style={{ marginTop: 48 }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
