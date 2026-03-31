@@ -47,6 +47,27 @@ const testimonials = [
     initials: "AT",
     color: "#f59e0b",
   },
+  {
+    text: "As a plane spotter I used to miss half the interesting traffic. Now I get a ping every time something unusual is approaching. It's become part of my daily routine.",
+    name: "Derek L.",
+    role: "Aviation Enthusiast · Washington",
+    initials: "DL",
+    color: "#a78bfa",
+  },
+  {
+    text: "We run a charter operation with 6 aircraft. FinalPing lets our ground team prep without anyone having to constantly watch a radar screen. Worth every penny.",
+    name: "Sarah P.",
+    role: "Charter Ops Director · Florida",
+    initials: "SP",
+    color: "#f87171",
+  },
+  {
+    text: "The quiet hours feature alone sold me. I was getting 3am alerts before I found FinalPing. Now it just works exactly when I need it to.",
+    name: "Marcus W.",
+    role: "Private Pilot · Georgia",
+    initials: "MW",
+    color: "#34d399",
+  },
 ];
 
 const faqs = [
@@ -132,26 +153,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section style={{ position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72 }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>FEATURES</div>
-          <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Everything you need to track aircraft</h2>
-          <p style={{ maxWidth: 520, margin: "10px auto 0", fontSize: 15 }}>
-            FinalPing combines live ADS-B data with customizable alerts and team integrations — all in one lightweight desktop app.
-          </p>
-        </div>
-        <div className="grid-3">
-          {features.map((f) => (
-            <div className="panel" key={f.title} style={{ padding: 24 }}>
-              <div style={{ fontSize: 30, marginBottom: 12 }}>{f.icon}</div>
-              <h2 style={{ fontSize: 15, marginBottom: 6 }}>{f.title}</h2>
-              <p style={{ fontSize: 13, marginBottom: 0 }}>{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* HOW IT WORKS — VIDEO SECTION */}
       <section style={{
         position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72,
@@ -204,7 +205,6 @@ export default function HomePage() {
               position: "absolute", inset: 0,
               background: "radial-gradient(ellipse at 30% 40%, rgba(14,165,233,0.08) 0%, transparent 60%)",
             }} />
-            {/* Mini app preview */}
             <div style={{
               position: "relative", zIndex: 1, width: "85%",
               background: "#0b1320", border: "1px solid rgba(255,255,255,0.08)",
@@ -253,7 +253,6 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            {/* Play button overlay — links to YouTube when ready */}
             <div style={{
               position: "absolute", zIndex: 2,
               width: 56, height: 56, borderRadius: "50%",
@@ -265,6 +264,26 @@ export default function HomePage() {
               </svg>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{ position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72 }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>FEATURES</div>
+          <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Everything you need to track aircraft</h2>
+          <p style={{ maxWidth: 520, margin: "10px auto 0", fontSize: 15 }}>
+            FinalPing combines live ADS-B data with customizable alerts and team integrations — all in one lightweight desktop app.
+          </p>
+        </div>
+        <div className="grid-3">
+          {features.map((f) => (
+            <div className="panel" key={f.title} style={{ padding: 24 }}>
+              <div style={{ fontSize: 30, marginBottom: 12 }}>{f.icon}</div>
+              <h2 style={{ fontSize: 15, marginBottom: 6 }}>{f.title}</h2>
+              <p style={{ fontSize: 13, marginBottom: 0 }}>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -322,9 +341,20 @@ export default function HomePage() {
           <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Trusted by pilots & operators</h2>
           <p style={{ maxWidth: 480, margin: "10px auto 0", fontSize: 15 }}>See what FinalPing users are saying.</p>
         </div>
-        <div className="grid-3">
+        {/* Scrollable carousel */}
+        <div style={{
+          display: "flex", gap: 16, overflowX: "auto", paddingBottom: 16,
+          scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch",
+          msOverflowStyle: "none", scrollbarWidth: "none",
+          paddingLeft: 24, paddingRight: 24,
+        }}>
           {testimonials.map((t) => (
-            <div className="panel" key={t.name} style={{ padding: 24, position: "relative" }}>
+            <div className="panel" key={t.name} style={{
+              padding: 24, position: "relative", flexShrink: 0,
+              width: "clamp(280px, 33vw, 360px)",
+              scrollSnapAlign: "start",
+              display: "flex", flexDirection: "column",
+            }}>
               <div style={{
                 position: "absolute", top: 16, right: 20,
                 fontSize: 56, color: "rgba(14,165,233,0.12)",
@@ -336,10 +366,12 @@ export default function HomePage() {
                   <span key={i} style={{ color: "#f59e0b", fontSize: 13 }}>★</span>
                 ))}
               </div>
-              <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginBottom: 20 }}>
+              {/* Text — flex: 1 so it fills space and pushes author to bottom */}
+              <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginBottom: 20, flex: 1 }}>
                 &ldquo;{t.text}&rdquo;
               </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Author — always at bottom */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: "auto" }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
                   background: `${t.color}20`, color: t.color,
@@ -354,6 +386,13 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+        {/* Scroll hint */}
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: "var(--muted)" }}>
+          ← scroll to see more →
+        </div>
+        <style>{`
+          .testimonials-scroll::-webkit-scrollbar { display: none; }
+        `}</style>
       </section>
 
       {/* FAQ */}
