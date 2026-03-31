@@ -335,19 +335,24 @@ export default function HomePage() {
       <section style={{
         position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72,
         borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
+        overflow: "hidden",
       }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>TESTIMONIALS</div>
           <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Trusted by pilots & operators</h2>
           <p style={{ maxWidth: 480, margin: "10px auto 0", fontSize: 15 }}>See what FinalPing users are saying.</p>
         </div>
-        {/* Scrollable carousel */}
+        {/* Scrollable carousel — breaks out of container */}
         <div style={{
-          display: "flex", gap: 16, overflowX: "auto", paddingBottom: 16,
-          scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch",
-          msOverflowStyle: "none", scrollbarWidth: "none",
-          paddingLeft: 24, paddingRight: 24,
-        }}>
+          display: "flex", gap: 16,
+          overflowX: "auto", overflowY: "visible",
+          paddingBottom: 12, paddingLeft: 24, paddingRight: 24,
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
+          cursor: "grab",
+        }}
+          className="testimonials-carousel"
+        >
           {testimonials.map((t) => (
             <div className="panel" key={t.name} style={{
               padding: 24, position: "relative", flexShrink: 0,
@@ -391,7 +396,9 @@ export default function HomePage() {
           ← scroll to see more →
         </div>
         <style>{`
-          .testimonials-scroll::-webkit-scrollbar { display: none; }
+          .testimonials-carousel::-webkit-scrollbar { display: none; }
+          .testimonials-carousel { -ms-overflow-style: none; scrollbar-width: none; }
+          .testimonials-carousel:active { cursor: grabbing; }
         `}</style>
       </section>
 
