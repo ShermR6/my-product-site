@@ -48,6 +48,21 @@ const testimonials = [
   },
 ];
 
+const ArrowBtn = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
+  <button
+    onClick={onClick}
+    style={{
+      flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
+      background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)",
+      color: "#0ea5e9", fontSize: 20, cursor: "pointer",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      transition: "background 0.15s",
+    }}
+    onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.3)"; }}
+    onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.15)"; }}
+  >{children}</button>
+);
+
 export default function TestimonialsCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -67,44 +82,15 @@ export default function TestimonialsCarousel() {
         <p style={{ maxWidth: 480, margin: "10px auto 0", fontSize: 15 }}>See what FinalPing users are saying.</p>
       </div>
 
-      {/* Carousel wrapper */}
-      <div style={{ position: "relative" }}>
-        {/* Left arrow */}
-        <button
-          onClick={() => scroll("left")}
-          style={{
-            position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
-            zIndex: 10, width: 36, height: 36, borderRadius: "50%",
-            background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)",
-            color: "#0ea5e9", fontSize: 16, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.3)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.15)"; }}
-        >‹</button>
+      {/* Arrow left | cards | Arrow right */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, paddingLeft: 16, paddingRight: 16 }}>
+        <ArrowBtn onClick={() => scroll("left")}>‹</ArrowBtn>
 
-        {/* Right arrow */}
-        <button
-          onClick={() => scroll("right")}
-          style={{
-            position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-            zIndex: 10, width: 36, height: 36, borderRadius: "50%",
-            background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)",
-            color: "#0ea5e9", fontSize: 16, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.3)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.15)"; }}
-        >›</button>
-
-        {/* Cards */}
         <div
           ref={scrollRef}
           style={{
-            display: "flex", gap: 16, overflowX: "auto",
-            paddingBottom: 8, paddingLeft: 56, paddingRight: 56,
+            display: "flex", gap: 16, overflowX: "auto", flex: 1,
+            paddingBottom: 4,
             scrollSnapType: "x mandatory",
             WebkitOverflowScrolling: "touch",
             msOverflowStyle: "none", scrollbarWidth: "none",
@@ -113,7 +99,7 @@ export default function TestimonialsCarousel() {
           {testimonials.map((t) => (
             <div className="panel" key={t.name} style={{
               padding: 24, position: "relative", flexShrink: 0,
-              width: "clamp(280px, 33vw, 360px)",
+              width: "clamp(260px, 30vw, 340px)",
               scrollSnapAlign: "start",
               display: "flex", flexDirection: "column",
             }}>
@@ -146,10 +132,12 @@ export default function TestimonialsCarousel() {
           ))}
         </div>
 
-        <style>{`
-          div[style*="overflow-x: auto"]::-webkit-scrollbar { display: none; }
-        `}</style>
+        <ArrowBtn onClick={() => scroll("right")}>›</ArrowBtn>
       </div>
+
+      <style>{`
+        .testimonials-hide-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
     </section>
   );
 }
