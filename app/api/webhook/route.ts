@@ -124,5 +124,90 @@ export async function POST(req: NextRequest) {
     console.log(`License created for ${customerEmail}: ${licenseKey}`);
   }
 
+  // ── Subscription renewal — extend existing license by 30 days ──────────────
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as Stripe.Invoice;
+
+    // Only handle renewal invoices, not the first payment (handled by checkout.session.completed)
+    if (invoice.billing_reason === "subscription_cycle") {
+      const customerEmail =
+        typeof invoice.customer_email === "string"
+          ? invoice.customer_email
+          : null;
+
+      if (!customerEmail) {
+        console.error("No customer email in renewal invoice");
+        return NextResponse.json({ received: true });
+      }
+
+      const email = customerEmail.toLowerCase().trim();
+
+      // Find the most recently activated license for this email
+      const license = await prisma.license.findFirst({
+        where: { purchaseEmail: email, status: "active" },
+        orderBy: { activatedAt: "desc" },
+      });
+
+      if (!license) {
+        console.error(`No active license found for renewal: ${email}`);
+        return NextResponse.json({ received: true });
+      }
+
+      // Extend expires_at by 30 days from now (or from current expiry if in the future)
+      const now = new Date();
+      const currentExpiry = license.expiresAt ?? now;
+      const baseDate = currentExpiry > now ? currentExpiry : now;
+      const newExpiry = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      await prisma.license.update({
+        where: { id: license.id },
+        data: { expiresAt: newExpiry },
+      });
+
+      // Also update Railway backend
+      try {
+        await fetch(`${BACKEND_URL}/api/licenses/renew`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
+          },
+          body: JSON.stringify({
+            license_key: license.licenseKey,
+            expires_at: newExpiry.toISOString(),
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to update Railway on renewal:", err);
+      }
+
+      // Send renewal confirmation email
+      const tierLabel =
+        license.tier === "pro" ? "Pro" :
+        license.tier === "premium" ? "Premium" : "Starter";
+
+      await resend.emails.send({
+        from: "FinalPing <noreply@finalpingapp.com>",
+        to: email,
+        subject: `FinalPing ${tierLabel} — Subscription Renewed`,
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+            <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+            <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
+            <p style="font-size:15px;margin-bottom:8px;">Your <strong>${tierLabel}</strong> subscription has been renewed successfully.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:8px;">Your access has been extended through <strong>${newExpiry.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">No action needed — FinalPing will continue tracking your aircraft automatically.</p>
+            <a href="https://finalpingapp.com/dashboard" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Dashboard</a>
+            <p style="font-size:12px;color:#555;margin-top:28px;">
+              To cancel your subscription, visit your <a href="https://finalpingapp.com/dashboard?tab=billing" style="color:#f5b400;">billing settings</a>.
+            </p>
+          </div>
+        `,
+      });
+
+      console.log(`License renewed for ${email} until ${newExpiry.toISOString()}`);
+    }
+  }
+
   return NextResponse.json({ received: true });
 }
