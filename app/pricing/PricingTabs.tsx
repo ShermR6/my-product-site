@@ -292,60 +292,58 @@ export default function PricingTabs() {
         <span className="refund">Refundable up to 30 days</span>
       </div>
 
-      {/* COMPARISON TABLE */}
-      <section style={{ marginTop: 48 }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>COMPARE</div>
-          <h2 style={{ fontSize: 26 }}>Everything at a glance</h2>
-          <p style={{ maxWidth: 480, margin: "8px auto 0" }}>
-            Full feature breakdown across all {mode === "personal" ? "personal" : "team"} plans.
+      {/* Ground Station Add-on */}
+      <section style={{ marginTop: 56 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>ADD-ON</div>
+          <h2 style={{ fontSize: 26 }}>FinalPing Ground Station</h2>
+          <p style={{ maxWidth: 520, margin: "8px auto 0" }}>
+            Connect your own ADS-B receiver for real ground data — actual landings, takeoffs, and taxi movements that the cloud tracker can&apos;t detect.
           </p>
         </div>
 
-        <div style={{ maxWidth: 800, margin: "0 auto", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden" }}>
-          {/* Table header */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: mode === "personal" ? "2fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr",
-            background: "rgba(255,255,255,0.03)", borderBottom: "1px solid var(--border)",
-          }}>
-            <div style={{ padding: "20px 20px" }} />
-            {data.plans.map((p) => (
-              <div key={p.name} style={{ padding: "20px 16px", textAlign: "center" }}>
-                {p.popular && (
-                  <div style={{
-                    fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
-                    color: "var(--accent)", marginBottom: 4,
-                  }}>★ Popular</div>
-                )}
-                <div style={{ fontSize: 13, fontWeight: 700, color: p.popular ? "var(--accent)" : "var(--text)" }}>{p.name}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{p.price}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Feature rows */}
-          {data.features.map((row, ri) => (
-            <div key={row.label} style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr 1fr",
-              borderBottom: ri < data.features.length - 1 ? "1px solid var(--border)" : "none",
-              background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
-              alignItems: "center",
-            }}>
-              <div style={{ padding: "14px 20px", fontSize: 13, color: "var(--muted)" }}>{row.label}</div>
-              {row.values.map((v, i) => (
-                <div key={i} style={{ padding: "14px 16px", textAlign: "center", fontSize: 13, fontWeight: 600 }}>
-                  {typeof v === "boolean"
-                    ? v
-                      ? <span style={{ color: "#22d3a3", fontSize: 16 }}>✓</span>
-                      : <span style={{ color: "#374151", fontSize: 16 }}>—</span>
-                    : <span style={{ color: "var(--text)" }}>{v}</span>
-                  }
+        <div style={{
+          maxWidth: 600, margin: "0 auto",
+          background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(14,165,233,0.03))",
+          border: "1px solid rgba(14,165,233,0.25)", borderRadius: 16, padding: "32px 36px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 24, flexWrap: "wrap" as const,
+        }}>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 8, letterSpacing: "0.04em" }}>
+              📡 GROUND STATION
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginBottom: 4 }}>
+              $29.99 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--muted)" }}>one-time</span>
+            </div>
+            <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
+              Requires a compatible ADS-B receiver (RTL-SDR, FlightAware stick, etc.) and an active FinalPing subscription.
+            </div>
+            <div style={{ marginTop: 14, display: "flex", flexDirection: "column" as const, gap: 6 }}>
+              {[
+                "Real touchdown & wheels-up detection",
+                "Ground movement on taxiways & ramps",
+                "2–5 second latency vs 30–60s with cloud",
+                "Works even with no OpenSky coverage",
+                "Fires through your existing notification channels",
+              ].map(f => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--muted)" }}>
+                  <span style={{ color: "#22d3a3", fontWeight: 700 }}>✓</span> {f}
                 </div>
               ))}
             </div>
-          ))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, alignItems: "center", flexShrink: 0 }}>
+            <button
+              className="pt-cta"
+              style={{ width: 160, padding: "13px 0", fontSize: 14 }}
+              onClick={() => handleBuy("ground-station")}
+              disabled={loadingTier === "ground-station"}
+            >
+              {loadingTier === "ground-station" ? "Loading..." : "Buy now →"}
+            </button>
+            <div style={{ fontSize: 11, color: "var(--muted)" }}>One-time purchase · No subscription</div>
+          </div>
         </div>
       </section>
 
