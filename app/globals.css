@@ -446,3 +446,27 @@ textarea { min-height: 110px; resize: vertical; }
   0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.6; }
   50% { transform: translateX(-50%) translateY(6px); opacity: 0.9; }
 }
+
+/* ── Dark select dropdowns ── */
+select {
+  color-scheme: dark;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+select option {
+  background: #1a1a2e;
+  color: #f9fafb;
+}
+
+[data-theme="light"] select {
+  color-scheme: light;
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="light"] select option {
+  background: #ffffff;
+  color: #111111;
+}
