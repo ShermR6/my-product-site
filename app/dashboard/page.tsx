@@ -23,17 +23,56 @@ const tierLabels: Record<string, string> = {
 const CHANNEL_ICONS: Record<string, string> = { discord: "💬", slack: "📱", teams: "👥", email: "✉️", sms: "📲", whatsapp: "🟢" };
 const CHANNEL_COLORS: Record<string, string> = { discord: "#5865f2", slack: "#4a154b", teams: "#6264a7", email: "#0ea5e9", sms: "#10b981", whatsapp: "#25d366" };
 
-function getLicenseStatus(license: License) {
-  if (license.status === "expired") return { label: "Expired", color: "#ef4444" };
-  if (license.status === "inactive" || !license.activatedAt) return { label: "Not Activated", color: "#f59e0b" };
-  if (license.expiresAt) {
-    const now = new Date(); const expires = new Date(license.expiresAt);
-    if (now > expires) return { label: "Expired", color: "#ef4444" };
-    const daysLeft = Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysLeft <= 7) return { label: `Expiring in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`, color: "#f59e0b" };
-    return { label: `Active — ${daysLeft} days left`, color: "#23c76b" };
+function getExpiryLabel(expiresAt: string | null, status: string, activatedAt: string | null): { label: string; color: string } {
+  if (status === "expired") return { label: "Expired", color: "#ef4444" };
+  if (status === "inactive" || !activatedAt) return { label: "Not Activated", color: "#f59e0b" };
+  if (!expiresAt) return { label: "Active", color: "#23c76b" };
+
+  const now = new Date();
+  const expires = new Date(expiresAt);
+  const msLeft = expires.getTime() - now.getTime();
+
+  if (msLeft <= 0) return { label: "Expired", color: "#ef4444" };
+
+  const totalMinutes = Math.floor(msLeft / (1000 * 60));
+  const totalHours = Math.floor(msLeft / (1000 * 60 * 60));
+  const totalDays = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+
+  // Last 60 minutes — count down by minute
+  if (totalMinutes < 60) {
+    const mins = totalMinutes;
+    return { label: `Expires in ${mins} minute${mins !== 1 ? "s" : ""}`, color: "#ef4444" };
   }
-  return { label: "Active", color: "#23c76b" };
+
+  // Last 24 hours — show hours
+  if (totalHours < 24) {
+    return { label: `Expires in ${totalHours} hour${totalHours !== 1 ? "s" : ""}`, color: "#f59e0b" };
+  }
+
+  // More than 24 hours — show days
+  if (totalDays <= 7) return { label: `Expiring in ${totalDays} day${totalDays !== 1 ? "s" : ""}`, color: "#f59e0b" };
+  return { label: `Active — ${totalDays} days left`, color: "#23c76b" };
+}
+
+function useLicenseCountdown(expiresAt: string | null, status: string, activatedAt: string | null) {
+  const [label, setLabel] = useState(() => getExpiryLabel(expiresAt, status, activatedAt));
+
+  useEffect(() => {
+    if (!expiresAt || status === "expired" || status === "inactive") return;
+
+    const update = () => setLabel(getExpiryLabel(expiresAt, status, activatedAt));
+    update();
+
+    const msLeft = new Date(expiresAt).getTime() - Date.now();
+    const totalMinutes = Math.floor(msLeft / (1000 * 60));
+
+    // Tick every minute if under 60 mins, every hour otherwise
+    const interval = totalMinutes < 60 ? 60 * 1000 : 60 * 60 * 1000;
+    const timer = setInterval(update, interval);
+    return () => clearInterval(timer);
+  }, [expiresAt, status, activatedAt]);
+
+  return label;
 }
 function formatAlertType(type: string) { return type === "landing" ? "🛬 Landing" : `📍 ${type} out`; }
 function formatDate(iso: string, timeZone?: string) {
@@ -143,27 +182,31 @@ function LicensesTab({ licenses, loading }: { licenses: License[]; loading: bool
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-          {licenses.map(license => {
-            const s2 = getLicenseStatus(license);
-            return (
-              <div key={license.id} style={styles.card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <span style={styles.tierBadge}>{tierLabels[license.tier] ?? license.tier} LICENSE</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: s2.color }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: s2.color, display: "inline-block" }} />{s2.label}
-                  </span>
-                </div>
-                <div style={{ display: "flex", gap: 28, flexWrap: "wrap" as const }}>
-                  <div><div style={styles.metaLabel}>License Key</div><div style={styles.licenseKey}>{license.licenseKey}</div></div>
-                  <div><div style={styles.metaLabel}>Purchased</div><div style={styles.metaValue}>{new Date(license.createdAt).toLocaleDateString()}</div></div>
-                  {license.activatedAt && <div><div style={styles.metaLabel}>Activated</div><div style={styles.metaValue}>{new Date(license.activatedAt).toLocaleDateString()}</div></div>}
-                  {license.expiresAt && <div><div style={styles.metaLabel}>Expires</div><div style={styles.metaValue}>{new Date(license.expiresAt).toLocaleDateString()}</div></div>}
-                </div>
-              </div>
-            );
-          })}
+          {licenses.map(license => (
+            <LicenseCard key={license.id} license={license} />
+          ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function LicenseCard({ license }: { license: License }) {
+  const { label, color } = useLicenseCountdown(license.expiresAt, license.status, license.activatedAt);
+  return (
+    <div style={styles.card}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <span style={styles.tierBadge}>{tierLabels[license.tier] ?? license.tier} LICENSE</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, display: "inline-block" }} />{label}
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 28, flexWrap: "wrap" as const }}>
+        <div><div style={styles.metaLabel}>License Key</div><div style={styles.licenseKey}>{license.licenseKey}</div></div>
+        <div><div style={styles.metaLabel}>Purchased</div><div style={styles.metaValue}>{new Date(license.createdAt).toLocaleDateString()}</div></div>
+        {license.activatedAt && <div><div style={styles.metaLabel}>Activated</div><div style={styles.metaValue}>{new Date(license.activatedAt).toLocaleDateString()}</div></div>}
+        {license.expiresAt && <div><div style={styles.metaLabel}>Expires</div><div style={styles.metaValue}>{new Date(license.expiresAt).toLocaleDateString()}</div></div>}
+      </div>
     </div>
   );
 }
