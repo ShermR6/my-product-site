@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useRef } from "react";
+import React from "react";
 
 type License = {
   id: string; licenseKey: string; tier: string; status: string;
@@ -211,13 +212,62 @@ function LicenseCard({ license }: { license: License }) {
   );
 }
 
+function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
+  label: string; options: string[]; selected: string[];
+  onChange: (vals: string[]) => void; formatLabel?: (v: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggle = (val: string) => onChange(selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]);
+
+  const btnStyle: React.CSSProperties = {
+    padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+    background: selected.length > 0 ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.06)",
+    border: selected.length > 0 ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
+    color: selected.length > 0 ? "#0ea5e9" : "var(--text)",
+    cursor: "pointer", outline: "none", display: "flex", alignItems: "center", gap: 6,
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative" as const }}>
+      <button style={btnStyle} onClick={() => setOpen(o => !o)}>
+        {label}{selected.length > 0 ? ` (${selected.length})` : ""} ▾
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute" as const, top: "calc(100% + 6px)", left: 0, zIndex: 100,
+          background: "#1a1a2e", border: "1px solid var(--border)", borderRadius: 10,
+          padding: "8px 0", minWidth: 180, boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        }}>
+          {options.map(opt => (
+            <label key={opt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: selected.includes(opt) ? "var(--text)" : "var(--muted)" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+              <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)}
+                style={{ accentColor: "#0ea5e9", width: 14, height: 14, flexShrink: 0 }} />
+              {formatLabel ? formatLabel(opt) : opt}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AlertsTab({ email }: { email: string }) {
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [filterAircraft, setFilterAircraft] = useState("all");
-  const [filterType, setFilterType] = useState("all");
-  const [filterChannel, setFilterChannel] = useState("all");
+  const [selectedAircraft, setSelectedAircraft] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [allAircraft, setAllAircraft] = useState<string[]>([]);
   const [allChannels, setAllChannels] = useState<string[]>([]);
 
@@ -246,42 +296,25 @@ function AlertsTab({ email }: { email: string }) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekStart = new Date(todayStart); weekStart.setDate(todayStart.getDate() - todayStart.getDay());
 
-  // Merge log-derived options with full lists from Railway
-  const aircraftOptions = ["all", ...Array.from(new Set([
-    ...allAircraft,
-    ...logs.map(l => l.aircraft_tail)
-  ])).sort()];
-
-  const typeOptions = ["all", ...Array.from(new Set(logs.map(l => l.alert_type))).sort((a, b) => {
+  const ALL_CHANNEL_TYPES = ["discord", "slack", "teams", "email", "sms", "whatsapp"];
+  const aircraftOptions = Array.from(new Set([...allAircraft, ...logs.map(l => l.aircraft_tail)])).sort();
+  const typeOptions = Array.from(new Set(logs.map(l => l.alert_type))).sort((a, b) => {
     const nmA = parseFloat(a); const nmB = parseFloat(b);
     if (!isNaN(nmA) && !isNaN(nmB)) return nmA - nmB;
-    if (!isNaN(nmA)) return -1;
-    if (!isNaN(nmB)) return 1;
+    if (!isNaN(nmA)) return -1; if (!isNaN(nmB)) return 1;
     return a.localeCompare(b);
-  })];
+  });
+  const channelOptions = Array.from(new Set([...ALL_CHANNEL_TYPES, ...allChannels, ...logs.map(l => l.integration_type)])).sort();
 
-  const ALL_CHANNEL_TYPES = ["discord", "slack", "teams", "email", "sms", "whatsapp"];
-
-  // Merge hardcoded channels with any from logs or integrations
-  const channelOptions = ["all", ...Array.from(new Set([
-    ...ALL_CHANNEL_TYPES,
-    ...allChannels,
-    ...logs.map(l => l.integration_type)
-  ])).sort()];
-
-  // Apply filters
   const filtered = logs.filter(l =>
-    (filterAircraft === "all" || l.aircraft_tail === filterAircraft) &&
-    (filterType === "all" || l.alert_type === filterType) &&
-    (filterChannel === "all" || l.integration_type === filterChannel)
+    (selectedAircraft.length === 0 || selectedAircraft.includes(l.aircraft_tail)) &&
+    (selectedTypes.length === 0 || selectedTypes.includes(l.alert_type)) &&
+    (selectedChannels.length === 0 || selectedChannels.includes(l.integration_type))
   );
 
-  const selectStyle: React.CSSProperties = {
-    padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-    background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
-    color: "var(--text)", cursor: "pointer", outline: "none",
-    colorScheme: "dark",
-  };
+  const hasFilters = selectedAircraft.length > 0 || selectedTypes.length > 0 || selectedChannels.length > 0;
+  const formatType = (t: string) => t === "landing" ? "🛬 Landing" : `📍 ${t} out`;
+  const formatChannel = (c: string) => c.charAt(0).toUpperCase() + c.slice(1);
 
   if (loading) return <div style={styles.loadingText}>Loading alert history...</div>;
 
@@ -311,32 +344,19 @@ function AlertsTab({ email }: { email: string }) {
 
       {/* Filters */}
       {logs.length > 0 && (
-        <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" as const, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" as const, alignItems: "center" }}>
           <span style={{ fontSize: 12, color: "var(--muted)" }}>🔽 Filter:</span>
-          <select style={selectStyle} value={filterAircraft} onChange={e => setFilterAircraft(e.target.value)}>
-            <option value="all">All Aircraft</option>
-            {aircraftOptions.filter(a => a !== "all").map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <select style={selectStyle} value={filterType} onChange={e => setFilterType(e.target.value)}>
-            <option value="all">All Alert Types</option>
-            {typeOptions.filter(t => t !== "all").map(t => <option key={t} value={t}>{formatAlertType(t)}</option>)}
-          </select>
-          <select style={selectStyle} value={filterChannel} onChange={e => setFilterChannel(e.target.value)}>
-            <option value="all">All Channels</option>
-            {channelOptions.filter(c => c !== "all").map(c => (
-              <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
-            ))}
-          </select>
-          {(filterAircraft !== "all" || filterType !== "all" || filterChannel !== "all") && (
-            <button
-              onClick={() => { setFilterAircraft("all"); setFilterType("all"); setFilterChannel("all"); }}
-              style={{ ...selectStyle, color: "#f87171", borderColor: "rgba(248,113,113,0.3)", background: "rgba(248,113,113,0.08)" }}
-            >
+          <CheckboxDropdown label="Aircraft" options={aircraftOptions} selected={selectedAircraft} onChange={setSelectedAircraft} />
+          <CheckboxDropdown label="Alert Types" options={typeOptions} selected={selectedTypes} onChange={setSelectedTypes} formatLabel={formatType} />
+          <CheckboxDropdown label="Channels" options={channelOptions} selected={selectedChannels} onChange={setSelectedChannels} formatLabel={formatChannel} />
+          {hasFilters && (
+            <button onClick={() => { setSelectedAircraft([]); setSelectedTypes([]); setSelectedChannels([]); }}
+              style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", cursor: "pointer" }}>
               ✕ Clear
             </button>
           )}
           <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}>
-            {filtered.length !== logs.length ? `${filtered.length} of ${logs.length} alerts` : `${logs.length} alerts`}
+            {hasFilters ? `${filtered.length} of ${logs.length} alerts` : `${logs.length} alerts`}
           </span>
         </div>
       )}
