@@ -1,4 +1,4 @@
-// app/api/alerts-proxy/route.ts
+// app/api/alerts-proxy/integrations/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -13,7 +13,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/admin/user-logs`, {
+    const res = await fetch(`${BACKEND_URL}/api/admin/user-integrations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

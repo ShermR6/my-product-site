@@ -218,26 +218,52 @@ function AlertsTab({ email }: { email: string }) {
   const [filterAircraft, setFilterAircraft] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [filterChannel, setFilterChannel] = useState("all");
+  const [allAircraft, setAllAircraft] = useState<string[]>([]);
+  const [allChannels, setAllChannels] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch("/api/alerts-proxy").then(r => r.json()).then(d => setLogs(Array.isArray(d) ? d : [])).catch(() => setError(true)).finally(() => setLoading(false));
+    // Fetch logs
+    fetch("/api/alerts-proxy")
+      .then(r => r.json())
+      .then(d => setLogs(Array.isArray(d) ? d : []))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+
+    // Fetch all aircraft from Railway
+    fetch("/api/alerts-proxy/aircraft")
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setAllAircraft(d.map((a: any) => a.tail_number).sort()); })
+      .catch(() => {});
+
+    // Fetch all integrations from Railway
+    fetch("/api/alerts-proxy/integrations")
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setAllChannels(d.map((i: any) => i.type).sort()); })
+      .catch(() => {});
   }, []);
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekStart = new Date(todayStart); weekStart.setDate(todayStart.getDate() - todayStart.getDay());
 
-  // Unique filter options derived from logs
-  const aircraftOptions = ["all", ...Array.from(new Set(logs.map(l => l.aircraft_tail))).sort()];
+  // Merge log-derived options with full lists from Railway
+  const aircraftOptions = ["all", ...Array.from(new Set([
+    ...allAircraft,
+    ...logs.map(l => l.aircraft_tail)
+  ])).sort()];
+
   const typeOptions = ["all", ...Array.from(new Set(logs.map(l => l.alert_type))).sort((a, b) => {
-    // Sort numerically: 2nm, 5nm, 10nm, then landing last
     const nmA = parseFloat(a); const nmB = parseFloat(b);
     if (!isNaN(nmA) && !isNaN(nmB)) return nmA - nmB;
     if (!isNaN(nmA)) return -1;
     if (!isNaN(nmB)) return 1;
     return a.localeCompare(b);
   })];
-  const channelOptions = ["all", ...Array.from(new Set(logs.map(l => l.integration_type))).sort()];
+
+  const channelOptions = ["all", ...Array.from(new Set([
+    ...allChannels,
+    ...logs.map(l => l.integration_type)
+  ])).sort()];
 
   // Apply filters
   const filtered = logs.filter(l =>
