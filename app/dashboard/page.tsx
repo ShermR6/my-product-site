@@ -212,37 +212,118 @@ function LicenseCard({ license }: { license: License }) {
 }
 
 function AlertsTab({ email }: { email: string }) {
-  const [logs, setLogs] = useState<NotificationLog[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(false);
-  useEffect(() => { fetch("/api/alerts-proxy").then(r => r.json()).then(d => setLogs(Array.isArray(d) ? d : [])).catch(() => setError(true)).finally(() => setLoading(false)); }, []);
-  const now = new Date(); const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const [logs, setLogs] = useState<NotificationLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [filterAircraft, setFilterAircraft] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [filterChannel, setFilterChannel] = useState("all");
+
+  useEffect(() => {
+    fetch("/api/alerts-proxy").then(r => r.json()).then(d => setLogs(Array.isArray(d) ? d : [])).catch(() => setError(true)).finally(() => setLoading(false));
+  }, []);
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekStart = new Date(todayStart); weekStart.setDate(todayStart.getDate() - todayStart.getDay());
+
+  // Unique filter options derived from logs
+  const aircraftOptions = ["all", ...Array.from(new Set(logs.map(l => l.aircraft_tail))).sort()];
+  const typeOptions = ["all", ...Array.from(new Set(logs.map(l => l.alert_type))).sort()];
+  const channelOptions = ["all", ...Array.from(new Set(logs.map(l => l.integration_type))).sort()];
+
+  // Apply filters
+  const filtered = logs.filter(l =>
+    (filterAircraft === "all" || l.aircraft_tail === filterAircraft) &&
+    (filterType === "all" || l.alert_type === filterType) &&
+    (filterChannel === "all" || l.integration_type === filterChannel)
+  );
+
+  const selectStyle: React.CSSProperties = {
+    padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+    background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
+    color: "var(--text)", cursor: "pointer", outline: "none",
+  };
+
   if (loading) return <div style={styles.loadingText}>Loading alert history...</div>;
+
   return (
     <div>
       <div style={{ ...styles.tabHeader, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div><h2 style={styles.tabTitle}>Alert History</h2><p style={styles.tabSub}>All notifications sent by the cloud tracker</p></div>
-        {logs.length > 0 && <button onClick={() => exportToTxt(logs)} style={styles.exportBtn} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}>⬇ Export .txt</button>}
+        {logs.length > 0 && (
+          <button onClick={() => exportToTxt(filtered)} style={styles.exportBtn}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}>
+            ⬇ Export .txt
+          </button>
+        )}
       </div>
+
+      {/* Stats — based on full logs not filtered */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-        {[{ label: "Today", value: logs.filter(l => new Date(l.sent_at) >= todayStart).length }, { label: "This Week", value: logs.filter(l => new Date(l.sent_at) >= weekStart).length }, { label: "All Time", value: logs.length }].map(s => (
+        {[
+          { label: "Today", value: logs.filter(l => new Date(l.sent_at) >= todayStart).length },
+          { label: "This Week", value: logs.filter(l => new Date(l.sent_at) >= weekStart).length },
+          { label: "All Time", value: logs.length },
+        ].map(s => (
           <div key={s.label} style={styles.statCard}><div style={styles.statLabel}>{s.label}</div><div style={styles.statValue}>{s.value}</div></div>
         ))}
       </div>
-      {error ? <div style={{ ...styles.card, textAlign: "center" as const, color: "var(--muted)" }}>Could not load alert history.</div>
-        : logs.length === 0 ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ fontSize: 32, marginBottom: 12 }}>📭</div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts yet.</p></div>
-        : <div style={styles.card}>
-            <div style={styles.tableHeader}><div>Aircraft</div><div>Message</div><div>Type</div><div>Channel</div><div>Status</div><div>Time</div></div>
-            {logs.map((log, i) => (
-              <div key={log.id} style={{ ...styles.tableRow, borderBottom: i < logs.length - 1 ? "1px solid var(--border)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 13 }}>{log.aircraft_tail}</div>
-                <div style={{ color: "var(--muted)", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{log.message}</div>
-                <div style={{ fontSize: 12, fontWeight: 600 }}>{formatAlertType(log.alert_type)}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span>{CHANNEL_ICONS[log.integration_type] ?? "🔔"}</span><span style={{ fontSize: 11, fontWeight: 700, color: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", textTransform: "capitalize" as const }}>{log.integration_type}</span></div>
-                <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#23c76b" : "#ef4444", border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
-                <div style={{ fontSize: 12, color: "var(--muted)" }}><LocalDate iso={log.sent_at} /></div>
+
+      {/* Filters */}
+      {logs.length > 0 && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" as const, alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>🔽 Filter:</span>
+          <select style={selectStyle} value={filterAircraft} onChange={e => setFilterAircraft(e.target.value)}>
+            <option value="all">All Aircraft</option>
+            {aircraftOptions.filter(a => a !== "all").map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <select style={selectStyle} value={filterType} onChange={e => setFilterType(e.target.value)}>
+            <option value="all">All Alert Types</option>
+            {typeOptions.filter(t => t !== "all").map(t => <option key={t} value={t}>{formatAlertType(t)}</option>)}
+          </select>
+          <select style={selectStyle} value={filterChannel} onChange={e => setFilterChannel(e.target.value)}>
+            <option value="all">All Channels</option>
+            {channelOptions.filter(c => c !== "all").map(c => <option key={c} value={c} style={{ textTransform: "capitalize" }}>{c}</option>)}
+          </select>
+          {(filterAircraft !== "all" || filterType !== "all" || filterChannel !== "all") && (
+            <button
+              onClick={() => { setFilterAircraft("all"); setFilterType("all"); setFilterChannel("all"); }}
+              style={{ ...selectStyle, color: "#f87171", borderColor: "rgba(248,113,113,0.3)", background: "rgba(248,113,113,0.08)" }}
+            >
+              ✕ Clear
+            </button>
+          )}
+          <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}>
+            {filtered.length !== logs.length ? `${filtered.length} of ${logs.length} alerts` : `${logs.length} alerts`}
+          </span>
+        </div>
+      )}
+
+      {error
+        ? <div style={{ ...styles.card, textAlign: "center" as const, color: "var(--muted)" }}>Could not load alert history.</div>
+        : logs.length === 0
+          ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ fontSize: 32, marginBottom: 12 }}>📭</div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts yet.</p></div>
+          : filtered.length === 0
+            ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts match your filters.</p></div>
+            : <div style={styles.card}>
+                <div style={styles.tableHeader}><div>Aircraft</div><div>Message</div><div>Type</div><div>Channel</div><div>Status</div><div>Time</div></div>
+                {filtered.map((log, i) => (
+                  <div key={log.id} style={{ ...styles.tableRow, borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                    <div style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 13 }}>{log.aircraft_tail}</div>
+                    <div style={{ color: "var(--muted)", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{log.message}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600 }}>{formatAlertType(log.alert_type)}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span>{CHANNEL_ICONS[log.integration_type] ?? "🔔"}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", textTransform: "capitalize" as const }}>{log.integration_type}</span>
+                    </div>
+                    <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#23c76b" : "#ef4444", border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}><LocalDate iso={log.sent_at} /></div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>}
+      }
     </div>
   );
 }
