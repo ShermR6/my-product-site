@@ -229,7 +229,14 @@ function AlertsTab({ email }: { email: string }) {
 
   // Unique filter options derived from logs
   const aircraftOptions = ["all", ...Array.from(new Set(logs.map(l => l.aircraft_tail))).sort()];
-  const typeOptions = ["all", ...Array.from(new Set(logs.map(l => l.alert_type))).sort()];
+  const typeOptions = ["all", ...Array.from(new Set(logs.map(l => l.alert_type))).sort((a, b) => {
+    // Sort numerically: 2nm, 5nm, 10nm, then landing last
+    const nmA = parseFloat(a); const nmB = parseFloat(b);
+    if (!isNaN(nmA) && !isNaN(nmB)) return nmA - nmB;
+    if (!isNaN(nmA)) return -1;
+    if (!isNaN(nmB)) return 1;
+    return a.localeCompare(b);
+  })];
   const channelOptions = ["all", ...Array.from(new Set(logs.map(l => l.integration_type))).sort()];
 
   // Apply filters
@@ -243,6 +250,7 @@ function AlertsTab({ email }: { email: string }) {
     padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
     background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
     color: "var(--text)", cursor: "pointer", outline: "none",
+    colorScheme: "dark",
   };
 
   if (loading) return <div style={styles.loadingText}>Loading alert history...</div>;
