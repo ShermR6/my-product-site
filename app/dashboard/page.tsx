@@ -323,7 +323,9 @@ function AlertsTab({ email }: { email: string }) {
           </select>
           <select style={selectStyle} value={filterChannel} onChange={e => setFilterChannel(e.target.value)}>
             <option value="all">All Channels</option>
-            {channelOptions.filter(c => c !== "all").map(c => <option key={c} value={c} style={{ textTransform: "capitalize" }}>{c}</option>)}
+            {channelOptions.filter(c => c !== "all").map(c => (
+              <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+            ))}
           </select>
           {(filterAircraft !== "all" || filterType !== "all" || filterChannel !== "all") && (
             <button
