@@ -20,11 +20,9 @@ const PRICE_MAP: Record<string, string> = {
   "team-starter-yearly": process.env.STRIPE_PRICE_TEAM_STARTER_YEARLY!,
   "team-premium-yearly": process.env.STRIPE_PRICE_TEAM_PREMIUM_YEARLY!,
   "team-pro-yearly": process.env.STRIPE_PRICE_TEAM_PRO_YEARLY!,
-  // Ground Station — one-time purchase
   "ground-station": process.env.STRIPE_PRICE_GROUND_STATION!,
 };
 
-// One-time payment products (not subscriptions)
 const ONE_TIME_TIERS = new Set(["ground-station"]);
 
 export async function POST(req: NextRequest) {
@@ -50,57 +48,6 @@ export async function POST(req: NextRequest) {
       cancel_url: `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
-      allow_promotion_codes: true,
-    });
-
-    return NextResponse.json({ url: checkoutSession.url });
-  } catch (err) {
-    console.error("Checkout error:", err);
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
-  }
-}
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
-});
-
-const PRICE_MAP: Record<string, string> = {
-  starter: process.env.STRIPE_PRICE_STARTER!,
-  premium: process.env.STRIPE_PRICE_PREMIUM!,
-  pro: process.env.STRIPE_PRICE_PRO!,
-  "team-starter": process.env.STRIPE_PRICE_TEAM_STARTER!,
-  "team-premium": process.env.STRIPE_PRICE_TEAM_PREMIUM!,
-  "team-pro": process.env.STRIPE_PRICE_TEAM_PRO!,
-  "starter-yearly": process.env.STRIPE_PRICE_STARTER_YEARLY!,
-  "premium-yearly": process.env.STRIPE_PRICE_PREMIUM_YEARLY!,
-  "pro-yearly": process.env.STRIPE_PRICE_PRO_YEARLY!,
-  "team-starter-yearly": process.env.STRIPE_PRICE_TEAM_STARTER_YEARLY!,
-  "team-premium-yearly": process.env.STRIPE_PRICE_TEAM_PREMIUM_YEARLY!,
-  "team-pro-yearly": process.env.STRIPE_PRICE_TEAM_PRO_YEARLY!,
-};
-
-export async function POST(req: NextRequest) {
-  try {
-    // Require login
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Please log in first", requireLogin: true }, { status: 401 });
-    }
-
-    const { tier } = await req.json();
-
-    const priceId = PRICE_MAP[tier];
-    if (!priceId) {
-      return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
-    }
-
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXTAUTH_URL}/dashboard?success=1`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
-      customer_email: session.user.email, // pre-fill and lock to their account email
-      metadata: { tier },
       allow_promotion_codes: true,
     });
 
