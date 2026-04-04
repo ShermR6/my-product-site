@@ -260,7 +260,11 @@ function AlertsTab({ email }: { email: string }) {
     return a.localeCompare(b);
   })];
 
+  const ALL_CHANNEL_TYPES = ["discord", "slack", "teams", "email", "sms", "whatsapp"];
+
+  // Merge hardcoded channels with any from logs or integrations
   const channelOptions = ["all", ...Array.from(new Set([
+    ...ALL_CHANNEL_TYPES,
     ...allChannels,
     ...logs.map(l => l.integration_type)
   ])).sort()];
