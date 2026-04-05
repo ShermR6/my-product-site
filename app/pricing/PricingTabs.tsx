@@ -157,13 +157,13 @@ export default function PricingTabs() {
       {
         label: "Notification channels",
         values: ["2 channels", "5 channels", "All 6 channels"],
-        subtitles: ["Discord & Email", "Starter+ Slack, SMS, Teams", "Premium+ WhatsApp"],
+
+        subtitles: ["Discord & Email", "Starter + Slack, SMS, Teams", "Premium + WhatsApp"],
       },
       { label: "Ground station add-on", values: [true, true, true] },
       { label: "Priority support", values: [false, true, true] },
     ];
 
-    
     const teamFeatures: FeatureRow[] = [
       { label: "Operator seats", values: ["3", "10", "Unlimited"] },
       { label: "Tracked aircraft", values: ["25", "75", "Unlimited"] },
@@ -286,12 +286,14 @@ export default function PricingTabs() {
             </div>
             {row.values.map((v, i) => (
               <div className="pt-cell pt-value" key={i}>
-                {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
-                {row.subtitles && row.subtitles[i] && (
-                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                    {row.subtitles[i]}
-                  </div>
-                )}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
+                  {row.subtitles && row.subtitles[i] && (
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                      {row.subtitles[i]}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
