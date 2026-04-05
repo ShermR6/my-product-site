@@ -59,22 +59,72 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const tier = session.metadata?.tier ?? "starter";
-    const customerEmail = session.customer_details?.email;
+    const customerEmail = session.customer_details?.email ?? session.metadata?.email;
 
     if (!customerEmail) {
       console.error("No customer email in session");
       return NextResponse.json({ error: "No email" }, { status: 400 });
     }
 
+    const email = customerEmail.toLowerCase().trim();
+
+    // ── Ground Station one-time purchase ──────────────────────────────────
+    if (tier === "ground-station") {
+      // Enable in Prisma
+      await prisma.user.updateMany({
+        where: { email },
+        data: { groundStationEnabled: true },
+      });
+
+      // Enable on Railway
+      try {
+        await fetch(`${BACKEND_URL}/api/admin/grant-ground-station`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
+          },
+          body: JSON.stringify({ email, enabled: true }),
+        });
+      } catch (err) {
+        console.error("Failed to enable ground station on Railway:", err);
+      }
+
+      // Send confirmation email with download instructions
+      await resend.emails.send({
+        from: "FinalPing <noreply@finalpingapp.com>",
+        to: email,
+        subject: "FinalPing Ground Station — You're all set!",
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+            <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+            <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Ground Station</div>
+            <p style="font-size:15px;margin-bottom:16px;">Thanks for purchasing <strong>FinalPing Ground Station</strong>! Your account is now enabled.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">Follow the setup guide to get your receiver connected and running in minutes.</p>
+            <a href="https://finalpingapp.com/groundstationsetup" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;margin-bottom:12px;">View Setup Guide</a>
+            <br />
+            <a href="https://finalpingapp.com/groundstationdevices" style="display:inline-block;padding:12px 24px;background:transparent;color:#f5b400;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;border:1px solid #f5b400;">Buy a Receiver</a>
+            <p style="font-size:12px;color:#555;margin-top:28px;">
+              Questions? Reply to this email or visit <a href="https://finalpingapp.com/dashboard" style="color:#f5b400;">your dashboard</a>.
+            </p>
+          </div>
+        `,
+      });
+
+      console.log(`Ground station enabled for ${email}`);
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Regular license purchase ──────────────────────────────────────────
     // Always generate a new unique license key for every purchase
     const licenseKey = generateLicenseKey();
 
     // Optionally link to existing user if they have an account
-    const user = await prisma.user.findUnique({ where: { email: customerEmail } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     await prisma.license.create({
       data: {
-        purchaseEmail: customerEmail,
+        purchaseEmail: email,
         userId: user?.id ?? undefined,
         licenseKey,
         tier,
@@ -84,14 +134,14 @@ export async function POST(req: NextRequest) {
     });
 
     // Also create the license in the FastAPI backend database
-    await createLicenseInBackend(licenseKey, tier, customerEmail);
+    await createLicenseInBackend(licenseKey, tier, email);
 
     const tierLabel = tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : "Starter";
 
     // Send license key email
     await resend.emails.send({
       from: "FinalPing <noreply@finalpingapp.com>",
-      to: customerEmail,
+      to: email,
       subject: `Your FinalPing ${tierLabel} License Key`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
@@ -105,7 +155,7 @@ export async function POST(req: NextRequest) {
           </div>
 
           <p style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">
-            To activate, open the FinalPing desktop app, enter this key and your email address (<strong>${customerEmail}</strong>).
+            To activate, open the FinalPing desktop app, enter this key and your email address (<strong>${email}</strong>).
           </p>
           <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">
             Your 30-day access period begins when you activate — not when you purchase.
@@ -121,7 +171,7 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    console.log(`License created for ${customerEmail}: ${licenseKey}`);
+    console.log(`License created for ${email}: ${licenseKey}`);
   }
 
   // ── Subscription renewal — extend existing license by 30 days ──────────────
