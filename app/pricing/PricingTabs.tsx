@@ -343,6 +343,10 @@ export default function PricingTabs() {
               {loadingTier === "ground-station" ? "Loading..." : "Buy now →"}
             </button>
             <div style={{ fontSize: 11, color: "var(--muted)" }}>One-time purchase · No subscription</div>
+            <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+              <a href="/groundstationsetup" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "underline" }}>Setup guide</a>
+              <a href="/groundstationdevices" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "underline" }}>Buy a receiver</a>
+            </div>
           </div>
         </div>
       </section>
