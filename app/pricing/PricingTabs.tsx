@@ -286,12 +286,14 @@ export default function PricingTabs() {
             </div>
             {row.values.map((v, i) => (
               <div className="pt-cell pt-value" key={i}>
-                {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
-                {row.subtitles && row.subtitles[i] && (
-                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                    {row.subtitles[i]}
-                  </div>
-                )}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
+                  {row.subtitles && row.subtitles[i] && (
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                      {row.subtitles[i]}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
