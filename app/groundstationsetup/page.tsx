@@ -126,6 +126,14 @@ export default function GroundStationSetupPage() {
             🍓 Raspberry Pi Setup
           </div>
 
+          <div style={{
+            background: "rgba(34,211,163,0.06)", border: "1px solid rgba(34,211,163,0.2)",
+            borderRadius: 12, padding: "16px 20px", marginBottom: 32,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#22d3a3", marginBottom: 8 }}>⚡ One-command install</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>Run this in your Pi terminal — it installs everything and walks you through setup:</div>
+            {codeBlock(`curl -fsSL https://finalpingapp.com/install.sh | bash`)}</div>
+
           {step(1, "Install PiAware on your Raspberry Pi", <>
             <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
               PiAware is FlightAware&apos;s free software that turns your Pi into an ADS-B receiver. It includes dump1090 which FinalPing reads from.
@@ -223,6 +231,15 @@ sudo journalctl -u finalping-ground -f`)}
             🪟 Windows Setup
           </div>
 
+          <div style={{
+            background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)",
+            borderRadius: 12, padding: "16px 20px", marginBottom: 32,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#7dd3fc", marginBottom: 8 }}>⚡ One-command install</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>Run this in PowerShell as Administrator (right-click PowerShell → Run as Administrator):</div>
+            {codeBlock(`irm https://finalpingapp.com/install.ps1 | iex`)}
+          </div>
+
           {step(1, "Install dump1090 for Windows", <>
             <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
               Download and install <strong style={{ color: "var(--text)" }}>dump1090-win</strong> — a Windows port of the standard dump1090 software:
@@ -276,6 +293,14 @@ python finalping_ground.py`)}
           }}>
             🍎 macOS Setup
           </div>
+
+          <div style={{
+            background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)",
+            borderRadius: 12, padding: "16px 20px", marginBottom: 32,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd", marginBottom: 8 }}>⚡ One-command install</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>Run this in Terminal — it installs everything and walks you through setup:</div>
+            {codeBlock(`curl -fsSL https://finalpingapp.com/install-mac.sh | bash`)}</div>
 
           {step(1, "Install Homebrew and dump1090", <>
             {codeBlock(`# Install Homebrew if you don't have it:
