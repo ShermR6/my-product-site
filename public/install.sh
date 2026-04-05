@@ -27,8 +27,12 @@ fi
 
 # ── Check for root / sudo ─────────────────────────────────────
 if [ "$EUID" -ne 0 ]; then
-  echo -e "${YELLOW}⚠️  This script needs sudo privileges. Re-running with sudo...${NC}"
-  exec sudo bash "$0" "$@"
+  echo -e "${YELLOW}⚠️  This script needs sudo privileges.${NC}"
+  echo ""
+  echo "Please re-run with sudo:"
+  echo "  curl -fsSL https://finalpingapp.com/install.sh | sudo bash"
+  echo ""
+  exit 1
 fi
 
 echo -e "${BOLD}This installer will:${NC}"
