@@ -43,11 +43,9 @@ echo "  • Install Python 3 and required packages"
 echo "  • Download FinalPing Ground Station"
 echo "  • Set up auto-start on boot"
 echo ""
-read -p "Continue? (y/n): " confirm
-if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-  echo "Cancelled."
-  exit 0
-fi
+echo -e "${YELLOW}Starting in 5 seconds — press Ctrl+C to cancel...${NC}"
+sleep 5
+echo ""
 
 echo ""
 echo -e "${CYAN}[1/7] Updating system packages...${NC}"
@@ -129,6 +127,9 @@ echo -e "${CYAN}${BOLD}=========================================================
 echo ""
 echo "Let's set up your FinalPing account details."
 echo ""
+
+# Reopen stdin from terminal so read works even when piped
+exec < /dev/tty
 
 read -p "FinalPing email: " fp_email
 read -s -p "FinalPing password: " fp_password
