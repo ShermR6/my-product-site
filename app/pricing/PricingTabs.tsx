@@ -17,6 +17,7 @@ type Plan = {
 type FeatureRow = {
   label: string;
   values: (string | boolean)[];
+  subtitles?: (string | null)[];
 };
 
 function CheckIcon() {
@@ -153,7 +154,12 @@ export default function PricingTabs() {
     const personalFeatures: FeatureRow[] = [
       { label: "Tracked aircraft", values: ["3", "7", "15"] },
       { label: "Distance alerts", values: [true, true, true] },
-      { label: "Notification channels", values: ["2 channels", "5 channels", "All 6 channels"] },
+      {
+        label: "Notification channels",
+        values: ["2 channels", "5 channels", "All 6 channels"],
+        subtitles: ["Discord & Email", "+ Slack, SMS, Teams", "+ WhatsApp"],
+      },
+      { label: "Ground station add-on", values: [true, true, true] },
       { label: "Priority support", values: [false, true, true] },
     ];
 
@@ -280,6 +286,11 @@ export default function PricingTabs() {
             {row.values.map((v, i) => (
               <div className="pt-cell pt-value" key={i}>
                 {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
+                {row.subtitles && row.subtitles[i] && (
+                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                    {row.subtitles[i]}
+                  </div>
+                )}
               </div>
             ))}
           </div>
