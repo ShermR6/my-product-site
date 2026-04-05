@@ -157,7 +157,8 @@ export default function PricingTabs() {
       {
         label: "Notification channels",
         values: ["2 channels", "5 channels", "All 6 channels"],
-        subtitles: ["Discord & Email", "+ Slack, SMS, Teams", "+ WhatsApp"],
+
+        subtitles: ["Discord & Email", "Starter + Slack, SMS, Teams", "Premium+ WhatsApp"],
       },
       { label: "Ground station add-on", values: [true, true, true] },
       { label: "Priority support", values: [false, true, true] },
