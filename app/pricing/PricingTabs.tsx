@@ -151,17 +151,15 @@ export default function PricingTabs() {
     ];
 
     const personalFeatures: FeatureRow[] = [
-      { label: "Tracked aircraft", values: ["3", "10", "Unlimited"] },
-      { label: "Saved coordinates", values: ["1", "5", "Unlimited"] },
+      { label: "Tracked aircraft", values: ["3", "7", "15"] },
       { label: "Distance alerts", values: [true, true, true] },
-      { label: "Notification channels", values: ["1 channel", "3 channels", "Unlimited"] },
+      { label: "Notification channels", values: ["2 channels", "5 channels", "All 6 channels"] },
       { label: "Priority support", values: [false, true, true] },
     ];
 
     const teamFeatures: FeatureRow[] = [
       { label: "Operator seats", values: ["3", "10", "Unlimited"] },
       { label: "Tracked aircraft", values: ["25", "75", "Unlimited"] },
-      { label: "Saved coordinates", values: ["5", "20", "Unlimited"] },
       { label: "Notification channels", values: ["3 channels", "10 channels", "Unlimited"] },
       { label: "Shared aircraft list", values: [true, true, true] },
       { label: "Distance alerts", values: [true, true, true] },
