@@ -54,9 +54,6 @@ export async function POST(req: NextRequest) {
         subscription_data: {
           metadata: { tier, email: session.user.email },
         },
-        payment_settings: {
-          save_default_payment_method: "on_subscription",
-        },
       }),
     });
 
