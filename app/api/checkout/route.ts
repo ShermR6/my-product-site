@@ -49,6 +49,15 @@ export async function POST(req: NextRequest) {
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
+      // Pause subscription billing until user activates their license key
+      ...(isOneTime ? {} : {
+        subscription_data: {
+          metadata: { tier, email: session.user.email },
+        },
+        payment_settings: {
+          save_default_payment_method: "on_subscription",
+        },
+      }),
     });
 
     return NextResponse.json({ url: checkoutSession.url });

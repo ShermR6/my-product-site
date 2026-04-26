@@ -18,7 +18,7 @@ function generateLicenseKey(): string {
   return segments.join("-");
 }
 
-async function createLicenseInBackend(licenseKey: string, tier: string, email: string) {
+async function createLicenseInBackend(licenseKey: string, tier: string, email: string, stripeSubscriptionId?: string) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/licenses/provision`, {
       method: "POST",
@@ -30,6 +30,7 @@ async function createLicenseInBackend(licenseKey: string, tier: string, email: s
         license_key: licenseKey,
         tier,
         email,
+        stripe_subscription_id: stripeSubscriptionId || null,
       }),
     });
 
@@ -70,13 +71,11 @@ export async function POST(req: NextRequest) {
 
     // ── Ground Station one-time purchase ──────────────────────────────────
     if (tier === "ground-station") {
-      // Enable in Prisma
       await prisma.user.updateMany({
         where: { email },
         data: { groundStationEnabled: true },
       });
 
-      // Enable on Railway
       try {
         await fetch(`${BACKEND_URL}/api/admin/grant-ground-station`, {
           method: "POST",
@@ -90,7 +89,6 @@ export async function POST(req: NextRequest) {
         console.error("Failed to enable ground station on Railway:", err);
       }
 
-      // Send confirmation email with download instructions
       await resend.emails.send({
         from: "FinalPing <noreply@finalpingapp.com>",
         to: email,
@@ -116,10 +114,23 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Regular license purchase ──────────────────────────────────────────
-    // Always generate a new unique license key for every purchase
     const licenseKey = generateLicenseKey();
 
-    // Optionally link to existing user if they have an account
+    // Get the Stripe subscription ID so we can resume billing on activation
+    const stripeSubscriptionId = session.subscription as string | null;
+
+    // Pause the subscription until the user activates their license key
+    if (stripeSubscriptionId) {
+      try {
+        await stripe.subscriptions.update(stripeSubscriptionId, {
+          pause_collection: { behavior: "void" },
+        });
+        console.log(`Paused subscription ${stripeSubscriptionId} until activation`);
+      } catch (err) {
+        console.error("Failed to pause subscription:", err);
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     await prisma.license.create({
@@ -128,17 +139,16 @@ export async function POST(req: NextRequest) {
         userId: user?.id ?? undefined,
         licenseKey,
         tier,
-        status: "inactive", // becomes "active" when activated in desktop app
+        status: "inactive",
         stripeSessionId: session.id,
+        stripeSubscriptionId: stripeSubscriptionId ?? undefined,
       },
     });
 
-    // Also create the license in the FastAPI backend database
-    await createLicenseInBackend(licenseKey, tier, email);
+    await createLicenseInBackend(licenseKey, tier, email, stripeSubscriptionId ?? undefined);
 
     const tierLabel = tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : "Starter";
 
-    // Send license key email
     await resend.emails.send({
       from: "FinalPing <noreply@finalpingapp.com>",
       to: email,
@@ -171,14 +181,13 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    console.log(`License created for ${email}: ${licenseKey}`);
+    console.log(`License created for ${email}: ${licenseKey} (sub: ${stripeSubscriptionId || 'none'})`);
   }
 
   // ── Subscription renewal — extend existing license by 30 days ──────────────
   if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object as Stripe.Invoice;
 
-    // Only handle renewal invoices, not the first payment (handled by checkout.session.completed)
     if (invoice.billing_reason === "subscription_cycle") {
       const customerEmail =
         typeof invoice.customer_email === "string"
@@ -192,7 +201,6 @@ export async function POST(req: NextRequest) {
 
       const email = customerEmail.toLowerCase().trim();
 
-      // Find the most recently activated license for this email
       const license = await prisma.license.findFirst({
         where: { purchaseEmail: email, status: "active" },
         orderBy: { activatedAt: "desc" },
@@ -203,7 +211,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true });
       }
 
-      // Extend expires_at by 30 days from now (or from current expiry if in the future)
       const now = new Date();
       const currentExpiry = license.expiresAt ?? now;
       const baseDate = currentExpiry > now ? currentExpiry : now;
@@ -214,7 +221,6 @@ export async function POST(req: NextRequest) {
         data: { expiresAt: newExpiry },
       });
 
-      // Also update Railway backend
       try {
         await fetch(`${BACKEND_URL}/api/licenses/renew`, {
           method: "POST",
@@ -231,7 +237,6 @@ export async function POST(req: NextRequest) {
         console.error("Failed to update Railway on renewal:", err);
       }
 
-      // Send renewal confirmation email
       const tierLabel =
         license.tier === "pro" ? "Pro" :
         license.tier === "premium" ? "Premium" : "Starter";
