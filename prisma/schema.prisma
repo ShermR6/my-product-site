@@ -89,6 +89,7 @@ model License {
   tier            String
   status          String    @default("inactive")
   stripeSessionId String?
+  stripeSubscriptionId String?
   createdAt       DateTime  @default(now())
   activatedAt     DateTime?
   expiresAt       DateTime?
