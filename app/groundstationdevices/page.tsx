@@ -31,16 +31,16 @@ const devices = [
   },
   {
     tier: "Best performance",
-    price: "~$40",
+    price: "~$50",
     badge: "Premium quality",
     badgeColor: "#a78bfa",
-    name: "ADSBexchange Blue SDR + Antenna",
+    name: "Nooelec NESDR SMArt v4 Bundle",
     description:
-      "ADS-B Exchange's own purpose-built receiver. Includes an industrial-grade microSD with software pre-loaded, onboard 1090MHz filter, amp, and a proper 5dBi antenna. Just add a Raspberry Pi.",
-    specs: ["0.5PPM TCXO — most accurate", "Onboard 1090MHz filter + amp", "Includes 8\" 5dBi 1090MHz antenna", "Industrial microSD with software", "No command line setup required"],
-    amazon: "https://www.amazon.com/ADSBexchange-com-RTL2832U-Antenna-Software-Industrial/dp/B09F2ND4R6",
-    image: "https://m.media-amazon.com/images/I/71RWN0tO3gL._AC_SL1500_.jpg",
-    note: "Best signal quality. Comes with antenna purpose-built for 1090MHz.",
+      "Nooelec's premium RTL-SDR bundle with an aluminum enclosure, 0.5PPM TCXO for maximum frequency accuracy, and a complete antenna kit. Well-built and significantly more stable than generic dongles in high-RF airport environments.",
+    specs: ["0.5PPM TCXO — high frequency accuracy", "Aluminum enclosure (heat + RF shielding)", "Wide 100kHz–1.75GHz range", "Includes antenna and adapters", "Works with dump1090 out of the box"],
+    amazon: "https://www.amazon.com/s?k=Nooelec+NESDR+SMArt+v4+Bundle",
+    image: "https://m.media-amazon.com/images/I/71bCYBN2xmL._AC_SL1500_.jpg",
+    note: "Verify the specific listing is in stock before purchasing — Nooelec updates their bundles periodically.",
   },
   {
     tier: "Complete kit",
@@ -71,7 +71,7 @@ export default function GroundStationDevicesPage() {
             Recommended ADS-B Receivers
           </h1>
           <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 520, margin: "0 auto 24px", lineHeight: 1.7 }}>
-            These receivers all work with FinalPing Ground Station and dump1090. Pick one based on your budget and setup.
+            These receivers all work with FinalPing Ground Station and dump1090 to deliver precise landing and takeoff alerts — with lower latency and fewer data gaps than cloud-based tracking. Pick one based on your budget and setup.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/groundstationsetup" style={{
@@ -104,7 +104,7 @@ export default function GroundStationDevicesPage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>What you need</div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
               To use FinalPing Ground Station you need a computer or Raspberry Pi, an ADS-B receiver dongle, and an antenna.
-              Most receiver kits include an antenna. All run dump1090 which FinalPing reads from.
+              Your local receiver delivers actual landing and takeoff detection — with 2–5 second latency vs 30–60+ seconds from adsb.lol.
             </div>
           </div>
           <div>

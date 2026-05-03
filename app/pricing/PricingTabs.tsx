@@ -10,6 +10,7 @@ type Plan = {
   perMonth?: string;
   oldPrice?: string;
   tagline: string;
+  desc: string;
   cta: string;
   popular?: boolean;
 };
@@ -98,6 +99,7 @@ export default function PricingTabs() {
         perMonth: yearly ? "$12.42/mo" : undefined,
         oldPrice: yearly ? undefined : "$49.99",
         tagline: yearly ? "Billed annually" : "Monthly Access",
+        desc: "Essential tracking for individual operators",
         cta: "Buy now",
       },
       {
@@ -107,6 +109,7 @@ export default function PricingTabs() {
         perMonth: yearly ? "$20.75/mo" : undefined,
         oldPrice: yearly ? undefined : "$74.99",
         tagline: yearly ? "Billed annually" : "Monthly Access",
+        desc: "More aircraft and channels for serious tracking",
         cta: "Buy now",
         popular: true,
       },
@@ -117,6 +120,7 @@ export default function PricingTabs() {
         perMonth: yearly ? "$41.58/mo" : undefined,
         oldPrice: yearly ? undefined : "$119.99",
         tagline: yearly ? "Billed annually" : "Monthly Access",
+        desc: "Maximum capacity for high-volume operations",
         cta: "Buy now",
       },
     ];
@@ -129,6 +133,7 @@ export default function PricingTabs() {
         perMonth: yearly ? "$16.58/mo" : undefined,
         oldPrice: yearly ? undefined : "$54.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
+        desc: "Shared tracking for small ramp teams",
         cta: "Buy now",
       },
       {
@@ -138,7 +143,9 @@ export default function PricingTabs() {
         perMonth: yearly ? "$29.08/mo" : undefined,
         oldPrice: yearly ? undefined : "$89.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
+        desc: "Scale up for larger ground operations",
         cta: "Buy now",
+        popular: true,
       },
       {
         name: "Team Pro",
@@ -147,6 +154,7 @@ export default function PricingTabs() {
         perMonth: yearly ? "$58.25/mo" : undefined,
         oldPrice: yearly ? undefined : "$139.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
+        desc: "No limits for enterprise and multi-base operations",
         cta: "Buy now",
       },
     ];
@@ -237,6 +245,14 @@ export default function PricingTabs() {
             display: "flex", alignItems: "center", gap: "8px",
           }}>
             Yearly
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+              textTransform: "uppercase", padding: "2px 8px", borderRadius: 999,
+              background: "rgba(34,211,163,0.15)", color: "#22d3a3",
+              border: "1px solid rgba(34,211,163,0.3)",
+            }}>
+              Save 17%
+            </span>
           </span>
         </div>
       </div>
@@ -245,7 +261,7 @@ export default function PricingTabs() {
         <div className="pt-row pt-header">
           <div className="pt-cell pt-left" />
           {data.plans.map((p) => (
-            <div className="pt-cell pt-plan" key={p.name} style={{ position: "relative" }}>
+            <div className={`pt-cell pt-plan${p.popular ? " pt-popular-col" : ""}`} key={p.name} style={{ position: "relative" }}>
               {p.popular && (
                 <span style={{
                   position: "absolute", top: -2, right: -2,
@@ -257,6 +273,7 @@ export default function PricingTabs() {
                 </span>
               )}
               <div className="pt-plan-title">{p.name}</div>
+              <div className="pt-plan-desc">{p.desc}</div>
               <div className="pt-price">
                 <span className="pt-price-now">{p.price}</span>
                 {p.oldPrice && <span className="pt-price-old">{p.oldPrice}</span>}
@@ -285,7 +302,7 @@ export default function PricingTabs() {
               <span className="pt-feature">{row.label}</span>
             </div>
             {row.values.map((v, i) => (
-              <div className="pt-cell pt-value" key={i}>
+              <div className={`pt-cell pt-value${data.plans[i]?.popular ? " pt-popular-col" : ""}`} key={i}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
                   {row.subtitles && row.subtitles[i] && (
@@ -310,7 +327,7 @@ export default function PricingTabs() {
           <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>ADD-ON</div>
           <h2 style={{ fontSize: 26 }}>FinalPing Ground Station</h2>
           <p style={{ maxWidth: 520, margin: "8px auto 0" }}>
-            Connect your own ADS-B receiver for real ground data — actual landings, takeoffs, and taxi movements that the cloud tracker can&apos;t detect.
+            Plug in your own ADS-B receiver for ultra-accurate landing and takeoff detection. Your local antenna captures what cloud APIs miss — with no reliance on adsb.lol or any third-party data feed.
           </p>
         </div>
 
@@ -333,11 +350,12 @@ export default function PricingTabs() {
             </div>
             <div style={{ marginTop: 14, display: "flex", flexDirection: "column" as const, gap: 6 }}>
               {[
-                "Real touchdown & wheels-up detection",
-                "Ground movement on taxiways & ramps",
-                "2–5 second latency vs 30–60s with cloud",
-                "Works even with no OpenSky coverage",
-                "Fires through your existing notification channels",
+                "Precise landing alerts — actual wheels-down touchdown detection",
+                "Takeoff alerts — detect the moment an aircraft lifts off",
+                "2–5 second latency vs 30–60+ seconds via adsb.lol",
+                "No data gaps — zero dependency on cloud API availability",
+                "Ground movement tracking: taxiways, ramps, and runways",
+                "Fires through all your existing notification channels",
               ].map(f => (
                 <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--muted)" }}>
                   <span style={{ color: "#22d3a3", fontWeight: 700 }}>✓</span> {f}

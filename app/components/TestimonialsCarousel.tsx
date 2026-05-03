@@ -12,14 +12,14 @@ const testimonials = [
     color: "#0ea5e9",
   },
   {
-    text: "The Discord alerts are instant. I get the 10nm ping, grab my fuel truck, and I'm ready at the ramp when they touch down. Saves me 10 minutes every arrival.",
+    text: "The alerts are instant. I get the 10nm ping, grab my fuel truck, and I'm ready at the ramp when they touch down. Saves me 10 minutes every arrival.",
     name: "Ryan K.",
     role: "FBO Line Tech · Colorado",
     initials: "RK",
     color: "#22d3a3",
   },
   {
-    text: "Set it up in 5 minutes. Now my whole team gets notified on Slack when our company plane is inbound. No more calling the airport to check.",
+    text: "Set it up in 5 minutes. Now my whole team gets notified the moment our company plane is inbound. No more calling the airport to check.",
     name: "Amanda T.",
     role: "Operations Manager · Ohio",
     initials: "AT",

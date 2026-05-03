@@ -380,6 +380,9 @@ textarea { min-height: 110px; resize: vertical; }
 .pt-feature { color: var(--text); font-size: 13px; font-weight: 700; }
 .pt-plan { flex-direction: column; gap: 8px; padding: 16px 14px; }
 .pt-plan-title { font-size: 13px; font-weight: 800; color: var(--text); }
+.pt-plan-desc { font-size: 11px; color: var(--muted); line-height: 1.4; margin-top: -4px; }
+.pt-popular-col { background: rgba(14,165,233,0.05); border-left: 1px solid rgba(14,165,233,0.18) !important; border-right: 1px solid rgba(14,165,233,0.18) !important; }
+.pt-header .pt-popular-col { background: rgba(14,165,233,0.09); }
 .pt-price { display: flex; gap: 10px; align-items: baseline; }
 .pt-price-now { font-size: 26px; font-weight: 900; color: var(--text); letter-spacing: -0.01em; }
 .pt-price-old { font-size: 13px; color: var(--muted); text-decoration: line-through; }

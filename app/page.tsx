@@ -6,7 +6,7 @@ import TestimonialsCarousel from "./components/TestimonialsCarousel";
 const features = [
   { icon: "📡", title: "Live ADS-B Tracking", desc: "Monitors real-time aircraft transponder data to track exact positions, altitude, and speed of your selected aircraft." },
   { icon: "🔔", title: "Proximity Alerts", desc: "Set custom distance zones — get notified at 10nm, 5nm, 2nm, or any distance you choose as aircraft approach." },
-  { icon: "💬", title: "Discord, Slack & Teams", desc: "Send alerts directly to your team's channels via webhook integrations. No extra apps needed." },
+  { icon: "📲", title: "SMS & Push Alerts", desc: "Get notified instantly via SMS, push notifications, email, and more. Alerts go where you are — no extra apps needed." },
   { icon: "✈️", title: "Multi-Aircraft Tracking", desc: "Track multiple tail numbers simultaneously. Each aircraft gets its own alert chain as it approaches." },
   { icon: "🌙", title: "Quiet Hours", desc: "Automatically pause notifications during off-hours. No 3am alerts — unless you want them." },
   { icon: "🔑", title: "License Key Activation", desc: "Purchase once, activate instantly. Your license key is delivered by email and works across reinstalls." },
@@ -14,7 +14,7 @@ const features = [
 
 const steps = [
   { num: "01", title: "Purchase & Download", desc: "Pick a plan, get your license key by email, and download the Windows installer." },
-  { num: "02", title: "Activate & Configure", desc: "Enter your license key, set your airport location coordinates, and connect Discord/Slack/Teams." },
+  { num: "02", title: "Activate & Configure", desc: "Enter your license key, set your airport location coordinates, and connect your notification channel." },
   { num: "03", title: "Add Aircraft", desc: "Add tail numbers and ICAO24 codes for the aircraft you want to monitor." },
   { num: "04", title: "Get Alerts", desc: "FinalPing runs in the background and sends you real-time notifications as aircraft enter your zones." },
 ];
@@ -73,7 +73,7 @@ export default function HomePage() {
         </h1>
 
         <p style={{ fontSize: 16, color: "var(--muted)", maxWidth: 480, lineHeight: 1.7, marginBottom: 36 }}>
-          Instant Discord, Slack, and Teams alerts the moment your aircraft enters your airspace.
+          Instant SMS and push alerts the moment your aircraft enters your airspace.
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 32 }}>
@@ -122,7 +122,7 @@ export default function HomePage() {
             <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>SEE IT IN ACTION</div>
             <h2 style={{ fontSize: 32, letterSpacing: "-0.02em", marginBottom: 12, lineHeight: 1.2 }}>
               From wheels down to{" "}
-              <span style={{ color: "#0ea5e9" }}>Discord ping</span>{" "}
+              <span style={{ color: "#0ea5e9" }}>instant alert</span>{" "}
               in seconds
             </h2>
             <p style={{ fontSize: 15, color: "var(--muted)", marginBottom: 28, lineHeight: 1.7 }}>
@@ -132,7 +132,7 @@ export default function HomePage() {
               {[
                 { n: "1", t: "Add your aircraft", d: "Enter tail numbers and ICAO codes. Takes 30 seconds." },
                 { n: "2", t: "Set your location", d: "Configure your airport or FBO with custom alert distances." },
-                { n: "3", t: "Connect your channels", d: "Discord, Slack, SMS, email. Mix and match." },
+                { n: "3", t: "Connect your channels", d: "SMS, push alerts, email, and more. Mix and match." },
                 { n: "4", t: "Get alerted automatically", d: "10nm, 5nm, 2nm, and landing notifications fire in real time." },
               ].map((s) => (
                 <div key={s.n} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -198,14 +198,14 @@ export default function HomePage() {
                   borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between",
                 }}>
                   <span style={{ fontSize: 12, fontWeight: 600 }}>N80896 — 10nm out</span>
-                  <span style={{ fontSize: 10, color: "#0ea5e9" }}>Discord ✓</span>
+                  <span style={{ fontSize: 10, color: "#0ea5e9" }}>Sent ✓</span>
                 </div>
                 <div style={{
                   background: "rgba(34,211,163,0.06)", border: "1px solid rgba(34,211,163,0.12)",
                   borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between",
                 }}>
                   <span style={{ fontSize: 12, fontWeight: 600 }}>N64423 — Landing</span>
-                  <span style={{ fontSize: 10, color: "#22d3a3" }}>Slack ✓</span>
+                  <span style={{ fontSize: 10, color: "#22d3a3" }}>Sent ✓</span>
                 </div>
               </div>
             </div>
@@ -238,28 +238,6 @@ export default function HomePage() {
               <div style={{ fontSize: 30, marginBottom: 12 }}>{f.icon}</div>
               <h2 style={{ fontSize: 15, marginBottom: 6 }}>{f.title}</h2>
               <p style={{ fontSize: 13, marginBottom: 0 }}>{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS — STEPS */}
-      <section style={{ position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72 }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>HOW IT WORKS</div>
-          <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Up and running in minutes</h2>
-          <p style={{ maxWidth: 480, margin: "10px auto 0", fontSize: 15 }}>From purchase to your first alert — four simple steps.</p>
-        </div>
-        <div className="grid-2" style={{ maxWidth: 720, margin: "0 auto" }}>
-          {steps.map((s) => (
-            <div className="panel" key={s.num} style={{ padding: 24, display: "flex", gap: 16, alignItems: "flex-start" }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)", lineHeight: 1, flexShrink: 0, width: 36 }}>
-                {s.num}
-              </div>
-              <div>
-                <h2 style={{ fontSize: 15, marginBottom: 6 }}>{s.title}</h2>
-                <p style={{ fontSize: 13, marginBottom: 0 }}>{s.desc}</p>
-              </div>
             </div>
           ))}
         </div>
