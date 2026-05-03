@@ -390,9 +390,9 @@ function AlertsTab({ email }: { email: string }) {
   );
 }
 
-function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onRefresh }: {
+function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onRefresh, upgraded }: {
   onManageBilling: () => void; portalLoading: boolean; portalError: string;
-  licenses: License[]; onRefresh: () => void;
+  licenses: License[]; onRefresh: () => void; upgraded: boolean;
 }) {
   const [selectedLicenseKey, setSelectedLicenseKey] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -421,10 +421,11 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
       const data = await res.json();
       if (!res.ok) {
         setUpgradeMsg({ text: data.error || "Upgrade failed.", type: "error" });
+      } else if (data.url) {
+        window.location.href = data.url;
+        return;
       } else {
-        const charged = (data.charged / 100).toFixed(2);
-        setUpgradeMsg({ text: `Successfully upgraded to ${tierLabels[selectedTier]}! $${charged} charged to your card.`, type: "success" });
-        setTimeout(() => { resetUpgrade(); onRefresh(); }, 2500);
+        setUpgradeMsg({ text: "Something went wrong. Please try again.", type: "error" });
       }
     } catch {
       setUpgradeMsg({ text: "Something went wrong. Please try again.", type: "error" });
@@ -436,6 +437,13 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
   return (
     <div>
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Billing & Subscription</h2><p style={styles.tabSub}>Manage your payment methods, invoices, and plan</p></div>
+
+      {upgraded && (
+        <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+          background: "rgba(35,199,107,0.1)", color: "#23c76b", border: "1px solid rgba(35,199,107,0.3)" }}>
+          ✓ Your plan has been upgraded successfully. Your new limits are active immediately.
+        </div>
+      )}
 
       <div style={styles.card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 16 }}>
@@ -880,7 +888,7 @@ function DashboardContent() {
         {activeTab === "account" && <AccountTab email={email} session={session} />}
         {activeTab === "licenses" && <LicensesTab licenses={licenses} loading={licensesLoading} />}
         {activeTab === "alerts" && <AlertsTab email={email} />}
-        {activeTab === "billing" && <BillingTab onManageBilling={handleManageBilling} portalLoading={portalLoading} portalError={portalError} licenses={licenses} onRefresh={refreshLicenses} />}
+        {activeTab === "billing" && <BillingTab onManageBilling={handleManageBilling} portalLoading={portalLoading} portalError={portalError} licenses={licenses} onRefresh={refreshLicenses} upgraded={searchParams.get("upgraded") === "1"} />}
         {activeTab === "security" && <SecurityTab email={email} />}
       </div>
     </div>

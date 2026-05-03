@@ -59,6 +59,62 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // ── Plan upgrade payment ──────────────────────────────────────────────
+    if (session.metadata?.type === "upgrade") {
+      const { licenseKey, newTier, subscriptionId, newPriceId } = session.metadata;
+      const upgradeEmail = session.customer_details?.email ?? "";
+
+      try {
+        // Update the Stripe subscription price for next renewal (no proration)
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        await stripe.subscriptions.update(subscriptionId, {
+          items: [{ id: sub.items.data[0].id, price: newPriceId }],
+          proration_behavior: "none",
+        });
+
+        // Update tier in web dashboard DB
+        await prisma.license.update({
+          where: { licenseKey },
+          data: { tier: newTier },
+        });
+
+        // Update tier in backend DB
+        await fetch(`${BACKEND_URL}/api/licenses/${licenseKey}/tier`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
+          },
+          body: JSON.stringify({ tier: newTier }),
+        });
+
+        const tierLabel = newTier === "pro" ? "Pro" : newTier === "premium" ? "Premium" : "Starter";
+        if (upgradeEmail) {
+          await resend.emails.send({
+            from: "FinalPing <noreply@finalpingapp.com>",
+            to: upgradeEmail,
+            subject: `You've upgraded to FinalPing ${tierLabel}`,
+            html: `
+              <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+                <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+                <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
+                <p style="font-size:15px;margin-bottom:8px;">Your plan has been upgraded to <strong>${tierLabel}</strong>.</p>
+                <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">Your new limits are active immediately in the desktop app. Your subscription will renew at the ${tierLabel} plan price on your next billing date.</p>
+                <a href="https://finalpingapp.com/dashboard?tab=billing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Dashboard</a>
+              </div>
+            `,
+          });
+        }
+
+        console.log(`Plan upgraded for ${upgradeEmail}: ${licenseKey} → ${newTier}`);
+      } catch (err) {
+        console.error("Upgrade webhook error:", err);
+      }
+
+      return NextResponse.json({ received: true });
+    }
+
     const tier = session.metadata?.tier ?? "starter";
     const customerEmail = session.customer_details?.email ?? session.metadata?.email;
 
