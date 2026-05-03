@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: `Plan Upgrade: ${TIER_LABELS[license.tier]} → ${TIER_LABELS[newTier]}`,
-            description: "One-time upgrade fee — price difference between plans",
+            description: `Price difference for upgrading now. Your subscription renews at the full ${TIER_LABELS[newTier]} plan price on your next billing date.`,
           },
           unit_amount: differenceCents,
         },
