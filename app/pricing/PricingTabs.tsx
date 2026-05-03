@@ -31,7 +31,7 @@ function XIcon() {
 const faqs = [
   {
     q: "Can I switch plans later?",
-    a: "Yes — you can upgrade or downgrade your plan at any time. When you upgrade, you'll be charged the prorated difference. When you downgrade, the change takes effect at the start of your next billing cycle.",
+    a: "Yes — you can switch plans at any time by contacting support. Changes take effect at the start of your next billing cycle.",
   },
   {
     q: "How does the 30-day refund work?",
