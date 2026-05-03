@@ -174,7 +174,7 @@ const TIER_ORDER = ["starter", "premium", "pro"];
 const MONTHLY_PRICES: Record<string, number> = { starter: 14.99, premium: 24.99, pro: 49.99 };
 const YEARLY_PRICES: Record<string, number> = { starter: 149, premium: 249, pro: 499 };
 
-function LicensesTab({ licenses, loading, onRefresh }: { licenses: License[]; loading: boolean; onRefresh: () => void }) {
+function LicensesTab({ licenses, loading }: { licenses: License[]; loading: boolean }) {
   if (loading) return <div style={styles.loadingText}>Loading licenses...</div>;
   return (
     <div>
@@ -187,53 +187,15 @@ function LicensesTab({ licenses, loading, onRefresh }: { licenses: License[]; lo
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-          {licenses.map(license => (
-            <LicenseCard key={license.id} license={license} onUpgradeSuccess={onRefresh} />
-          ))}
+          {licenses.map(license => <LicenseCard key={license.id} license={license} />)}
         </div>
       )}
     </div>
   );
 }
 
-function LicenseCard({ license, onUpgradeSuccess }: { license: License; onUpgradeSuccess: () => void }) {
+function LicenseCard({ license }: { license: License }) {
   const { label, color } = useLicenseCountdown(license.expiresAt, license.status, license.activatedAt);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
-  const [upgradeMsg, setUpgradeMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
-  const currentIndex = TIER_ORDER.indexOf(license.tier);
-  const upgradableTiers = TIER_ORDER.slice(currentIndex + 1);
-  const canUpgrade = license.status === "active" && upgradableTiers.length > 0 && !license.tier.startsWith("team-");
-
-  const closeUpgrade = () => { setUpgradeOpen(false); setSelectedTier(null); setUpgradeMsg(null); };
-
-  const handleUpgrade = async () => {
-    if (!selectedTier) return;
-    setUpgrading(true);
-    setUpgradeMsg(null);
-    try {
-      const res = await fetch("/api/upgrade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ licenseKey: license.licenseKey, newTier: selectedTier }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setUpgradeMsg({ text: data.error || "Upgrade failed.", type: "error" });
-      } else {
-        const charged = (data.charged / 100).toFixed(2);
-        setUpgradeMsg({ text: `Upgraded to ${tierLabels[selectedTier]}! $${charged} charged.`, type: "success" });
-        setTimeout(() => { closeUpgrade(); onUpgradeSuccess(); }, 2000);
-      }
-    } catch {
-      setUpgradeMsg({ text: "Something went wrong. Please try again.", type: "error" });
-    } finally {
-      setUpgrading(false);
-    }
-  };
-
   return (
     <div style={styles.card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -248,59 +210,6 @@ function LicenseCard({ license, onUpgradeSuccess }: { license: License; onUpgrad
         {license.activatedAt && <div><div style={styles.metaLabel}>Activated</div><div style={styles.metaValue}>{new Date(license.activatedAt).toLocaleDateString()}</div></div>}
         {license.expiresAt && <div><div style={styles.metaLabel}>Expires</div><div style={styles.metaValue}>{new Date(license.expiresAt).toLocaleDateString()}</div></div>}
       </div>
-
-      {canUpgrade && !upgradeOpen && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-          <button onClick={() => setUpgradeOpen(true)} style={{ ...styles.smallBtn, color: "#0ea5e9", borderColor: "rgba(14,165,233,0.4)", background: "rgba(14,165,233,0.06)" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.12)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.06)"; }}>
-            Upgrade Plan ↑
-          </button>
-        </div>
-      )}
-
-      {upgradeOpen && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Upgrade Plan</div>
-          <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14, lineHeight: 1.6 }}>
-            Select your new plan. You&apos;ll be charged the price difference today using your card on file. Your subscription renews at the new plan&apos;s price on your next billing date.
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginBottom: 14 }}>
-            {upgradableTiers.map(tier => {
-              const monthlyDiff = (MONTHLY_PRICES[tier] - MONTHLY_PRICES[license.tier]).toFixed(2);
-              const yearlyDiff = (YEARLY_PRICES[tier] - YEARLY_PRICES[license.tier]).toFixed(2);
-              const selected = selectedTier === tier;
-              return (
-                <button key={tier} onClick={() => setSelectedTier(tier)} style={{
-                  padding: "12px 16px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  background: selected ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
-                  border: selected ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
-                  color: "var(--text)",
-                }}>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>{tierLabels[tier]}</div>
-                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                      Monthly plan: +${monthlyDiff} &nbsp;·&nbsp; Yearly plan: +${yearlyDiff}
-                    </div>
-                  </div>
-                  {selected && <span style={{ color: "#0ea5e9", fontSize: 16 }}>✓</span>}
-                </button>
-              );
-            })}
-          </div>
-          <StatusMsg msg={upgradeMsg} />
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button onClick={handleUpgrade} disabled={!selectedTier || upgrading}
-              style={{ ...styles.primaryBtn, opacity: !selectedTier || upgrading ? 0.6 : 1, cursor: !selectedTier || upgrading ? "not-allowed" : "pointer" }}
-              onMouseEnter={e => { if (selectedTier && !upgrading) e.currentTarget.style.background = "#0284c7"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
-              {upgrading ? "Processing..." : "Confirm Upgrade"}
-            </button>
-            <button onClick={closeUpgrade} style={styles.ghostBtn}>Cancel</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -481,10 +390,53 @@ function AlertsTab({ email }: { email: string }) {
   );
 }
 
-function BillingTab({ onManageBilling, portalLoading, portalError }: { onManageBilling: () => void; portalLoading: boolean; portalError: string }) {
+function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onRefresh }: {
+  onManageBilling: () => void; portalLoading: boolean; portalError: string;
+  licenses: License[]; onRefresh: () => void;
+}) {
+  const [selectedLicenseKey, setSelectedLicenseKey] = useState<string | null>(null);
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  const upgradeableLicenses = licenses.filter(l =>
+    l.status === "active" && !l.tier.startsWith("team-") && TIER_ORDER.indexOf(l.tier) < TIER_ORDER.length - 1
+  );
+
+  const activeLicense = upgradeableLicenses.find(l => l.licenseKey === selectedLicenseKey) ?? upgradeableLicenses[0] ?? null;
+  const upgradableTiers = activeLicense ? TIER_ORDER.slice(TIER_ORDER.indexOf(activeLicense.tier) + 1) : [];
+
+  const resetUpgrade = () => { setSelectedTier(null); setUpgradeMsg(null); };
+
+  const handleUpgrade = async () => {
+    if (!activeLicense || !selectedTier) return;
+    setUpgrading(true);
+    setUpgradeMsg(null);
+    try {
+      const res = await fetch("/api/upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ licenseKey: activeLicense.licenseKey, newTier: selectedTier }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUpgradeMsg({ text: data.error || "Upgrade failed.", type: "error" });
+      } else {
+        const charged = (data.charged / 100).toFixed(2);
+        setUpgradeMsg({ text: `Successfully upgraded to ${tierLabels[selectedTier]}! $${charged} charged to your card.`, type: "success" });
+        setTimeout(() => { resetUpgrade(); onRefresh(); }, 2500);
+      }
+    } catch {
+      setUpgradeMsg({ text: "Something went wrong. Please try again.", type: "error" });
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
   return (
     <div>
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Billing & Subscription</h2><p style={styles.tabSub}>Manage your payment methods, invoices, and plan</p></div>
+
       <div style={styles.card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 16 }}>
           <div><div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Stripe Billing Portal</div><div style={{ fontSize: 13, color: "var(--muted)" }}>Update payment methods, download invoices, or cancel your subscription.</div></div>
@@ -492,8 +444,72 @@ function BillingTab({ onManageBilling, portalLoading, portalError }: { onManageB
         </div>
         {portalError && <p style={{ fontSize: 13, color: "#ef4444", margin: "12px 0 0" }}>{portalError}</p>}
       </div>
+
+      {upgradeableLicenses.length > 0 && (
+        <div style={{ ...styles.card, marginTop: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Upgrade Your Plan</div>
+          <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16, lineHeight: 1.6 }}>
+            You&apos;ll be charged the price difference between plans today using your card on file. Your subscription renews at the new plan price on your next billing date.
+          </div>
+
+          {upgradeableLicenses.length > 1 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={styles.metaLabel}>Select license to upgrade</div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, marginTop: 6 }}>
+                {upgradeableLicenses.map(l => (
+                  <button key={l.licenseKey} onClick={() => { setSelectedLicenseKey(l.licenseKey); resetUpgrade(); }}
+                    style={{ padding: "10px 14px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
+                      background: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
+                      border: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
+                      color: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+                    {tierLabels[l.tier]} — {l.licenseKey}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeLicense && (
+            <>
+              <div style={styles.metaLabel}>Current plan: <strong style={{ color: "var(--text)" }}>{tierLabels[activeLicense.tier]}</strong></div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginTop: 10, marginBottom: 14 }}>
+                {upgradableTiers.map(tier => {
+                  const monthlyDiff = (MONTHLY_PRICES[tier] - MONTHLY_PRICES[activeLicense.tier]).toFixed(2);
+                  const yearlyDiff = (YEARLY_PRICES[tier] - YEARLY_PRICES[activeLicense.tier]).toFixed(2);
+                  const selected = selectedTier === tier;
+                  return (
+                    <button key={tier} onClick={() => setSelectedTier(tier)} style={{
+                      padding: "14px 16px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      background: selected ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
+                      border: selected ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>{tierLabels[tier]}</div>
+                        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}>
+                          Monthly: +${monthlyDiff} today &nbsp;·&nbsp; Yearly: +${yearlyDiff} today
+                        </div>
+                      </div>
+                      {selected && <span style={{ color: "#0ea5e9", fontSize: 18, fontWeight: 700 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <StatusMsg msg={upgradeMsg} />
+              <button onClick={handleUpgrade} disabled={!selectedTier || upgrading}
+                style={{ ...styles.primaryBtn, marginTop: 4, opacity: !selectedTier || upgrading ? 0.6 : 1, cursor: !selectedTier || upgrading ? "not-allowed" : "pointer" }}
+                onMouseEnter={e => { if (selectedTier && !upgrading) e.currentTarget.style.background = "#0284c7"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                {upgrading ? "Processing..." : "Confirm Upgrade →"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       <div style={{ ...styles.card, marginTop: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Need a different plan?</div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Need a new plan?</div>
         <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>View all available plans and pricing options.</div>
         <Link href="/pricing" style={styles.outlineBtn}>View Pricing →</Link>
       </div>
@@ -862,9 +878,9 @@ function DashboardContent() {
       </div>
       <div style={styles.main}>
         {activeTab === "account" && <AccountTab email={email} session={session} />}
-        {activeTab === "licenses" && <LicensesTab licenses={licenses} loading={licensesLoading} onRefresh={refreshLicenses} />}
+        {activeTab === "licenses" && <LicensesTab licenses={licenses} loading={licensesLoading} />}
         {activeTab === "alerts" && <AlertsTab email={email} />}
-        {activeTab === "billing" && <BillingTab onManageBilling={handleManageBilling} portalLoading={portalLoading} portalError={portalError} />}
+        {activeTab === "billing" && <BillingTab onManageBilling={handleManageBilling} portalLoading={portalLoading} portalError={portalError} licenses={licenses} onRefresh={refreshLicenses} />}
         {activeTab === "security" && <SecurityTab email={email} />}
       </div>
     </div>
