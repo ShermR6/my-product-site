@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
         },
         quantity: 1,
       }],
+      allow_promotion_codes: true,
       success_url: `${process.env.NEXTAUTH_URL}/dashboard?tab=billing&upgraded=1`,
       cancel_url: `${process.env.NEXTAUTH_URL}/dashboard?tab=billing`,
       metadata: {
