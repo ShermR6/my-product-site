@@ -31,7 +31,7 @@ function XIcon() {
 const faqs = [
   {
     q: "Can I switch plans later?",
-    a: "Yes — you can switch plans at any time by contacting support. Changes take effect at the start of your next billing cycle.",
+    a: "Yes — you can upgrade your plan at any time directly from your dashboard. You'll be charged the flat price difference between plans today, and your subscription renews at the new plan's price on your next billing date. Downgrades can be arranged by contacting support.",
   },
   {
     q: "How does the 30-day refund work?",
