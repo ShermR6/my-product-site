@@ -11,6 +11,8 @@ export default function Footer() {
             <Link href="/contact">Support</Link>
             <Link href="/download">Download</Link>
             <Link href="/pricing">Purchase</Link>
+            <Link href="/changelog">Changelog</Link>
+            <Link href="/status">Status</Link>
           </div>
         </div>
       </div>

@@ -59,7 +59,33 @@ export default function PricingTabs() {
   const [mode, setMode] = useState<"personal" | "team">("personal");
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const [trialLoading, setTrialLoading] = useState(false);
   const router = useRouter();
+
+  const handleTrial = async () => {
+    setTrialLoading(true);
+    try {
+      const res = await fetch("/api/trial", { method: "POST" });
+      const data = await res.json();
+      if (res.status === 401 || data.requireLogin) {
+        router.push("/login?callbackUrl=/pricing");
+        return;
+      }
+      if (res.status === 409) {
+        alert(data.error);
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setTrialLoading(false);
+    }
+  };
 
   const handleBuy = async (tier: string) => {
     setLoadingTier(tier);
@@ -291,6 +317,19 @@ export default function PricingTabs() {
               >
                 {mode === "team" ? "Coming Soon" : loadingTier === p.tier ? "Loading..." : p.cta}
               </button>
+              {p.tier === "starter" && mode === "personal" && billing === "monthly" && (
+                <button
+                  onClick={handleTrial}
+                  disabled={trialLoading}
+                  style={{
+                    background: "none", border: "none", cursor: trialLoading ? "default" : "pointer",
+                    color: "var(--accent)", fontSize: 13, padding: "6px 0 0", textDecoration: "underline",
+                    opacity: trialLoading ? 0.6 : 1,
+                  }}
+                >
+                  {trialLoading ? "Loading..." : "Try free for 7 days →"}
+                </button>
+              )}
               <div className="pt-tagline">{p.tagline}</div>
             </div>
           ))}

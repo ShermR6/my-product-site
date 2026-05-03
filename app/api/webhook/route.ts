@@ -176,12 +176,18 @@ export async function POST(req: NextRequest) {
     const stripeSubscriptionId = session.subscription as string | null;
 
     // Pause the subscription until the user activates their license key
+    // Skip pause for trial subscriptions — they're already not charging
     if (stripeSubscriptionId) {
       try {
-        await stripe.subscriptions.update(stripeSubscriptionId, {
-          pause_collection: { behavior: "void" },
-        });
-        console.log(`Paused subscription ${stripeSubscriptionId} until activation`);
+        const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+        if (sub.status !== "trialing") {
+          await stripe.subscriptions.update(stripeSubscriptionId, {
+            pause_collection: { behavior: "void" },
+          });
+          console.log(`Paused subscription ${stripeSubscriptionId} until activation`);
+        } else {
+          console.log(`Skipped pause for trial subscription ${stripeSubscriptionId}`);
+        }
       } catch (err) {
         console.error("Failed to pause subscription:", err);
       }
