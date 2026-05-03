@@ -211,10 +211,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true });
       }
 
-      const now = new Date();
-      const currentExpiry = license.expiresAt ?? now;
-      const baseDate = currentExpiry > now ? currentExpiry : now;
-      const newExpiry = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      // Use Stripe's authoritative period end so license expiry always matches
+      // the next billing date. Fall back to +30 days if the field is missing.
+      const periodEnd = invoice.lines.data[0]?.period?.end;
+      const newExpiry = periodEnd
+        ? new Date(periodEnd * 1000)
+        : new Date((license.expiresAt ?? new Date()).getTime() + 30 * 24 * 60 * 60 * 1000);
 
       await prisma.license.update({
         where: { id: license.id },
