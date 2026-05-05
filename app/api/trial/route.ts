@@ -17,13 +17,13 @@ export async function POST(req: NextRequest) {
 
     const email = session.user.email.toLowerCase().trim();
 
-    // One trial per email — check for any existing trial license
-    const existing = await prisma.license.findFirst({
-      where: { purchaseEmail: email, tier: "starter" },
+    // Block only if the account already has an active license
+    const activeLicense = await prisma.license.findFirst({
+      where: { purchaseEmail: email, status: "active" },
     });
-    if (existing) {
+    if (activeLicense) {
       return NextResponse.json(
-        { error: "A trial or starter plan already exists for this account. Visit your dashboard to manage it." },
+        { error: "Your account already has an active plan. Visit your dashboard to manage it." },
         { status: 409 }
       );
     }

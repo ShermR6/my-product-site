@@ -60,10 +60,13 @@ export default function PricingTabs() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const [trialLoading, setTrialLoading] = useState(false);
+  const [trialError, setTrialError] = useState<string | null>(null);
+  const [buyError, setBuyError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleTrial = async () => {
     setTrialLoading(true);
+    setTrialError(null);
     try {
       const res = await fetch("/api/trial", { method: "POST" });
       const data = await res.json();
@@ -71,17 +74,13 @@ export default function PricingTabs() {
         router.push("/login?callbackUrl=/pricing");
         return;
       }
-      if (res.status === 409) {
-        alert(data.error);
+      if (!res.ok) {
+        setTrialError(data.error ?? "Something went wrong. Please try again.");
         return;
       }
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Something went wrong. Please try again.");
-      }
+      if (data.url) window.location.href = data.url;
     } catch {
-      alert("Something went wrong. Please try again.");
+      setTrialError("Something went wrong. Please try again.");
     } finally {
       setTrialLoading(false);
     }
@@ -89,6 +88,7 @@ export default function PricingTabs() {
 
   const handleBuy = async (tier: string) => {
     setLoadingTier(tier);
+    setBuyError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -105,10 +105,10 @@ export default function PricingTabs() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert("Something went wrong. Please try again.");
+        setBuyError("Something went wrong. Please try again.");
       }
     } catch {
-      alert("Something went wrong. Please try again.");
+      setBuyError("Something went wrong. Please try again.");
     } finally {
       setLoadingTier(null);
     }
@@ -318,17 +318,24 @@ export default function PricingTabs() {
                 {mode === "team" ? "Coming Soon" : loadingTier === p.tier ? "Loading..." : p.cta}
               </button>
               {p.tier === "starter" && mode === "personal" && billing === "monthly" && (
-                <button
-                  onClick={handleTrial}
-                  disabled={trialLoading}
-                  style={{
-                    background: "none", border: "none", cursor: trialLoading ? "default" : "pointer",
-                    color: "var(--accent)", fontSize: 13, padding: "6px 0 0", textDecoration: "underline",
-                    opacity: trialLoading ? 0.6 : 1,
-                  }}
-                >
-                  {trialLoading ? "Loading..." : "Try free for 7 days →"}
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <button
+                    onClick={handleTrial}
+                    disabled={trialLoading}
+                    style={{
+                      background: "none", border: "none", cursor: trialLoading ? "default" : "pointer",
+                      color: "var(--accent)", fontSize: 13, padding: "6px 0 0", textDecoration: "underline",
+                      opacity: trialLoading ? 0.6 : 1,
+                    }}
+                  >
+                    {trialLoading ? "Loading..." : "Try free for 7 days →"}
+                  </button>
+                  {trialError && (
+                    <div style={{ fontSize: 12, color: "#f87171", textAlign: "center", maxWidth: 200 }}>
+                      {trialError}
+                    </div>
+                  )}
+                </div>
               )}
               <div className="pt-tagline">{p.tagline}</div>
             </div>
