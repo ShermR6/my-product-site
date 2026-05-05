@@ -332,8 +332,6 @@ export async function POST(req: NextRequest) {
   if (event.type === "customer.subscription.deleted") {
     const subscription = event.data.object as Stripe.Subscription;
     const subscriptionId = subscription.id;
-    const cancelledEmail = subscription.customer_details?.email
-      ?? (typeof subscription.customer === "string" ? null : null);
 
     const license = await prisma.license.findFirst({
       where: { stripeSubscriptionId: subscriptionId },
@@ -358,7 +356,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send cancellation email if we have an address
-      const emailTo = cancelledEmail || license.purchaseEmail;
+      const emailTo = license.purchaseEmail;
       if (emailTo) {
         const tierLabel = license.tier === "pro" ? "Pro" : license.tier === "premium" ? "Premium" : "Starter";
         const isTrial = subscription.metadata?.is_trial === "true";
