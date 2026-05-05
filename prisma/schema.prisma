@@ -93,4 +93,5 @@ model License {
   createdAt       DateTime  @default(now())
   activatedAt     DateTime?
   expiresAt       DateTime?
+  hadTrial        Boolean   @default(false)
 }

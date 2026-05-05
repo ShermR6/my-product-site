@@ -195,6 +195,8 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
+    const isTrial = session.metadata?.is_trial === "true";
+
     await prisma.license.create({
       data: {
         purchaseEmail: email,
@@ -204,6 +206,7 @@ export async function POST(req: NextRequest) {
         status: "inactive",
         stripeSessionId: session.id,
         stripeSubscriptionId: stripeSubscriptionId ?? undefined,
+        hadTrial: isTrial,
       },
     });
 
