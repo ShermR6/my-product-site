@@ -328,5 +328,67 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Subscription cancelled / trial ended without payment ───────────────────
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+    const subscriptionId = subscription.id;
+    const cancelledEmail = subscription.customer_details?.email
+      ?? (typeof subscription.customer === "string" ? null : null);
+
+    const license = await prisma.license.findFirst({
+      where: { stripeSubscriptionId: subscriptionId },
+    });
+
+    if (license) {
+      await prisma.license.update({
+        where: { id: license.id },
+        data: { status: "inactive", expiresAt: new Date() },
+      });
+
+      try {
+        await fetch(`${BACKEND_URL}/api/licenses/${license.licenseKey}/expire`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
+          },
+        });
+      } catch (err) {
+        console.error("Failed to expire license on backend:", err);
+      }
+
+      // Send cancellation email if we have an address
+      const emailTo = cancelledEmail || license.purchaseEmail;
+      if (emailTo) {
+        const tierLabel = license.tier === "pro" ? "Pro" : license.tier === "premium" ? "Premium" : "Starter";
+        const isTrial = subscription.metadata?.is_trial === "true";
+        await resend.emails.send({
+          from: "FinalPing <noreply@finalpingapp.com>",
+          to: emailTo,
+          subject: isTrial
+            ? "Your FinalPing trial has ended"
+            : `Your FinalPing ${tierLabel} subscription has been cancelled`,
+          html: `
+            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+              <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+              <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
+              ${isTrial
+                ? `<p style="font-size:15px;margin-bottom:8px;">Your 7-day free trial has ended and your access has been deactivated.</p>
+                   <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">Ready to keep tracking? Subscribe to a plan to restore access instantly.</p>`
+                : `<p style="font-size:15px;margin-bottom:8px;">Your <strong>${tierLabel}</strong> subscription has been cancelled and your access has been deactivated.</p>
+                   <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">You can resubscribe at any time to restore access.</p>`
+              }
+              <a href="https://finalpingapp.com/pricing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Plans</a>
+            </div>
+          `,
+        });
+      }
+
+      console.log(`License deactivated for subscription ${subscriptionId} (${license.licenseKey})`);
+    } else {
+      console.error(`No license found for cancelled subscription ${subscriptionId}`);
+    }
+  }
+
   return NextResponse.json({ received: true });
 }
