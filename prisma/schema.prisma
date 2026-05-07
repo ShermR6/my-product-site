@@ -70,6 +70,10 @@ model User {
   pendingPasswordCode     String?
   pendingPasswordExpiry   DateTime?
   pendingPasswordMethod   String?
+
+  // Pending 2FA login
+  pendingLoginToken       String?
+  pendingLoginExpiry      DateTime?
 }
 
 model VerificationToken {

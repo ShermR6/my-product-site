@@ -11,20 +11,36 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        loginToken: { label: "Login Token", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email) return null;
 
         const email = credentials.email.toLowerCase();
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
+        // 2FA login flow — loginToken issued after successful 2FA verification
+        if (credentials.loginToken) {
+          if (!user.pendingLoginToken || !user.pendingLoginExpiry) return null;
+          if (new Date() > user.pendingLoginExpiry) return null;
+          if (credentials.loginToken !== user.pendingLoginToken) return null;
+          // Single-use: clear the token immediately
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { pendingLoginToken: null, pendingLoginExpiry: null },
+          });
+          return { id: user.id, email: user.email, name: user.name };
+        }
 
-        if (!user || !user.password) return null;
-
+        // Password login flow
+        if (!credentials.password || !user.password) return null;
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
+
+        // If 2FA is enabled, block direct password login — must use 2FA flow
+        const has2FA = user.twoFactorEmailEnabled || user.twoFactorSmsEnabled || user.twoFactorTotpEnabled;
+        if (has2FA) return null;
 
         return { id: user.id, email: user.email, name: user.name };
       },
