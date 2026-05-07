@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
@@ -13,7 +13,8 @@ export async function POST(
   }
 
   const { action } = await req.json();
-  const licenseKey = params.key.toUpperCase();
+  const { key } = await params;
+  const licenseKey = key.toUpperCase();
 
   if (action === "revoke") {
     const license = await prisma.license.update({
