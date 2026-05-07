@@ -18,7 +18,7 @@ function generateLicenseKey(): string {
   return segments.join("-");
 }
 
-async function createLicenseInBackend(licenseKey: string, tier: string, email: string, stripeSubscriptionId?: string) {
+async function createLicenseInBackend(licenseKey: string, tier: string, email: string) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/licenses/provision`, {
       method: "POST",
@@ -30,7 +30,6 @@ async function createLicenseInBackend(licenseKey: string, tier: string, email: s
         license_key: licenseKey,
         tier,
         email,
-        stripe_subscription_id: stripeSubscriptionId || null,
       }),
     });
 
@@ -59,62 +58,6 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
-    // ── Plan upgrade payment ──────────────────────────────────────────────
-    if (session.metadata?.type === "upgrade") {
-      const { licenseKey, newTier, subscriptionId, newPriceId } = session.metadata;
-      const upgradeEmail = session.customer_details?.email ?? "";
-
-      try {
-        // Update the Stripe subscription price for next renewal (no proration)
-        const sub = await stripe.subscriptions.retrieve(subscriptionId);
-        await stripe.subscriptions.update(subscriptionId, {
-          items: [{ id: sub.items.data[0].id, price: newPriceId }],
-          proration_behavior: "none",
-        });
-
-        // Update tier in web dashboard DB
-        await prisma.license.update({
-          where: { licenseKey },
-          data: { tier: newTier },
-        });
-
-        // Update tier in backend DB
-        await fetch(`${BACKEND_URL}/api/licenses/${licenseKey}/tier`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
-          },
-          body: JSON.stringify({ tier: newTier }),
-        });
-
-        const tierLabel = newTier === "pro" ? "Pro" : newTier === "premium" ? "Premium" : "Starter";
-        if (upgradeEmail) {
-          await resend.emails.send({
-            from: "FinalPing <noreply@finalpingapp.com>",
-            to: upgradeEmail,
-            subject: `You've upgraded to FinalPing ${tierLabel}`,
-            html: `
-              <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
-                <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
-                <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
-                <p style="font-size:15px;margin-bottom:8px;">Your plan has been upgraded to <strong>${tierLabel}</strong>.</p>
-                <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">Your new limits are active immediately in the desktop app. Your subscription will renew at the ${tierLabel} plan price on your next billing date.</p>
-                <a href="https://finalpingapp.com/dashboard?tab=billing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Dashboard</a>
-              </div>
-            `,
-          });
-        }
-
-        console.log(`Plan upgraded for ${upgradeEmail}: ${licenseKey} → ${newTier}`);
-      } catch (err) {
-        console.error("Upgrade webhook error:", err);
-      }
-
-      return NextResponse.json({ received: true });
-    }
-
     const tier = session.metadata?.tier ?? "starter";
     const customerEmail = session.customer_details?.email ?? session.metadata?.email;
 
@@ -127,11 +70,13 @@ export async function POST(req: NextRequest) {
 
     // ── Ground Station one-time purchase ──────────────────────────────────
     if (tier === "ground-station") {
+      // Enable in Prisma
       await prisma.user.updateMany({
         where: { email },
         data: { groundStationEnabled: true },
       });
 
+      // Enable on Railway
       try {
         await fetch(`${BACKEND_URL}/api/admin/grant-ground-station`, {
           method: "POST",
@@ -145,6 +90,7 @@ export async function POST(req: NextRequest) {
         console.error("Failed to enable ground station on Railway:", err);
       }
 
+      // Send confirmation email with download instructions
       await resend.emails.send({
         from: "FinalPing <noreply@finalpingapp.com>",
         to: email,
@@ -170,32 +116,11 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Regular license purchase ──────────────────────────────────────────
+    // Always generate a new unique license key for every purchase
     const licenseKey = generateLicenseKey();
 
-    // Get the Stripe subscription ID so we can resume billing on activation
-    const stripeSubscriptionId = session.subscription as string | null;
-
-    // Pause the subscription until the user activates their license key
-    // Skip pause for trial subscriptions — they're already not charging
-    if (stripeSubscriptionId) {
-      try {
-        const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-        if (sub.status !== "trialing") {
-          await stripe.subscriptions.update(stripeSubscriptionId, {
-            pause_collection: { behavior: "void" },
-          });
-          console.log(`Paused subscription ${stripeSubscriptionId} until activation`);
-        } else {
-          console.log(`Skipped pause for trial subscription ${stripeSubscriptionId}`);
-        }
-      } catch (err) {
-        console.error("Failed to pause subscription:", err);
-      }
-    }
-
+    // Optionally link to existing user if they have an account
     const user = await prisma.user.findUnique({ where: { email } });
-
-    const isTrial = session.metadata?.is_trial === "true";
 
     await prisma.license.create({
       data: {
@@ -203,17 +128,17 @@ export async function POST(req: NextRequest) {
         userId: user?.id ?? undefined,
         licenseKey,
         tier,
-        status: "inactive",
+        status: "inactive", // becomes "active" when activated in desktop app
         stripeSessionId: session.id,
-        stripeSubscriptionId: stripeSubscriptionId ?? undefined,
-        hadTrial: isTrial,
       },
     });
 
-    await createLicenseInBackend(licenseKey, tier, email, stripeSubscriptionId ?? undefined);
+    // Also create the license in the FastAPI backend database
+    await createLicenseInBackend(licenseKey, tier, email);
 
     const tierLabel = tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : "Starter";
 
+    // Send license key email
     await resend.emails.send({
       from: "FinalPing <noreply@finalpingapp.com>",
       to: email,
@@ -246,13 +171,14 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    console.log(`License created for ${email}: ${licenseKey} (sub: ${stripeSubscriptionId || 'none'})`);
+    console.log(`License created for ${email}: ${licenseKey}`);
   }
 
   // ── Subscription renewal — extend existing license by 30 days ──────────────
   if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object as Stripe.Invoice;
 
+    // Only handle renewal invoices, not the first payment (handled by checkout.session.completed)
     if (invoice.billing_reason === "subscription_cycle") {
       const customerEmail =
         typeof invoice.customer_email === "string"
@@ -266,6 +192,7 @@ export async function POST(req: NextRequest) {
 
       const email = customerEmail.toLowerCase().trim();
 
+      // Find the most recently activated license for this email
       const license = await prisma.license.findFirst({
         where: { purchaseEmail: email, status: "active" },
         orderBy: { activatedAt: "desc" },
@@ -276,18 +203,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true });
       }
 
-      // Use Stripe's authoritative period end so license expiry always matches
-      // the next billing date. Fall back to +30 days if the field is missing.
-      const periodEnd = invoice.lines.data[0]?.period?.end;
-      const newExpiry = periodEnd
-        ? new Date(periodEnd * 1000)
-        : new Date((license.expiresAt ?? new Date()).getTime() + 30 * 24 * 60 * 60 * 1000);
+      // Extend expires_at by 30 days from now (or from current expiry if in the future)
+      const now = new Date();
+      const currentExpiry = license.expiresAt ?? now;
+      const baseDate = currentExpiry > now ? currentExpiry : now;
+      const newExpiry = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
 
       await prisma.license.update({
         where: { id: license.id },
         data: { expiresAt: newExpiry },
       });
 
+      // Also update Railway backend
       try {
         await fetch(`${BACKEND_URL}/api/licenses/renew`, {
           method: "POST",
@@ -304,6 +231,7 @@ export async function POST(req: NextRequest) {
         console.error("Failed to update Railway on renewal:", err);
       }
 
+      // Send renewal confirmation email
       const tierLabel =
         license.tier === "pro" ? "Pro" :
         license.tier === "premium" ? "Premium" : "Starter";
@@ -331,63 +259,65 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Subscription cancelled / trial ended without payment ───────────────────
+  // ── Subscription cancelled — expire the license ────────────────────────────
   if (event.type === "customer.subscription.deleted") {
-    const subscription = event.data.object as Stripe.Subscription;
-    const subscriptionId = subscription.id;
+    try {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerEmail =
+        typeof (subscription as any).customer_email === "string"
+          ? (subscription as any).customer_email
+          : null;
 
-    const license = await prisma.license.findFirst({
-      where: { stripeSubscriptionId: subscriptionId },
-    });
+      if (!customerEmail) {
+        console.error("No customer email in subscription.deleted event");
+        return NextResponse.json({ received: true });
+      }
 
-    if (license) {
-      await prisma.license.update({
-        where: { id: license.id },
-        data: { status: "inactive", expiresAt: new Date() },
+      const email = customerEmail.toLowerCase().trim();
+
+      const license = await prisma.license.findFirst({
+        where: { purchaseEmail: email, status: "active" },
+        orderBy: { activatedAt: "desc" },
       });
 
-      try {
-        await fetch(`${BACKEND_URL}/api/licenses/${license.licenseKey}/expire`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
-          },
-        });
-      } catch (err) {
-        console.error("Failed to expire license on backend:", err);
+      if (!license) {
+        console.error(`No active license to expire for: ${email}`);
+        return NextResponse.json({ received: true });
       }
 
-      // Send cancellation email if we have an address
-      const emailTo = license.purchaseEmail;
-      if (emailTo) {
-        const tierLabel = license.tier === "pro" ? "Pro" : license.tier === "premium" ? "Premium" : "Starter";
-        const isTrial = subscription.metadata?.is_trial === "true";
-        await resend.emails.send({
-          from: "FinalPing <noreply@finalpingapp.com>",
-          to: emailTo,
-          subject: isTrial
-            ? "Your FinalPing trial has ended"
-            : `Your FinalPing ${tierLabel} subscription has been cancelled`,
-          html: `
-            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
-              <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
-              <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
-              ${isTrial
-                ? `<p style="font-size:15px;margin-bottom:8px;">Your 7-day free trial has ended and your access has been deactivated.</p>
-                   <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">Ready to keep tracking? Subscribe to a plan to restore access instantly.</p>`
-                : `<p style="font-size:15px;margin-bottom:8px;">Your <strong>${tierLabel}</strong> subscription has been cancelled and your access has been deactivated.</p>
-                   <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">You can resubscribe at any time to restore access.</p>`
-              }
-              <a href="https://finalpingapp.com/pricing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Plans</a>
-            </div>
-          `,
-        });
-      }
+      const now = new Date();
 
-      console.log(`License deactivated for subscription ${subscriptionId} (${license.licenseKey})`);
-    } else {
-      console.error(`No license found for cancelled subscription ${subscriptionId}`);
+      await prisma.license.update({
+        where: { id: license.id },
+        data: { status: "expired", expiresAt: now },
+      });
+
+      const tierLabel =
+        license.tier === "pro" ? "Pro" :
+        license.tier === "premium" ? "Premium" : "Starter";
+
+      await resend.emails.send({
+        from: "FinalPing <noreply@finalpingapp.com>",
+        to: email,
+        subject: "Your FinalPing subscription has ended",
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+            <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+            <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
+            <p style="font-size:15px;margin-bottom:8px;">Your <strong>${tierLabel}</strong> subscription has ended.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:8px;">Your license expired on <strong>${now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:24px;">To continue tracking aircraft and receiving alerts, you can re-subscribe at any time.</p>
+            <a href="https://finalpingapp.com/pricing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Re-subscribe →</a>
+            <p style="font-size:12px;color:#555;margin-top:28px;">
+              Thank you for being a FinalPing customer. We hope to see you again soon.
+            </p>
+          </div>
+        `,
+      });
+
+      console.log(`License expired for ${email} (subscription.deleted)`);
+    } catch (err) {
+      console.error("Error handling subscription.deleted:", err);
     }
   }
 

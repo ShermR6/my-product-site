@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Resend } from "resend";
 const bcrypt = require("bcryptjs");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +36,30 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
       },
     });
+
+    // Send welcome email — non-blocking
+    try {
+      await resend.emails.send({
+        from: "FinalPing <noreply@finalpingapp.com>",
+        to: email,
+        subject: "Welcome to FinalPing",
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+            <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+            <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
+            <p style="font-size:15px;margin-bottom:16px;">Welcome! Your account is ready.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:24px;">Browse plans to get started tracking aircraft and receive real-time proximity alerts.</p>
+            <a href="https://finalpingapp.com/pricing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;margin-right:12px;margin-bottom:12px;">Browse Plans</a>
+            <a href="https://finalpingapp.com/download" style="display:inline-block;padding:12px 24px;background:transparent;color:#f5b400;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;border:1px solid #f5b400;">Download the App</a>
+            <p style="font-size:12px;color:#555;margin-top:28px;">
+              Questions? Visit <a href="https://finalpingapp.com/dashboard" style="color:#f5b400;">your dashboard</a> anytime.
+            </p>
+          </div>
+        `,
+      });
+    } catch (emailErr) {
+      console.error("Welcome email failed:", emailErr);
+    }
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {
