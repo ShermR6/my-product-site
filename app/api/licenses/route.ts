@@ -21,7 +21,7 @@ export async function GET() {
   }
 
   const licenses = await prisma.license.findMany({
-    where: { purchaseEmail: email },
+    where: { purchaseEmail: email, NOT: { status: "revoked" } },
     orderBy: { createdAt: "desc" },
   });
 
