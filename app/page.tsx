@@ -34,7 +34,7 @@ const faqs = [
   { q: "What platforms are supported?", a: "FinalPing is currently available as a Windows desktop application. macOS and Linux support are planned for future releases." },
   { q: "Can I customize the alert messages?", a: "Absolutely. Each distance alert has a fully customizable message template with variables like {tail_number}, {airport}, {distance}, and {altitude} that get replaced with real data." },
   { q: "What happens if I reinstall or switch computers?", a: "Your license key works across reinstalls. Just enter the same key on your new setup and you're good to go." },
-  { q: "Is there a free trial?", a: "There isn't a free trial at this time, but all plans come with support. If something isn't working as expected, reach out via the contact page and we'll help." },
+  { q: "Is there a free trial?", a: "Yes — all plans include a 7-day free trial. Your 30-day access period begins when you activate your license key in the app, not when you purchase. There's also a 30-day money-back guarantee if FinalPing isn't the right fit." },
 ];
 
 export default function HomePage() {
@@ -76,17 +76,21 @@ export default function HomePage() {
           Instant SMS and push alerts the moment your aircraft enters your airspace.
         </p>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 32 }}>
-          <Link href="/download" className="btn btn-solid" style={{
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
+          <Link href="/pricing" className="btn btn-solid" style={{
             padding: "13px 28px", borderRadius: "999px", fontSize: 14,
             boxShadow: "0 0 32px rgba(14,165,233,0.3)",
           }}>
+            Start Free Trial
+          </Link>
+          <Link href="/download" className="btn btn-outline" style={{ padding: "13px 28px", borderRadius: "999px", fontSize: 14 }}>
             Download Now
           </Link>
-          <Link href="/pricing" className="btn btn-outline" style={{ padding: "13px 28px", borderRadius: "999px", fontSize: 14 }}>
-            View Pricing
-          </Link>
         </div>
+
+        <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 28 }}>
+          7-day free trial · 30-day money-back guarantee · No commitment
+        </p>
 
         <div className="chips" style={{ justifyContent: "center" }}>
           <span className="chip">Instant delivery</span>
@@ -287,18 +291,21 @@ export default function HomePage() {
       {/* BOTTOM CTA */}
       <section style={{ position: "relative", zIndex: 1, paddingTop: 40, paddingBottom: 16 }}>
         <div className="panel" style={{ padding: 40, textAlign: "center" }}>
-          <h2 style={{ fontSize: 28, marginBottom: 8, letterSpacing: "-0.02em" }}>Ready to start tracking?</h2>
-          <p style={{ maxWidth: 440, margin: "0 auto 24px", fontSize: 15 }}>
-            Get FinalPing today and never miss an aircraft arrival again.
+          <h2 style={{ fontSize: 28, marginBottom: 8, letterSpacing: "-0.02em" }}>Try FinalPing free for 7 days</h2>
+          <p style={{ maxWidth: 440, margin: "0 auto 8px", fontSize: 15 }}>
+            No commitment. Cancel anytime. 30-day money-back guarantee.
+          </p>
+          <p style={{ maxWidth: 440, margin: "0 auto 24px", fontSize: 13, color: "var(--muted)" }}>
+            Your 30-day access period begins when you activate your license — not when you purchase.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link className="btn btn-outline" href="/pricing" style={{ padding: "12px 24px", borderRadius: "999px" }}>
-              View Pricing
-            </Link>
-            <Link className="btn btn-solid" href="/download" style={{
+            <Link className="btn btn-solid" href="/pricing" style={{
               padding: "12px 24px", borderRadius: "999px",
               boxShadow: "0 0 24px rgba(14,165,233,0.25)",
             }}>
+              Start Free Trial
+            </Link>
+            <Link className="btn btn-outline" href="/download" style={{ padding: "12px 24px", borderRadius: "999px" }}>
               Download Now
             </Link>
           </div>
