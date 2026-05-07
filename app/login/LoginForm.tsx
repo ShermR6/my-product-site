@@ -13,6 +13,18 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
+  const pwStrength = (pw: string) => {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return score;
+  };
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"];
+  const strengthColor = ["", "#ef4444", "#f59e0b", "#0ea5e9", "#23c76b"];
+  const strength = tab === "signup" ? pwStrength(password) : 0;
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -163,8 +175,28 @@ export default function LoginForm() {
             onFocus={e => e.target.style.borderColor = "#3b82f6"}
             onBlur={e => e.target.style.borderColor = "#374151"}
           />
-          {tab === "signup" && (
-            <p style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>Minimum 8 characters</p>
+          {tab === "signup" && password.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 4, marginBottom: 5 }}>
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: strength >= i ? strengthColor[strength] : "#374151", transition: "background 0.2s" }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: strengthColor[strength] || "#6b7280" }}>{strengthLabel[strength] || "Too weak"}</span>
+              </div>
+              <div style={{ marginTop: 6, display: "flex", flexDirection: "column" as const, gap: 2 }}>
+                {[
+                  { label: "8+ characters", met: password.length >= 8 },
+                  { label: "Uppercase letter", met: /[A-Z]/.test(password) },
+                  { label: "Number", met: /[0-9]/.test(password) },
+                ].map(r => (
+                  <span key={r.label} style={{ fontSize: 11, color: r.met ? "#23c76b" : "#6b7280" }}>
+                    {r.met ? "✓" : "○"} {r.label}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 

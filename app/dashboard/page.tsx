@@ -848,8 +848,18 @@ function DashboardContent() {
   const [licensesLoading, setLicensesLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState("");
+  const [show2FABanner, setShow2FABanner] = useState(false);
 
   useEffect(() => { if (status === "unauthenticated") window.location.href = "/login"; }, [status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const dismissed = sessionStorage.getItem("2fa-banner-dismissed");
+    if (dismissed) return;
+    fetch("/api/auth/2fa/status").then(r => r.json()).then(d => {
+      if (!d.email && !d.sms && !d.totp) setShow2FABanner(true);
+    }).catch(() => {});
+  }, [status]);
 
   const refreshLicenses = useCallback(() => {
     if (!session?.user?.email) return;
@@ -885,6 +895,18 @@ function DashboardContent() {
         ))}
       </div>
       <div style={styles.main}>
+        {show2FABanner && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 16px", marginBottom: 24, borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
+              <span style={{ fontSize: 16 }}>🔒</span>
+              <span style={{ color: "#f9fafb" }}>Secure your account with two-factor authentication.</span>
+              <button onClick={() => setActiveTab("security")} style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                Enable 2FA →
+              </button>
+            </div>
+            <button onClick={() => { setShow2FABanner(false); sessionStorage.setItem("2fa-banner-dismissed", "1"); }} style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1 }}>✕</button>
+          </div>
+        )}
         {activeTab === "account" && <AccountTab email={email} session={session} />}
         {activeTab === "licenses" && <LicensesTab licenses={licenses} loading={licensesLoading} />}
         {activeTab === "alerts" && <AlertsTab email={email} />}
