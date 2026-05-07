@@ -11,6 +11,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const pwStrength = (pw: string) => {
@@ -164,17 +165,26 @@ export default function LoginForm() {
           <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
             Password
           </label>
-          <input
-            style={inputStyle}
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            minLength={8}
-            onFocus={e => e.target.style.borderColor = "#3b82f6"}
-            onBlur={e => e.target.style.borderColor = "#374151"}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              style={{ ...inputStyle, paddingRight: "42px" }}
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              minLength={8}
+              onFocus={e => e.target.style.borderColor = "#3b82f6"}
+              onBlur={e => e.target.style.borderColor = "#374151"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#6b7280", fontSize: "13px", padding: 0, lineHeight: 1 }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           {tab === "signup" && password.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <div style={{ display: "flex", gap: 4, marginBottom: 5 }}>
