@@ -321,5 +321,39 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Trial ending soon — send 3-day warning email ──────────────────────────
+  if (event.type === "customer.subscription.trial_will_end") {
+    try {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const customerEmail = (customer as Stripe.Customer).email;
+
+      if (customerEmail) {
+        const trialEnd = new Date((subscription.trial_end ?? 0) * 1000);
+        await resend.emails.send({
+          from: "FinalPing <noreply@finalpingapp.com>",
+          to: customerEmail,
+          subject: "Your FinalPing trial ends in 3 days",
+          html: `
+            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+              <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+              <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
+              <p style="font-size:15px;margin-bottom:8px;">Your free trial ends on <strong>${trialEnd.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>.</p>
+              <p style="font-size:13px;color:#bdbdbd;margin-bottom:8px;">After your trial expires, aircraft tracking and alerts will be paused until you subscribe.</p>
+              <p style="font-size:13px;color:#bdbdbd;margin-bottom:24px;">Your card on file will be charged automatically — no action needed if you'd like to continue.</p>
+              <a href="https://finalpingapp.com/dashboard?tab=billing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Manage Subscription →</a>
+              <p style="font-size:12px;color:#555;margin-top:28px;">
+                Want to cancel? Visit your <a href="https://finalpingapp.com/dashboard?tab=billing" style="color:#f5b400;">billing settings</a> before your trial ends.
+              </p>
+            </div>
+          `,
+        });
+        console.log(`Trial ending email sent to ${customerEmail}`);
+      }
+    } catch (err) {
+      console.error("Error handling trial_will_end:", err);
+    }
+  }
+
   return NextResponse.json({ received: true });
 }

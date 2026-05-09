@@ -141,6 +141,9 @@ function CodeInput({ value, onChange, onSubmit }: { value: string; onChange: (v:
 
 function AccountTab({ email, session }: { email: string; session: any }) {
   const [memberSince, setMemberSince] = useState<string>("—");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -152,6 +155,20 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       })
       .catch(() => {});
   }, []);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/auth/delete-account", { method: "DELETE" });
+      if (res.ok) {
+        await signOut({ callbackUrl: "/" });
+      }
+    } catch {
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
+  };
+
   return (
     <div>
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Account Information</h2><p style={styles.tabSub}>Your profile and account details</p></div>
@@ -161,10 +178,31 @@ function AccountTab({ email, session }: { email: string; session: any }) {
           <span style={styles.infoValue}>{memberSince}</span>
         </div>
       </div>
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
         <button onClick={() => signOut({ callbackUrl: "/" })} style={styles.dangerBtn}
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Sign Out</button>
+      </div>
+      <div style={{ marginTop: 32, padding: "20px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, background: "rgba(239,68,68,0.04)" }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#ef4444", margin: "0 0 6px" }}>Delete Account</h3>
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>Permanently delete your account and cancel any active subscriptions. This cannot be undone.</p>
+        {!deleteConfirm ? (
+          <button onClick={() => setDeleteConfirm(true)} style={{ ...styles.dangerBtn, borderColor: "rgba(239,68,68,0.3)" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Delete Account</button>
+        ) : (
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "#f87171" }}>Are you sure? This is permanent.</span>
+            <button onClick={handleDeleteAccount} disabled={deleting}
+              style={{ padding: "8px 16px", background: "#ef4444", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+              {deleting ? "Deleting..." : "Yes, delete"}
+            </button>
+            <button onClick={() => setDeleteConfirm(false)}
+              style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--muted)", fontSize: 13, cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
