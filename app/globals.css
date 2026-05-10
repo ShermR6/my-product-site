@@ -366,13 +366,14 @@ textarea { min-height: 110px; resize: vertical; }
 [data-theme="dark"] .pt-header { background: rgba(255,255,255,0.02); }
 
 .pt-cell {
-  padding: 14px 14px;
+  padding: 14px 12px;
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
-  min-height: 48px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
+  vertical-align: middle;
 }
 
 .pt-row .pt-cell:last-child { border-right: none; }

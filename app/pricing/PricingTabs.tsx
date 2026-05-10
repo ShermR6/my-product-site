@@ -19,6 +19,7 @@ type FeatureRow = {
   label: string;
   values: (string | boolean)[];
   subtitles?: (string | null)[];
+  subtitlePrefix?: (string | null)[];
 };
 
 function CheckIcon() {
@@ -191,7 +192,8 @@ export default function PricingTabs() {
       {
         label: "Notification channels",
         values: ["2 channels", "5 channels", "8 channels"],
-        subtitles: ["Discord & Email", "Starter + Slack, Teams & Google Chat", "Premium + SMS, Telegram & Webhook"],
+        subtitles: ["Discord · Email", "Slack · Teams · Google Chat", "SMS · Telegram · Webhook"],
+        subtitlePrefix: [null, "+ 3 more", "+ 3 more"],
       },
       { label: "Ground station add-on", values: [true, true, true] },
       { label: "Priority support", values: [false, true, true] },
@@ -348,11 +350,24 @@ export default function PricingTabs() {
             </div>
             {row.values.map((v, i) => (
               <div className={`pt-cell pt-value${data.plans[i]?.popular ? " pt-popular-col" : ""}`} key={i}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span>{v}</span>}
-                  {row.subtitles && row.subtitles[i] && (
-                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                      {row.subtitles[i]}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textAlign: "center" }}>
+                  {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : <span style={{ fontWeight: 700 }}>{v}</span>}
+                  {row.subtitles?.[i] && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                      {row.subtitlePrefix?.[i] && (
+                        <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.04em" }}>
+                          {row.subtitlePrefix[i]}
+                        </span>
+                      )}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center" }}>
+                        {row.subtitles[i]!.split(" · ").map(ch => (
+                          <span key={ch} style={{
+                            fontSize: 10, padding: "1px 6px", borderRadius: 999,
+                            background: "rgba(255,255,255,0.06)", color: "var(--muted)",
+                            border: "1px solid rgba(255,255,255,0.08)", whiteSpace: "nowrap",
+                          }}>{ch}</span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
