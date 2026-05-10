@@ -190,8 +190,8 @@ export default function PricingTabs() {
       { label: "Distance alerts", values: [true, true, true] },
       {
         label: "Notification channels",
-        values: ["2 channels", "4 channels", "5 channels"],
-        subtitles: ["Discord & Email", "Starter + Slack & Teams", "Premium + SMS"],
+        values: ["2 channels", "5 channels", "8 channels"],
+        subtitles: ["Discord & Email", "Starter + Slack, Teams & Google Chat", "Premium + SMS, Telegram & Webhook"],
       },
       { label: "Ground station add-on", values: [true, true, true] },
       { label: "Priority support", values: [false, true, true] },
