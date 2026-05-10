@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     await resend.emails.send({
       from: "FinalPing Contact Form <support@finalpingapp.com>",
-      to: "andrew.p.sherman21@gmail.com",
+      to: "aircraftalerts@finalpingapp.com",
       replyTo: email,
       subject: `[FinalPing] New message from ${name || "Anonymous"}`,
       html: `
