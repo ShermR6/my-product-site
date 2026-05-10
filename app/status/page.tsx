@@ -1,12 +1,42 @@
 // app/status/page.tsx
-import { revalidatePath } from "next/cache";
 
-const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
+const UPTIMEROBOT_API = "https://api.uptimerobot.com/v2/getMonitors";
 
-async function checkBackend(): Promise<{ ok: boolean; ms: number }> {
+interface UptimeMonitor {
+  id: number;
+  friendly_name: string;
+  status: number; // 2=up, 8=seems down, 9=down
+  average_response_time: string;
+  custom_uptime_ratio: string; // "7day-30day"
+}
+
+async function getUptimeData(): Promise<UptimeMonitor[]> {
+  const apiKey = process.env.UPTIMEROBOT_API_KEY;
+  if (!apiKey) return [];
+  try {
+    const res = await fetch(UPTIMEROBOT_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        api_key: apiKey,
+        format: "json",
+        custom_uptime_ratios: "7-30",
+        response_times: "0",
+      }).toString(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+    const data = await res.json();
+    return data.monitors ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function checkWebsite(): Promise<{ ok: boolean; ms: number }> {
   const start = Date.now();
   try {
-    const res = await fetch(`${BACKEND_URL}/`, {
+    const res = await fetch("https://finalpingapp.com", {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
@@ -19,13 +49,28 @@ async function checkBackend(): Promise<{ ok: boolean; ms: number }> {
 export const dynamic = "force-dynamic";
 
 export default async function StatusPage() {
-  const backend = await checkBackend();
+  const [monitors, website] = await Promise.all([getUptimeData(), checkWebsite()]);
+
+  const apiMonitor = monitors.find((m) =>
+    m.friendly_name.toLowerCase().includes("backend") ||
+    m.friendly_name.toLowerCase().includes("api")
+  );
+
+  const apiUp = apiMonitor ? apiMonitor.status === 2 : null;
+  const apiUptime7 = apiMonitor?.custom_uptime_ratio?.split("-")[0];
+  const apiUptime30 = apiMonitor?.custom_uptime_ratio?.split("-")[1];
+  const apiResponseMs = apiMonitor?.average_response_time
+    ? Math.round(parseFloat(apiMonitor.average_response_time))
+    : null;
+
+  // Fallback if UptimeRobot not configured: treat as unknown
+  const backendOk = apiUp ?? true;
+  const allGood = backendOk && website.ok;
+
   const checkedAt = new Date().toLocaleString("en-US", {
     month: "short", day: "numeric", year: "numeric",
     hour: "numeric", minute: "2-digit", timeZoneName: "short",
   });
-
-  const allGood = backend.ok;
 
   return (
     <>
@@ -34,6 +79,7 @@ export default async function StatusPage() {
         Live status of FinalPing services. Updated on page load.
       </p>
 
+      {/* Overall banner */}
       <div
         className="panel-white"
         style={{
@@ -56,26 +102,43 @@ export default async function StatusPage() {
         </div>
       </div>
 
+      {/* Components */}
       <div className="panel-white" style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, marginBottom: 16 }}>Components</h2>
+
         <StatusRow
           label="FinalPing API"
           description="Aircraft tracking, alerts, license management"
-          ok={backend.ok}
-          ms={backend.ms}
+          ok={backendOk}
+          ms={apiResponseMs ?? undefined}
+          uptime7={apiUptime7}
+          uptime30={apiUptime30}
+        />
+        <StatusRow
+          label="Web Dashboard"
+          description="This site — billing, licenses, account"
+          ok={website.ok}
+          ms={website.ms}
         />
         <StatusRow
           label="Desktop App Updates"
           description="Auto-update delivery for Windows app"
           ok={true}
         />
-        <StatusRow
-          label="Web Dashboard"
-          description="This site — billing, licenses, account"
-          ok={true}
-        />
       </div>
 
+      {/* Uptime summary */}
+      {apiMonitor && (
+        <div className="panel-white" style={{ marginBottom: 16 }}>
+          <h2 style={{ fontSize: 15, marginBottom: 16 }}>Uptime</h2>
+          <div style={{ display: "flex", gap: 32 }}>
+            <UptimeStat label="Last 7 days" value={apiUptime7} />
+            <UptimeStat label="Last 30 days" value={apiUptime30} />
+          </div>
+        </div>
+      )}
+
+      {/* Incident history */}
       <div className="panel-white">
         <h2 style={{ fontSize: 15, marginBottom: 8 }}>Incident history</h2>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
@@ -96,11 +159,15 @@ function StatusRow({
   description,
   ok,
   ms,
+  uptime7,
+  uptime30,
 }: {
   label: string;
   description: string;
   ok: boolean;
   ms?: number;
+  uptime7?: string;
+  uptime30?: string;
 }) {
   return (
     <div
@@ -115,6 +182,12 @@ function StatusRow({
       <div>
         <div style={{ fontWeight: 600, fontSize: 14 }}>{label}</div>
         <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{description}</div>
+        {(uptime7 || uptime30) && (
+          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4, display: "flex", gap: 12 }}>
+            {uptime7 && <span>7d: <strong style={{ color: "var(--foreground)" }}>{parseFloat(uptime7).toFixed(2)}%</strong></span>}
+            {uptime30 && <span>30d: <strong style={{ color: "var(--foreground)" }}>{parseFloat(uptime30).toFixed(2)}%</strong></span>}
+          </div>
+        )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
         {ms !== undefined && (
@@ -133,6 +206,19 @@ function StatusRow({
           {ok ? "Operational" : "Degraded"}
         </span>
       </div>
+    </div>
+  );
+}
+
+function UptimeStat({ label, value }: { label: string; value?: string }) {
+  const pct = value ? parseFloat(value).toFixed(2) : null;
+  const color = pct
+    ? parseFloat(pct) >= 99.5 ? "#22c55e" : parseFloat(pct) >= 95 ? "#f59e0b" : "#ef4444"
+    : "var(--muted)";
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color }}>{pct ? `${pct}%` : "—"}</div>
     </div>
   );
 }
