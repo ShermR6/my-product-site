@@ -2,6 +2,7 @@
 import Link from "next/link";
 import AirplaneBackground from "./components/AirplaneBackground";
 import TestimonialsCarousel from "./components/TestimonialsCarousel";
+import VideoPlayer from "./components/VideoPlayer";
 
 const features = [
   { icon: "📡", title: "Live ADS-B Tracking", desc: "Monitors real-time aircraft transponder data to track exact positions, altitude, and speed of your selected aircraft." },
@@ -118,111 +119,51 @@ export default function HomePage() {
         position: "relative", zIndex: 1, paddingTop: 72, paddingBottom: 72,
         borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
       }}>
-        <div style={{
-          display: "grid", gridTemplateColumns: "1fr 1fr",
-          gap: 64, alignItems: "center", maxWidth: 960, margin: "0 auto",
-        }}>
-          <div>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
             <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>SEE IT IN ACTION</div>
             <h2 style={{ fontSize: 32, letterSpacing: "-0.02em", marginBottom: 12, lineHeight: 1.2 }}>
               From wheels down to{" "}
               <span style={{ color: "#0ea5e9" }}>instant alert</span>{" "}
               in seconds
             </h2>
-            <p style={{ fontSize: 15, color: "var(--muted)", marginBottom: 28, lineHeight: 1.7 }}>
+            <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
               FinalPing watches your aircraft 24/7 and fires alerts the moment they enter your airspace — so you&apos;re always ready at the ramp.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[
-                { n: "1", t: "Add your aircraft", d: "Enter tail numbers and ICAO codes. Takes 30 seconds." },
-                { n: "2", t: "Set your location", d: "Configure your airport or FBO with custom alert distances." },
-                { n: "3", t: "Connect your channels", d: "SMS, push alerts, email, and more. Mix and match." },
-                { n: "4", t: "Get alerted automatically", d: "10nm, 5nm, 2nm, and landing notifications fire in real time." },
-              ].map((s) => (
-                <div key={s.n} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <div style={{
-                    width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                    background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
-                    color: "#0ea5e9", fontSize: 11, fontWeight: 700,
-                    display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2,
-                  }}>{s.n}</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{s.t}</div>
-                    <div style={{ fontSize: 13, color: "var(--muted)" }}>{s.d}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Video placeholder */}
+          {/* Full-width video */}
           <div style={{
-            background: "var(--panel)", border: "1px solid var(--border)",
-            borderRadius: 20, overflow: "hidden", aspectRatio: "16/10",
-            position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
+            border: "1px solid var(--border)",
+            borderRadius: 20, overflow: "hidden", aspectRatio: "16/9",
+            position: "relative",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+            marginBottom: 40,
           }}>
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "radial-gradient(ellipse at 30% 40%, rgba(14,165,233,0.08) 0%, transparent 60%)",
-            }} />
-            <div style={{
-              position: "relative", zIndex: 1, width: "85%",
-              background: "#0b1320", border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 12, overflow: "hidden",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
-            }}>
-              <div style={{
-                background: "#0d1117", padding: "10px 14px",
-                display: "flex", alignItems: "center", gap: 8,
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f57" }} />
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#febc2e" }} />
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#28c840" }} />
-                <div style={{ fontSize: 11, color: "#4b5563", marginLeft: 8 }}>FinalPing — Dashboard</div>
-              </div>
-              <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                {[
-                  { label: "Aircraft", value: "9", color: "#0ea5e9" },
-                  { label: "Alerts Today", value: "14", color: "#0ea5e9" },
-                  { label: "Status", value: "● Active", color: "#22d3a3" },
-                ].map((c) => (
-                  <div key={c.label} style={{
-                    background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.12)",
-                    borderRadius: 8, padding: 12,
-                  }}>
-                    <div style={{ fontSize: 9, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{c.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: c.color }}>{c.value}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+            <VideoPlayer src="/videos/FinalPingSAAS.mp4" />
+          </div>
+
+          {/* Steps below */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            {[
+              { n: "1", t: "Add your aircraft", d: "Enter tail numbers and ICAO codes. Takes 30 seconds." },
+              { n: "2", t: "Set your location", d: "Configure your airport or FBO with custom alert distances." },
+              { n: "3", t: "Connect your channels", d: "SMS, push alerts, email, and more. Mix and match." },
+              { n: "4", t: "Get alerted automatically", d: "10nm, 5nm, 2nm, and landing notifications fire in real time." },
+            ].map((s) => (
+              <div key={s.n} className="panel" style={{ padding: 18 }}>
                 <div style={{
-                  background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)",
-                  borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between",
-                }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>N80896 — 10nm out</span>
-                  <span style={{ fontSize: 10, color: "#0ea5e9" }}>Sent ✓</span>
-                </div>
-                <div style={{
-                  background: "rgba(34,211,163,0.06)", border: "1px solid rgba(34,211,163,0.12)",
-                  borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between",
-                }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>N64423 — Landing</span>
-                  <span style={{ fontSize: 10, color: "#22d3a3" }}>Sent ✓</span>
-                </div>
+                  width: 26, height: 26, borderRadius: 8,
+                  background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
+                  color: "#0ea5e9", fontSize: 11, fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 10,
+                }}>{s.n}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{s.t}</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>{s.d}</div>
               </div>
-            </div>
-            <div style={{
-              position: "absolute", zIndex: 2,
-              width: 56, height: 56, borderRadius: "50%",
-              background: "#0ea5e9", display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 40px rgba(14,165,233,0.4)", cursor: "pointer",
-            }}>
-              <svg width="18" height="18" fill="white" viewBox="0 0 24 24" style={{ marginLeft: 3 }}>
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </div>
+            ))}
           </div>
         </div>
       </section>
