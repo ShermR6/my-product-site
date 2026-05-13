@@ -16,7 +16,7 @@
     "next-auth": "^4.24.13",
     "nodemailer": "^7.0.13",
     "otpauth": "^9.5.0",
-    "posthog-js": "^1.372.10",
+    "posthog-js": "^1.373.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.2",
