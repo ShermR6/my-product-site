@@ -7,7 +7,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  const logoData = readFileSync(join(process.cwd(), "public", "web-app-manifest-512x512.png"));
+  const logoData = readFileSync(join(process.cwd(), "public", "finalping-1024.png"));
   const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
 
   const interBlack = readFileSync(join(process.cwd(), "public", "fonts", "Inter-Black.woff"));
