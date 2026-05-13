@@ -1,5 +1,7 @@
-export const metadata = {
-  title: "Privacy Policy | FinalPing",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
   description: "FinalPing Privacy Policy. How we collect, use, and protect your data.",
 };
 

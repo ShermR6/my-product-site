@@ -8,11 +8,14 @@ export default function Footer() {
         <div className="footer-inner">
           <div>© {new Date().getFullYear()} FinalPing</div>
           <div className="footer-links">
+            <Link href="/docs">Help</Link>
             <Link href="/contact">Support</Link>
             <Link href="/download">Download</Link>
             <Link href="/pricing">Purchase</Link>
             <Link href="/changelog">Changelog</Link>
             <Link href="/status">Status</Link>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
           </div>
         </div>
       </div>

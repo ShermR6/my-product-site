@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /account/
+Disallow: /checkout/
+Disallow: /alerts/
+Disallow: /groundstationsetup/
+Disallow: /groundstationdevices/
+
+Sitemap: https://finalpingapp.com/sitemap.xml

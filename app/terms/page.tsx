@@ -1,5 +1,7 @@
-export const metadata = {
-  title: "Terms of Service | FinalPing",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
   description: "FinalPing Terms of Service. Read our terms before using the application.",
 };
 

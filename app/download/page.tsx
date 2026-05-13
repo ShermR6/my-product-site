@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Download",
+  description: "Download FinalPing for Windows. Get the latest installer and start tracking aircraft in minutes.",
+};
+
 export default function DownloadPage() {
   return (
     <>

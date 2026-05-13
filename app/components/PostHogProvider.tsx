@@ -31,7 +31,11 @@ export default function PostHogProvider({ children }: { children: React.ReactNod
         capture_pageview: false,
         capture_pageleave: true,
         autocapture: false,
+        opt_out_capturing_by_default: true,
       });
+      if (localStorage.getItem("cookieConsent") === "accepted") {
+        posthog.opt_in_capturing();
+      }
     }
   }, [key, host]);
 

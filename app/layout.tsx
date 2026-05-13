@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Providers from "./components/Providers";
+import CookieConsent from "./components/CookieConsent";
 
 export const metadata: Metadata = {
   title: {
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="container">{children}</div>
           </main>
           <Footer />
+          <CookieConsent />
         </Providers>
       </body>
     </html>

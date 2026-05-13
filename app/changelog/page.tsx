@@ -1,4 +1,10 @@
 // app/changelog/page.tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Changelog",
+  description: "Release history and what's new in each version of FinalPing.",
+};
 
 type Entry = {
   version: string;
