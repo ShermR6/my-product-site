@@ -15,9 +15,27 @@ type Entry = {
 
 const entries: Entry[] = [
   {
-    version: "1.0.6",
+    version: "1.0.8",
     date: "May 2026",
     tag: "latest",
+    changes: [
+      { type: "new", text: "New app icon with runway and radar design" },
+      { type: "new", text: "Formatting syntax guide in alert message editor — bold, italic, underline, and strikethrough reference chips" },
+      { type: "improved", text: "Help Center button added to the dashboard toolbar" },
+      { type: "improved", text: "macOS installer now available for download" },
+    ],
+  },
+  {
+    version: "1.0.7",
+    date: "May 2026",
+    changes: [
+      { type: "new", text: "Auto-updater: app now checks for new versions on launch and prompts to install" },
+      { type: "improved", text: "Download page updated with direct installer links for Windows and macOS" },
+    ],
+  },
+  {
+    version: "1.0.6",
+    date: "May 2026",
     changes: [
       { type: "new", text: "Plan upgrades available directly from the Billing tab, no need to contact support" },
       { type: "new", text: "Quiet hours enable/disable toggle, can now fully turn quiet hours off after setting them" },

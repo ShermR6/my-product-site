@@ -20,7 +20,7 @@ export default function DownloadPage() {
           <a
             className="btn btn-solid"
             style={{ width: "100%", display: "block", textAlign: "center", marginTop: 12 }}
-            href="https://github.com/ShermR6/aircraft-tracker-desktop/releases/download/v1.0.7/FinalPingSetup.exe"
+            href="https://github.com/ShermR6/aircraft-tracker-desktop/releases/download/v1.0.8/FinalPingSetup.exe"
           >
             Download for Windows
           </a>
@@ -34,7 +34,7 @@ export default function DownloadPage() {
           <a
             className="btn btn-solid"
             style={{ width: "100%", display: "block", textAlign: "center", marginTop: 12 }}
-            href="https://github.com/ShermR6/aircraft-tracker-desktop/releases/download/v1.0.7/FinalPingSetup.dmg"
+            href="https://github.com/ShermR6/aircraft-tracker-desktop/releases/download/v1.0.8/FinalPingSetup.dmg"
           >
             Download for macOS
           </a>
@@ -83,7 +83,7 @@ export default function DownloadPage() {
           <div style={{ display: "flex", gap: 32, flexWrap: "wrap", fontSize: 13 }}>
             <div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 2 }}>Version</div>
-              <div style={{ fontWeight: 700 }}>1.0.7</div>
+              <div style={{ fontWeight: 700 }}>1.0.8</div>
             </div>
             <div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 2 }}>Platform</div>
