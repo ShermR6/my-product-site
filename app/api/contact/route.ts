@@ -93,7 +93,7 @@ Reply to this email to respond directly to the customer.`,
           <p style="font-size:15px;margin-bottom:16px;">Hi${name ? ` ${name}` : ""},</p>
           <p style="font-size:15px;margin-bottom:16px;">Thanks for reaching out! We received your message and will get back to you within 1 business day.</p>
           <p style="font-size:13px;color:#bdbdbd;margin-bottom:16px;">Please check your spam or junk folder for our reply, and consider adding support@finalpingapp.com to your contacts.</p>
-          <p style="font-size:13px;color:#999;margin-top:24px;">— The FinalPing Team</p>
+          <p style="font-size:13px;color:#999;margin-top:24px;">The FinalPing Team</p>
         </div>
       `,
     });
