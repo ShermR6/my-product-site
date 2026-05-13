@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: process.env.RESEND_FROM!,
       to: session.user.email,
-      subject: "FinalPing — Confirm Password Change",
+      subject: "FinalPing: Confirm Password Change",
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #0ea5e9;">Confirm Password Change</h2>

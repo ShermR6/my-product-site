@@ -70,8 +70,8 @@ export async function POST(req: NextRequest) {
   }
 
   const subject = context === "setup"
-    ? "FinalPing — Verify 2FA Setup"
-    : "FinalPing — Confirm Password Change";
+    ? "FinalPing: Verify 2FA Setup"
+    : "FinalPing: Confirm Password Change";
 
   const bodyText = context === "setup"
     ? `Your FinalPing 2FA setup code is: ${code}. Expires in 10 minutes.`

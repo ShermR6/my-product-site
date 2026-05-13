@@ -32,11 +32,11 @@ function XIcon() {
 const faqs = [
   {
     q: "Can I switch plans later?",
-    a: "Yes — you can upgrade your plan at any time directly from your dashboard. You'll be charged the flat price difference between plans today, and your subscription renews at the new plan's price on your next billing date. Downgrades can be arranged by contacting support.",
+    a: "Yes. You can upgrade your plan at any time directly from your dashboard. You'll be charged the flat price difference between plans today, and your subscription renews at the new plan's price on your next billing date. Downgrades can be arranged by contacting support.",
   },
   {
     q: "How does the 30-day refund work?",
-    a: "If you're not satisfied for any reason within the first 30 days, contact us and we'll issue a full refund — no questions asked.",
+    a: "If you're not satisfied for any reason within the first 30 days, contact us and we'll issue a full refund, no questions asked.",
   },
   {
     q: "Do I need a license per device?",
@@ -52,7 +52,7 @@ const faqs = [
   },
   {
     q: "What's the difference between Personal and Team plans?",
-    a: "Personal plans are for individual users tracking their own aircraft. Team plans are built for businesses like FBOs, fuel services, and flight schools — multiple team members can log in and monitor a shared fleet, with much higher limits on tracked aircraft and notification channels.",
+    a: "Personal plans are for individual users tracking their own aircraft. Team plans are built for businesses like FBOs, fuel services, and flight schools. Multiple team members can log in and monitor a shared fleet, with much higher limits on tracked aircraft and notification channels.",
   },
 ];
 
@@ -387,7 +387,7 @@ export default function PricingTabs() {
           <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>ADD-ON</div>
           <h2 style={{ fontSize: 26 }}>FinalPing Ground Station</h2>
           <p style={{ maxWidth: 520, margin: "8px auto 0" }}>
-            Plug in your own ADS-B receiver for ultra-accurate landing and takeoff detection. Your local antenna captures what cloud APIs miss — with no reliance on adsb.lol or any third-party data feed.
+            Plug in your own ADS-B receiver for ultra-accurate landing and takeoff detection. Your local antenna captures what cloud APIs miss, with no reliance on adsb.lol or any third-party data feed.
           </p>
         </div>
 
@@ -410,10 +410,10 @@ export default function PricingTabs() {
             </div>
             <div style={{ marginTop: 14, display: "flex", flexDirection: "column" as const, gap: 6 }}>
               {[
-                "Precise landing alerts — actual wheels-down touchdown detection",
-                "Takeoff alerts — detect the moment an aircraft lifts off",
-                "2–5 second latency vs 30–60+ seconds via adsb.lol",
-                "No data gaps — zero dependency on cloud API availability",
+                "Precise landing alerts: actual wheels-down touchdown detection",
+                "Takeoff alerts: detect the moment an aircraft lifts off",
+                "2-5 second latency vs 30-60+ seconds via adsb.lol",
+                "No data gaps: zero dependency on cloud API availability",
                 "Ground movement tracking: taxiways, ramps, and runways",
                 "Fires through all your existing notification channels",
               ].map(f => (

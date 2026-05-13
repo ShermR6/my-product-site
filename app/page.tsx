@@ -6,10 +6,10 @@ import VideoPlayer from "./components/VideoPlayer";
 
 const features = [
   { icon: "📡", title: "Live ADS-B Tracking", desc: "Monitors real-time aircraft transponder data to track exact positions, altitude, and speed of your selected aircraft." },
-  { icon: "🔔", title: "Proximity Alerts", desc: "Set custom distance zones — get notified at 10nm, 5nm, 2nm, or any distance you choose as aircraft approach." },
-  { icon: "📲", title: "SMS & Push Alerts", desc: "Get notified instantly via SMS, push notifications, email, and more. Alerts go where you are — no extra apps needed." },
+  { icon: "🔔", title: "Proximity Alerts", desc: "Set custom distance zones and get notified at 10nm, 5nm, 2nm, or any distance you choose as aircraft approach." },
+  { icon: "📲", title: "SMS & Push Alerts", desc: "Get notified instantly via SMS, push notifications, email, and more. Alerts go wherever you are, with no extra apps needed." },
   { icon: "✈️", title: "Multi-Aircraft Tracking", desc: "Track multiple tail numbers simultaneously. Each aircraft gets its own alert chain as it approaches." },
-  { icon: "🌙", title: "Quiet Hours", desc: "Automatically pause notifications during off-hours. No 3am alerts — unless you want them." },
+  { icon: "🌙", title: "Quiet Hours", desc: "Automatically pause notifications during off-hours. No 3am alerts (unless you want them)." },
   { icon: "🔑", title: "License Key Activation", desc: "Purchase once, activate instantly. Your license key is delivered by email and works across reinstalls." },
 ];
 
@@ -22,20 +22,20 @@ const steps = [
 
 const useCases = [
   { icon: "🛫", title: "Ramp Agents & Ground Crews", desc: "Know exactly when inbound aircraft are approaching so you can prep the gate, fuel truck, or equipment ahead of time." },
-  { icon: "🔭", title: "Plane Spotters & Enthusiasts", desc: "Get alerts when rare or interesting aircraft enter your area — never miss a flyover again." },
+  { icon: "🔭", title: "Plane Spotters & Enthusiasts", desc: "Get alerts when rare or interesting aircraft enter your area. Never miss a flyover again." },
   { icon: "🏫", title: "Flight Schools & FBOs", desc: "Track your fleet and training aircraft in real time. Know when students are returning before they call in." },
   { icon: "📦", title: "Cargo & Logistics Teams", desc: "Monitor inbound cargo flights to coordinate ground handling and minimize turnaround time." },
 ];
 
 const faqs = [
   { q: "What data source does FinalPing use?", a: "FinalPing uses ADS-B (Automatic Dependent Surveillance-Broadcast) data, which is publicly broadcast by aircraft transponders. This is the same data used by services like FlightAware and Flightradar24." },
-  { q: "Does it work outside the United States?", a: "Yes — FinalPing works with any coordinates worldwide. As long as ADS-B coverage exists in your area, you can track aircraft near any location on the globe." },
+  { q: "Does it work outside the United States?", a: "Yes. FinalPing works with any coordinates worldwide. As long as ADS-B coverage exists in your area, you can track aircraft near any location on the globe." },
   { q: "How many aircraft can I track?", a: "It depends on your plan. The Starter tier supports tracking a limited number of aircraft, while Premium and Pro tiers allow more. Check the pricing page for exact limits." },
-  { q: "Do I need to keep the app open for alerts to work?", a: "The desktop app needs to be running, but it works quietly in the background. You don't need to keep it in the foreground — it will send notifications to your configured channels automatically." },
+  { q: "Do I need to keep the app open for alerts to work?", a: "The desktop app needs to be running, but it works quietly in the background. You don't need to keep it in the foreground; it will send notifications to your configured channels automatically." },
   { q: "What platforms are supported?", a: "FinalPing is currently available as a Windows desktop application. macOS and Linux support are planned for future releases." },
   { q: "Can I customize the alert messages?", a: "Absolutely. Each distance alert has a fully customizable message template with variables like {tail_number}, {airport}, {distance}, and {altitude} that get replaced with real data." },
   { q: "What happens if I reinstall or switch computers?", a: "Your license key works across reinstalls. Just enter the same key on your new setup and you're good to go." },
-  { q: "Is there a free trial?", a: "Yes — all plans include a 7-day free trial. Your 30-day access period begins when you activate your license key in the app, not when you purchase. There's also a 30-day money-back guarantee if FinalPing isn't the right fit." },
+  { q: "Is there a free trial?", a: "Yes. All plans include a 7-day free trial. Your 30-day access period begins when you activate your license key in the app, not when you purchase. There is also a 30-day money-back guarantee if FinalPing is not the right fit." },
 ];
 
 export default function HomePage() {
@@ -129,7 +129,7 @@ export default function HomePage() {
               in seconds
             </h2>
             <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
-              FinalPing watches your aircraft 24/7 and fires alerts the moment they enter your airspace — so you&apos;re always ready at the ramp.
+              FinalPing watches your aircraft 24/7 and fires alerts the moment they enter your airspace, so you&apos;re always ready at the ramp.
             </p>
           </div>
 
@@ -174,7 +174,7 @@ export default function HomePage() {
           <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>FEATURES</div>
           <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Everything you need to track aircraft</h2>
           <p style={{ maxWidth: 520, margin: "10px auto 0", fontSize: 15 }}>
-            FinalPing combines live ADS-B data with customizable alerts and team integrations — all in one lightweight desktop app.
+            FinalPing combines live ADS-B data with customizable alerts and team integrations, all in one lightweight desktop app.
           </p>
         </div>
         <div className="grid-3">
@@ -194,7 +194,7 @@ export default function HomePage() {
           <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>USE CASES</div>
           <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Built for people who need to know</h2>
           <p style={{ maxWidth: 520, margin: "10px auto 0", fontSize: 15 }}>
-            Whether you&apos;re on the ramp, in the tower, or just watching the skies — FinalPing keeps you informed.
+            Whether you&apos;re on the ramp, in the tower, or just watching the skies, FinalPing keeps you informed.
           </p>
         </div>
         <div className="grid-2">
@@ -237,7 +237,7 @@ export default function HomePage() {
             No commitment. Cancel anytime. 30-day money-back guarantee.
           </p>
           <p style={{ maxWidth: 440, margin: "0 auto 24px", fontSize: 13, color: "var(--muted)" }}>
-            Your 30-day access period begins when you activate your license — not when you purchase.
+            Your 30-day access period begins when you activate your license, not when you purchase.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link className="btn btn-solid" href="/pricing" style={{

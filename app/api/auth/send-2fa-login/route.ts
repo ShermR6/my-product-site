@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: "FinalPing <noreply@finalpingapp.com>",
         to: user.email!,
-        subject: "FinalPing — Login Verification Code",
+        subject: "FinalPing: Login Verification Code",
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
             <div style="font-size:20px;font-weight:700;margin-bottom:4px;">FinalPing</div>

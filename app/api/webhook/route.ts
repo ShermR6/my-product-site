@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: "FinalPing <noreply@finalpingapp.com>",
         to: email,
-        subject: "FinalPing Ground Station — You're all set!",
+        subject: "FinalPing Ground Station: You're all set!",
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
             <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
             To activate, open the FinalPing desktop app, enter this key and your email address (<strong>${email}</strong>).
           </p>
           <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">
-            Your 30-day access period begins when you activate — not when you purchase.
+            Your 30-day access period begins when you activate, not when you purchase.
           </p>
 
           <a href="https://finalpingapp.com/download" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Download the app</a>
@@ -239,14 +239,14 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: "FinalPing <noreply@finalpingapp.com>",
         to: email,
-        subject: `FinalPing ${tierLabel} — Subscription Renewed`,
+        subject: `FinalPing ${tierLabel}: Subscription Renewed`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
             <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
             <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
             <p style="font-size:15px;margin-bottom:8px;">Your <strong>${tierLabel}</strong> subscription has been renewed successfully.</p>
             <p style="font-size:13px;color:#bdbdbd;margin-bottom:8px;">Your access has been extended through <strong>${newExpiry.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>.</p>
-            <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">No action needed — FinalPing will continue tracking your aircraft automatically.</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">No action needed. FinalPing will continue tracking your aircraft automatically.</p>
             <a href="https://finalpingapp.com/dashboard" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Dashboard</a>
             <p style="font-size:12px;color:#555;margin-top:28px;">
               To cancel your subscription, visit your <a href="https://finalpingapp.com/dashboard?tab=billing" style="color:#f5b400;">billing settings</a>.
@@ -340,7 +340,7 @@ export async function POST(req: NextRequest) {
               <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Real-time aircraft tracking</div>
               <p style="font-size:15px;margin-bottom:8px;">Your free trial ends on <strong>${trialEnd.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>.</p>
               <p style="font-size:13px;color:#bdbdbd;margin-bottom:8px;">After your trial expires, aircraft tracking and alerts will be paused until you subscribe.</p>
-              <p style="font-size:13px;color:#bdbdbd;margin-bottom:24px;">Your card on file will be charged automatically — no action needed if you'd like to continue.</p>
+              <p style="font-size:13px;color:#bdbdbd;margin-bottom:24px;">Your card on file will be charged automatically. No action needed if you would like to continue.</p>
               <a href="https://finalpingapp.com/dashboard?tab=billing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">Manage Subscription →</a>
               <p style="font-size:12px;color:#555;margin-top:28px;">
                 Want to cancel? Visit your <a href="https://finalpingapp.com/dashboard?tab=billing" style="color:#f5b400;">billing settings</a> before your trial ends.

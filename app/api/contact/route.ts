@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       from: "FinalPing Support <support@finalpingapp.com>",
       to: "aircraftalerts@finalpingapp.com",
       replyTo: email,
-      subject: `New message from ${name || "a customer"} — FinalPing`,
+      subject: `New message from ${name || "a customer"} | FinalPing`,
       text: `From: ${name || "Anonymous"} <${email}>
 
 ${message}
@@ -85,7 +85,7 @@ Reply to this email to respond directly to the customer.`,
     await resend.emails.send({
       from: "FinalPing <support@finalpingapp.com>",
       to: email,
-      subject: "We received your message — FinalPing",
+      subject: "We received your message | FinalPing",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
           <div style="font-size:20px;font-weight:700;margin-bottom:8px;">FinalPing</div>

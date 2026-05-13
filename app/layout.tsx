@@ -7,7 +7,7 @@ import Providers from "./components/Providers";
 
 export const metadata: Metadata = {
   title: {
-    default: "FinalPing — Real-Time Aircraft Tracking & Alerts",
+    default: "FinalPing | Real-Time Aircraft Tracking & Alerts",
     template: "%s | FinalPing",
   },
   description: "Get real-time proximity alerts when your aircraft approaches. Track multiple aircraft with Discord, Slack, SMS, and email notifications.",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "FinalPing — Real-Time Aircraft Tracking & Alerts",
+    title: "FinalPing | Real-Time Aircraft Tracking & Alerts",
     description: "Get real-time proximity alerts when your aircraft approaches. Track multiple aircraft with Discord, Slack, SMS, and email notifications.",
     url: "https://finalpingapp.com",
     siteName: "FinalPing",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FinalPing — Real-Time Aircraft Tracking & Alerts",
+    title: "FinalPing | Real-Time Aircraft Tracking & Alerts",
     description: "Get real-time proximity alerts when your aircraft approaches.",
   },
   metadataBase: new URL("https://finalpingapp.com"),

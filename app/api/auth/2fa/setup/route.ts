@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: process.env.RESEND_FROM!,
       to: session.user.email,
-      subject: "FinalPing — Verify Email 2FA Setup",
+      subject: "FinalPing: Verify Email 2FA Setup",
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #0ea5e9;">Verify Email Two-Factor Authentication</h2>
