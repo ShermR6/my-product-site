@@ -68,29 +68,71 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: "FinalPing Contact Form <support@finalpingapp.com>",
+      from: "FinalPing Support <support@finalpingapp.com>",
       to: "aircraftalerts@finalpingapp.com",
       replyTo: email,
-      subject: `[FinalPing] New message from ${name || "Anonymous"}`,
+      subject: `New message from ${name || "a customer"} — FinalPing`,
       html: `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;">
-          <div style="font-size:18px;font-weight:700;margin-bottom:16px;color:#111;">New Contact Form Submission</div>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+        <!-- Header -->
+        <tr><td style="background:#0f172a;border-radius:12px 12px 0 0;padding:28px 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="padding:8px 12px;font-weight:600;color:#374151;width:80px;vertical-align:top;">Name</td>
-              <td style="padding:8px 12px;color:#111;">${name || "Not provided"}</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 12px;font-weight:600;color:#374151;vertical-align:top;">Email</td>
-              <td style="padding:8px 12px;color:#111;"><a href="mailto:${email}" style="color:#2563eb;">${email}</a></td>
-            </tr>
-            <tr>
-              <td style="padding:8px 12px;font-weight:600;color:#374151;vertical-align:top;">Message</td>
-              <td style="padding:8px 12px;color:#111;white-space:pre-wrap;">${message}</td>
+              <td>
+                <div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">FinalPing</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;letter-spacing:0.05em;text-transform:uppercase;">Support Request</div>
+              </td>
+              <td align="right">
+                <div style="background:#1e293b;border-radius:6px;padding:6px 12px;display:inline-block;font-size:11px;color:#94a3b8;white-space:nowrap;">${new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
+              </td>
             </tr>
           </table>
-          <div style="margin-top:20px;font-size:12px;color:#9ca3af;">Sent from the FinalPing contact form at finalpingapp.com</div>
-        </div>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#ffffff;padding:32px;">
+
+          <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.5;">
+            You have a new message from the FinalPing contact form. Reply directly to this email to respond to the customer.
+          </p>
+
+          <!-- Sender card -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:24px;">
+            <tr>
+              <td style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+                <div style="font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">From</div>
+                <div style="font-size:15px;font-weight:600;color:#111827;">${name || "Anonymous"}</div>
+                <div style="font-size:13px;color:#6b7280;margin-top:2px;"><a href="mailto:${email}" style="color:#2563eb;text-decoration:none;">${email}</a></div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Message -->
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Message</div>
+          <div style="background:#f8fafc;border-left:3px solid #0ea5e9;border-radius:0 6px 6px 0;padding:16px 20px;font-size:14px;color:#1e293b;line-height:1.7;white-space:pre-wrap;">${message}</div>
+
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:16px 32px;">
+          <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+            Submitted via <a href="https://finalpingapp.com/contact" style="color:#0ea5e9;text-decoration:none;">finalpingapp.com/contact</a>
+            &nbsp;·&nbsp; Reply to this email to respond directly to the customer
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
       `,
     });
 
