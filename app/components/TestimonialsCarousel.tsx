@@ -5,7 +5,7 @@ import { useRef } from "react";
 
 const testimonials = [
   {
-    text: "I manage a flight school with 12 aircraft. FinalPing has completely changed how we coordinate — I know exactly when planes are approaching before I even see them.",
+    text: "I manage a flight school with 12 aircraft. FinalPing has completely changed how we coordinate. I know exactly when planes are approaching before I even see them.",
     name: "James M.",
     role: "Flight School Owner · Texas",
     initials: "JM",

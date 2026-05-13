@@ -13,11 +13,11 @@ const entries: Entry[] = [
     date: "May 2026",
     tag: "latest",
     changes: [
-      { type: "new", text: "Plan upgrades available directly from the Billing tab — no need to contact support" },
-      { type: "new", text: "Quiet hours enable/disable toggle — can now fully turn quiet hours off after setting them" },
-      { type: "fix", text: "Quiet hours were stored but never enforced — notifications now correctly suppressed during the set window" },
+      { type: "new", text: "Plan upgrades available directly from the Billing tab, no need to contact support" },
+      { type: "new", text: "Quiet hours enable/disable toggle, can now fully turn quiet hours off after setting them" },
+      { type: "fix", text: "Quiet hours were stored but never enforced; notifications now correctly suppressed during the set window" },
       { type: "improved", text: "ETA on approach alerts now uses actual aircraft groundspeed from ADS-B data instead of a fixed 90-knot estimate" },
-      { type: "improved", text: "License tier now syncs from the backend when opening Aircraft or Integrations screens — no restart needed after an upgrade" },
+      { type: "improved", text: "License tier now syncs from the backend when opening Aircraft or Integrations screens, no restart needed after an upgrade" },
       { type: "improved", text: "Upgrade checkout now supports promotion/discount codes" },
     ],
   },
@@ -25,7 +25,7 @@ const entries: Entry[] = [
     version: "1.0.5",
     date: "April 2026",
     changes: [
-      { type: "new", text: "Ground Station support — connect a local RTL-SDR/dump1090 receiver for lower-latency landing and takeoff detection" },
+      { type: "new", text: "Ground Station support: connect a local RTL-SDR/dump1090 receiver for lower-latency landing and takeoff detection" },
       { type: "new", text: "Takeoff detection added alongside existing landing alerts" },
       { type: "improved", text: "Approach alert pipeline now enforces sequential zone crossing (10nm → 5nm → 2nm) to reduce false positives" },
       { type: "improved", text: "Landing detection now cross-checks ADS-B signal loss with last known position and altitude" },
@@ -36,7 +36,7 @@ const entries: Entry[] = [
     date: "March 2026",
     changes: [
       { type: "new", text: "Multi-location monitoring for Premium and Pro plans" },
-      { type: "new", text: "Alert log export — download your full notification history" },
+      { type: "new", text: "Alert log export: download your full notification history" },
       { type: "improved", text: "Live Map added to the desktop app dashboard" },
       { type: "fix", text: "Subscription renewal now correctly extends license expiry to match the Stripe billing period end date" },
     ],
