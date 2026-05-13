@@ -10,6 +10,9 @@ export default async function Image() {
   const logoData = readFileSync(join(process.cwd(), "public", "web-app-manifest-512x512.png"));
   const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
 
+  const interBlack = readFileSync(join(process.cwd(), "public", "fonts", "Inter-Black.woff"));
+
+
   return new ImageResponse(
     (
       <div
@@ -39,7 +42,7 @@ export default async function Image() {
         }} />
 
         {/* Left: text content */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", zIndex: "1" }}>
           {/* Eyebrow */}
           <div style={{
             display: "flex",
@@ -57,12 +60,13 @@ export default async function Image() {
           <div style={{
             display: "flex",
             fontSize: 112,
-            fontWeight: 800,
+            fontWeight: 900,
+            fontFamily: "Inter",
             color: "#ffffff",
             letterSpacing: "-0.03em",
             lineHeight: 0.9,
             marginBottom: 20,
-            marginLeft: -10,
+            marginLeft: -4,
           }}>
             FinalPing
           </div>
@@ -106,12 +110,15 @@ export default async function Image() {
         </div>
 
         {/* Right: logo icon */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: "1" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoSrc} width={240} height={240} alt="" style={{ borderRadius: 54, opacity: 0.97 }} />
         </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [{ name: "Inter", data: interBlack, style: "normal", weight: 900 }],
+    }
   );
 }
