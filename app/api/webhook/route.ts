@@ -10,12 +10,13 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
 
-function generateLicenseKey(): string {
+function generateLicenseKey(tier: string): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const segments = Array.from({ length: 4 }, () =>
     Array.from({ length: 4 }, () => chars[crypto.randomInt(chars.length)]).join("")
   );
-  return segments.join("-");
+  const prefix = tier.startsWith("team-") ? "FPT" : "FP";
+  return `${prefix}-${segments.join("-")}`;
 }
 
 async function createLicenseInBackend(licenseKey: string, tier: string, email: string) {
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
 
     // ── Regular license purchase ──────────────────────────────────────────
     // Always generate a new unique license key for every purchase
-    const licenseKey = generateLicenseKey();
+    const licenseKey = generateLicenseKey(tier);
 
     // Optionally link to existing user if they have an account
     const user = await prisma.user.findUnique({ where: { email } });
