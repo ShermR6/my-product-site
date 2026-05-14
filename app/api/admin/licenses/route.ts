@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
+const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
+
 function generateLicenseKey(tier: string): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const segments = Array.from({ length: 4 }, () =>
@@ -11,6 +13,21 @@ function generateLicenseKey(tier: string): string {
   );
   const prefix = tier.startsWith("team-") ? "FPT" : "FP";
   return `${prefix}-${segments.join("-")}`;
+}
+
+async function provisionInBackend(licenseKey: string, tier: string, email: string) {
+  try {
+    await fetch(`${BACKEND_URL}/api/licenses/provision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "finalping-internal-secret",
+      },
+      body: JSON.stringify({ license_key: licenseKey, tier, email }),
+    });
+  } catch (err) {
+    console.error("Failed to provision license in backend:", err);
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -79,6 +96,8 @@ export async function POST(req: NextRequest) {
       userId: user?.id ?? undefined,
     },
   });
+
+  await provisionInBackend(licenseKey, tier, normalizedEmail);
 
   return NextResponse.json(license, { status: 201 });
 }
