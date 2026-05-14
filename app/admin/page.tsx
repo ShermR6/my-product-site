@@ -43,6 +43,9 @@ const TIER_COLORS: Record<string, string> = {
   starter: "#0ea5e9",
   premium: "#a855f7",
   pro: "#f5b400",
+  "team-starter": "#22d3a3",
+  "team-premium": "#818cf8",
+  "team-pro": "#fb923c",
 };
 
 function statusBadge(status: string) {
@@ -399,9 +402,16 @@ function CreateLicenseTab() {
           <div style={{ marginBottom: 20 }}>
             <label style={s.label}>Tier</label>
             <select style={{ ...s.select, width: "100%" }} value={tier} onChange={(e) => setTier(e.target.value)}>
-              <option value="starter">Starter</option>
-              <option value="premium">Premium</option>
-              <option value="pro">Pro</option>
+              <optgroup label="Personal (FP-)">
+                <option value="starter">Starter</option>
+                <option value="premium">Premium</option>
+                <option value="pro">Pro</option>
+              </optgroup>
+              <optgroup label="Teams (FPT-)">
+                <option value="team-starter">Team Starter</option>
+                <option value="team-premium">Team Premium</option>
+                <option value="team-pro">Team Pro</option>
+              </optgroup>
             </select>
           </div>
           <button
