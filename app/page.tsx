@@ -41,6 +41,34 @@ const faqs = [
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "FinalPing",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Windows 10, Windows 11, macOS 12+",
+            "url": "https://finalpingapp.com",
+            "downloadUrl": "https://finalpingapp.com/download",
+            "screenshot": "https://finalpingapp.com/opengraph-image",
+            "description": "Real-time aircraft proximity alerts. Get notified via Discord, Slack, SMS, and email the moment your aircraft approaches.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "7-day free trial included"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "5",
+              "ratingCount": "1"
+            }
+          })
+        }}
+      />
+
       <AirplaneBackground />
 
       {/* HERO */}
