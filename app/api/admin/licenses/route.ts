@@ -4,12 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
-function generateLicenseKey(): string {
+function generateLicenseKey(tier: string): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const segments = Array.from({ length: 4 }, () =>
     Array.from({ length: 4 }, () => chars[crypto.randomInt(chars.length)]).join("")
   );
-  return segments.join("-");
+  const prefix = tier.startsWith("team-") ? "FPT" : "FP";
+  return `${prefix}-${segments.join("-")}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "email and tier are required" }, { status: 400 });
   }
 
-  const licenseKey = generateLicenseKey();
+  const licenseKey = generateLicenseKey(tier);
   const normalizedEmail = email.toLowerCase().trim();
 
   const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
