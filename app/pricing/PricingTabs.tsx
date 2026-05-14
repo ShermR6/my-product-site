@@ -224,11 +224,17 @@ export default function PricingTabs() {
           <button className={`tab ${mode === "personal" ? "active" : ""}`} onClick={() => setMode("personal")} role="tab">Personal</button>
           <button className={`tab ${mode === "team" ? "active" : ""}`} onClick={() => setMode("team")} role="tab">
             Team
+            <span style={{
+              marginLeft: 7, fontSize: 9, fontWeight: 800, letterSpacing: "0.08em",
+              textTransform: "uppercase", padding: "2px 6px", borderRadius: 999,
+              background: "rgba(251,191,36,0.15)", color: "#fbbf24",
+              border: "1px solid rgba(251,191,36,0.3)", verticalAlign: "middle",
+            }}>Soon</span>
           </button>
         </div>
 
-        {/* Monthly / Yearly toggle */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "20px" }}>
+        {/* Monthly / Yearly toggle — only shown for personal plans */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "20px", visibility: mode === "team" ? "hidden" : "visible" }}>
           <span style={{
             fontSize: "14px",
             fontWeight: billing === "monthly" ? 600 : 400,
@@ -276,7 +282,40 @@ export default function PricingTabs() {
         </div>
       </div>
 
-      <div className="pricing-table">
+      {mode === "team" && (
+        <div style={{
+          maxWidth: 560, margin: "48px auto 32px",
+          background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02))",
+          border: "1px solid rgba(251,191,36,0.2)", borderRadius: 20,
+          padding: "52px 40px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 20 }}>🏗️</div>
+          <div style={{
+            fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
+            color: "#fbbf24", marginBottom: 12,
+          }}>Coming Soon</div>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text)", margin: "0 0 14px" }}>
+            FinalPing for Teams
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.75, maxWidth: 400, margin: "0 auto 28px" }}>
+            Multi-seat aircraft tracking for FBOs, fuel services, flight schools, and ground crews.
+            Shared fleets, team notifications, custom roles, and more — launching soon.
+          </p>
+          <a
+            href="/contact"
+            style={{
+              display: "inline-block", padding: "12px 28px", borderRadius: 10,
+              background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)",
+              color: "#fbbf24", fontSize: 14, fontWeight: 700, textDecoration: "none",
+              cursor: "pointer",
+            }}
+          >
+            Get notified when it launches →
+          </a>
+        </div>
+      )}
+
+      {mode === "personal" && <div className="pricing-table">
         <div className="pt-row pt-header">
           <div className="pt-cell pt-left" />
           {data.plans.map((p) => (
@@ -371,11 +410,13 @@ export default function PricingTabs() {
             ))}
           </div>
         ))}
-      </div>
+      </div>}
 
-      <div className="pricing-foot">
-        <span className="refund">Refundable up to 30 days</span>
-      </div>
+      {mode === "personal" && (
+        <div className="pricing-foot">
+          <span className="refund">Refundable up to 30 days</span>
+        </div>
+      )}
 
       {/* Ground Station Add-on */}
       <section style={{ marginTop: 56 }}>
