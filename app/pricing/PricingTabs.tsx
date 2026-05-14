@@ -348,11 +348,6 @@ export default function PricingTabs() {
               >
                 {loadingTier === p.tier ? "Loading..." : p.cta}
               </button>
-              {mode === "team" && (
-                <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>
-                  Requires <strong style={{ color: "var(--text)" }}>FinalPing for Teams</strong>
-                </div>
-              )}
               {p.tier === "starter" && mode === "personal" && billing === "monthly" && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                   <button
