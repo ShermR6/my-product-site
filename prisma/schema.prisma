@@ -84,6 +84,13 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String?
+  createdAt DateTime @default(now())
+}
+
 model License {
   id              String    @id @default(cuid())
   purchaseEmail   String

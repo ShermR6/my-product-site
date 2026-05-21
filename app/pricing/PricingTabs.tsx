@@ -302,7 +302,7 @@ export default function PricingTabs() {
             Shared fleets, team notifications, custom roles, and more — launching soon.
           </p>
           <a
-            href="/contact"
+            href="/waitlist"
             style={{
               display: "inline-block", padding: "12px 28px", borderRadius: 10,
               background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)",

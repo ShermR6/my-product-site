@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ComparePlans from "./ComparePlans";
 
 export const metadata: Metadata = {
   title: "Download",
@@ -127,7 +128,8 @@ export default function DownloadPage() {
   return (
     <>
       <h1>Download</h1>
-      <p>Choose the edition that matches your license. Not sure which one? <a href="/pricing" style={{ color: "var(--accent)" }}>Compare plans →</a></p>
+      <p style={{ marginBottom: 4 }}>Choose the edition that matches your license. Not sure which one?</p>
+      <ComparePlans />
 
       <AppSection
         tag="Personal"
@@ -178,7 +180,7 @@ export default function DownloadPage() {
             The Teams edition is currently in development. Download links will appear here when it launches.
           </p>
           <a
-            href="/contact"
+            href="/waitlist"
             style={{
               marginTop: 4, fontSize: 13, fontWeight: 600,
               color: "var(--accent)", textDecoration: "none",

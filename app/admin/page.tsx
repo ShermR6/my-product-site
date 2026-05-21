@@ -107,6 +107,7 @@ const NAV_ITEMS = [
   { id: "users", label: "Users", icon: "👥" },
   { id: "licenses", label: "Licenses", icon: "🔑" },
   { id: "create", label: "Create License", icon: "➕" },
+  { id: "waitlist", label: "Waitlist", icon: "📋" },
 ];
 
 // ── Overview Tab ─────────────────────────────────────────────────────────────
@@ -474,6 +475,67 @@ export default function AdminPage() {
     return <div style={{ padding: 40, color: "#6b7280", fontSize: 14 }}>Loading...</div>;
   }
 
+  // ── Waitlist Tab ────────────────────────────────────────────────────────────
+  function WaitlistTab() {
+    const [entries, setEntries] = React.useState<{ id: string; email: string; source: string | null; createdAt: string }[]>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    const load = React.useCallback(() => {
+      setLoading(true);
+      fetch("/api/admin/waitlist")
+        .then(r => r.json())
+        .then(d => { setEntries(d.entries ?? []); setLoading(false); })
+        .catch(() => setLoading(false));
+    }, []);
+
+    React.useEffect(() => { load(); }, [load]);
+
+    const handleDelete = async (id: string) => {
+      await fetch("/api/admin/waitlist", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      load();
+    };
+
+    return (
+      <div>
+        <div style={{ ...s.tabHeader, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <div style={s.tabTitle}>Teams Waitlist</div>
+            <div style={s.tabSub}>{entries.length} signup{entries.length !== 1 ? "s" : ""}</div>
+          </div>
+          <a
+            href="/api/admin/waitlist?format=csv"
+            download
+            style={{ ...s.primaryBtn, textDecoration: "none", display: "inline-block" }}
+          >
+            Export CSV ↓
+          </a>
+        </div>
+
+        <div style={s.card}>
+          {loading ? (
+            <div style={{ padding: 32, textAlign: "center", color: "#6b7280" }}>Loading…</div>
+          ) : entries.length === 0 ? (
+            <div style={{ padding: 32, textAlign: "center", color: "#6b7280" }}>No signups yet.</div>
+          ) : (
+            <>
+              <div style={s.tableHeader("2fr 1fr 1fr 80px")}>
+                <span>Email</span><span>Source</span><span>Joined</span><span></span>
+              </div>
+              {entries.map(e => (
+                <div key={e.id} style={{ ...s.tableRow("2fr 1fr 1fr 80px"), borderTop: "1px solid #1f2937" }}>
+                  <span style={{ fontFamily: "monospace", fontSize: 12 }}>{e.email}</span>
+                  <span style={{ color: "#6b7280", fontSize: 12 }}>{e.source ?? "—"}</span>
+                  <span style={{ color: "#6b7280", fontSize: 12 }}>{formatDate(e.createdAt)}</span>
+                  <button style={s.dangerBtn} onClick={() => handleDelete(e.id)}>Remove</button>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (accessDenied) {
     return (
       <div style={{ padding: 80, textAlign: "center", color: "#6b7280" }}>
@@ -520,6 +582,7 @@ export default function AdminPage() {
         {activeTab === "users" && <UsersTab />}
         {activeTab === "licenses" && <LicensesTab />}
         {activeTab === "create" && <CreateLicenseTab />}
+        {activeTab === "waitlist" && <WaitlistTab />}
       </div>
     </div>
   );
