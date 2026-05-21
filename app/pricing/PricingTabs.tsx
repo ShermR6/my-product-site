@@ -229,7 +229,7 @@ export default function PricingTabs() {
               textTransform: "uppercase", padding: "2px 6px", borderRadius: 999,
               background: "rgba(251,191,36,0.15)", color: "#fbbf24",
               border: "1px solid rgba(251,191,36,0.3)", verticalAlign: "middle",
-            }}>Soon</span>
+            }}>Coming Soon</span>
           </button>
         </div>
 

@@ -138,15 +138,56 @@ export default function DownloadPage() {
         macHref={`${PERSONAL_BASE}/FinalPingSetup.dmg`}
       />
 
-      <AppSection
-        tag="Teams"
-        title="FinalPing for Teams"
-        tagline="For FBOs, ramp crews, and flight schools. Activate with your FPT- license key."
-        version={TEAMS_VERSION}
-        winHref={`${TEAMS_BASE}/FinalPingTeamsSetup.exe`}
-        macHref={`${TEAMS_BASE}/FinalPingTeamsSetup.dmg`}
-        accent
-      />
+      {/* Teams — coming soon */}
+      <div style={{
+        borderRadius: 16,
+        border: "1px solid rgba(14,165,233,0.2)",
+        background: "linear-gradient(135deg, rgba(14,165,233,0.04), transparent)",
+        padding: "28px 28px 24px",
+        marginTop: 32,
+      }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+            textTransform: "uppercase", padding: "3px 10px", borderRadius: 999,
+            background: "rgba(14,165,233,0.15)", color: "var(--accent)",
+            border: "1px solid rgba(14,165,233,0.3)", marginBottom: 10,
+          }}>
+            Teams
+          </div>
+          <h2 style={{ fontSize: 20, margin: "0 0 4px", fontWeight: 800 }}>FinalPing for Teams</h2>
+          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>For FBOs, ramp crews, and flight schools.</p>
+        </div>
+
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexDirection: "column", gap: 12,
+          padding: "36px 24px",
+          borderRadius: 12,
+          border: "1px dashed rgba(14,165,233,0.2)",
+          background: "rgba(14,165,233,0.03)",
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 36 }}>🏗️</div>
+          <div style={{
+            fontSize: 14, fontWeight: 800, letterSpacing: "0.12em",
+            textTransform: "uppercase", color: "#fbbf24",
+          }}>Coming Soon</div>
+          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, maxWidth: 380, lineHeight: 1.6 }}>
+            The Teams edition is currently in development. Download links will appear here when it launches.
+          </p>
+          <a
+            href="/contact"
+            style={{
+              marginTop: 4, fontSize: 13, fontWeight: 600,
+              color: "var(--accent)", textDecoration: "none",
+            }}
+          >
+            Get notified when it launches →
+          </a>
+        </div>
+      </div>
 
       {/* Installation steps */}
       <div style={{ marginTop: 32 }}>
