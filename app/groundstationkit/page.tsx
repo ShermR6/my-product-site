@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const INCLUDED = [
@@ -32,9 +33,39 @@ const SPECS = [
 
 export default function GroundStationKitPage() {
   const [builtAndFlashed, setBuiltAndFlashed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const basePrice = 200;
   const addonPrice = 25;
   const total = basePrice + (builtAndFlashed ? addonPrice : 0);
+
+  const handleOrder = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const tier = builtAndFlashed ? "ground-station-kit-built" : "ground-station-kit";
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.requireLogin) {
+        router.push("/login?callbackUrl=/groundstationkit");
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="page">
@@ -195,21 +226,26 @@ export default function GroundStationKitPage() {
               </div>
 
               {/* Order button */}
-              <a
-                href={`/contact?subject=Ground+Station+Kit${builtAndFlashed ? "+%28Built+%26+Flashed%29" : ""}&total=$${total}`}
+              <button
+                onClick={handleOrder}
+                disabled={loading}
                 style={{
-                  display: "block", textAlign: "center",
+                  display: "block", width: "100%", textAlign: "center",
                   padding: "14px", borderRadius: 12, marginBottom: 12,
-                  background: "#0ea5e9", color: "#fff",
-                  fontSize: 15, fontWeight: 800, textDecoration: "none",
+                  background: loading ? "rgba(14,165,233,0.5)" : "#0ea5e9", color: "#fff",
+                  fontSize: 15, fontWeight: 800, border: "none", cursor: loading ? "default" : "pointer",
                   letterSpacing: "-0.01em",
                 }}
               >
-                Order Now — ${total}
-              </a>
+                {loading ? "Loading..." : `Order Now — $${total}`}
+              </button>
+
+              {error && (
+                <div style={{ fontSize: 12, color: "#f87171", textAlign: "center", marginBottom: 8 }}>{error}</div>
+              )}
 
               <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>
-                We&apos;ll confirm your order and collect shipping details via email.
+                Secure checkout via Stripe. We&apos;ll collect shipping details after payment.
               </div>
 
               {/* Trust points */}

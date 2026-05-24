@@ -21,9 +21,11 @@ const PRICE_MAP: Record<string, string> = {
   "team-premium-yearly": process.env.STRIPE_PRICE_TEAM_PREMIUM_YEARLY!,
   "team-pro-yearly": process.env.STRIPE_PRICE_TEAM_PRO_YEARLY!,
   "ground-station": process.env.STRIPE_PRICE_GROUND_STATION!,
+  "ground-station-kit": process.env.STRIPE_PRICE_GROUND_STATION_KIT!,
+  "ground-station-kit-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_BUILT!,
 };
 
-const ONE_TIME_TIERS = new Set(["ground-station"]);
+const ONE_TIME_TIERS = new Set(["ground-station", "ground-station-kit", "ground-station-kit-built"]);
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,7 +46,9 @@ export async function POST(req: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: isOneTime ? "payment" : "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${tier}`,
+      success_url: tier.startsWith("ground-station-kit")
+        ? `${process.env.NEXTAUTH_URL}/checkout/kit-success`
+        : `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${tier}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
