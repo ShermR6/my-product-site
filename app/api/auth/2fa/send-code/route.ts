@@ -60,31 +60,38 @@ export async function POST(req: NextRequest) {
       },
     });
   } else {
+    // covers "password-change" and "account-deletion"
     await prisma.user.update({
       where: { email: session.user.email },
       data: {
         pendingPasswordCode: hashedCode,
         pendingPasswordExpiry: expiry,
+        pendingPasswordMethod: method,
       },
     });
   }
 
   const subject = context === "setup"
     ? "FinalPing: Verify 2FA Setup"
-    : "FinalPing: Confirm Password Change";
+    : context === "account-deletion"
+      ? "FinalPing: Confirm Account Deletion"
+      : "FinalPing: Confirm Password Change";
 
   const bodyText = context === "setup"
     ? `Your FinalPing 2FA setup code is: ${code}. Expires in 10 minutes.`
-    : `Your FinalPing password change code is: ${code}. Expires in 10 minutes.`;
+    : context === "account-deletion"
+      ? `Your FinalPing account deletion code is: ${code}. Expires in 10 minutes.`
+      : `Your FinalPing password change code is: ${code}. Expires in 10 minutes.`;
 
   const htmlBody = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #0ea5e9;">${context === "setup" ? "Verify 2FA Setup" : "Confirm Password Change"}</h2>
-      <p>Your verification code is:</p>
+      <h2 style="color: #ef4444;">${context === "account-deletion" ? "Confirm Account Deletion" : context === "setup" ? "Verify 2FA Setup" : "Confirm Password Change"}</h2>
+      <p>${context === "account-deletion" ? "Someone requested to permanently delete your FinalPing account. Enter this code to confirm:" : "Your verification code is:"}</p>
       <div style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #0ea5e9; padding: 16px 0;">
         ${code}
       </div>
       <p style="color: #6b7280; font-size: 13px;">This code expires in 10 minutes.</p>
+      ${context === "account-deletion" ? '<p style="color: #ef4444; font-size: 13px;">If you did not request this, ignore this email and your account will not be deleted.</p>' : ""}
     </div>
   `;
 

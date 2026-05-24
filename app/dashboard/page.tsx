@@ -139,10 +139,17 @@ function CodeInput({ value, onChange, onSubmit }: { value: string; onChange: (v:
   );
 }
 
+type DeleteStep = "idle" | "confirm" | "choose-method" | "enter-code" | "totp-code";
+
 function AccountTab({ email, session }: { email: string; session: any }) {
   const [memberSince, setMemberSince] = useState<string>("—");
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<DeleteStep>("idle");
   const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState<string>("");
+  const [twoFA, setTwoFA] = useState<TwoFAStatus | null>(null);
+  const [deleteMethod, setDeleteMethod] = useState<"email" | "sms" | "totp" | null>(null);
+  const [deleteCode, setDeleteCode] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -154,18 +161,95 @@ function AccountTab({ email, session }: { email: string; session: any }) {
         }
       })
       .catch(() => {});
+    fetch("/api/auth/2fa/status")
+      .then(r => r.json())
+      .then(d => setTwoFA(d))
+      .catch(() => {});
   }, []);
 
-  const handleDeleteAccount = async () => {
+  const has2FA = twoFA && (twoFA.email || twoFA.sms || twoFA.totp);
+  const activeMethods = twoFA ? [
+    ...(twoFA.email ? [{ id: "email" as const, label: "Email" }] : []),
+    ...(twoFA.sms ? [{ id: "sms" as const, label: `SMS (${twoFA.phone ?? ""})` }] : []),
+    ...(twoFA.totp ? [{ id: "totp" as const, label: "Authenticator App" }] : []),
+  ] : [];
+
+  const resetDelete = () => {
+    setDeleteStep("idle");
+    setDeleteMsg("");
+    setDeleteMethod(null);
+    setDeleteCode("");
+  };
+
+  const handleConfirm = () => {
+    if (!has2FA) {
+      setDeleteStep("confirm");
+      return;
+    }
+    if (activeMethods.length === 1) {
+      sendDeletionCode(activeMethods[0].id);
+    } else {
+      setDeleteStep("choose-method");
+    }
+  };
+
+  const sendDeletionCode = async (method: "email" | "sms" | "totp") => {
+    if (method === "totp") {
+      setDeleteMethod("totp");
+      setDeleteStep("totp-code");
+      return;
+    }
+    setSendingCode(true);
+    setDeleteMsg("");
+    try {
+      const r = await fetch("/api/auth/2fa/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method, context: "account-deletion" }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setDeleteMsg(d.error || "Failed to send code."); return; }
+      setDeleteMethod(method);
+      setDeleteStep("enter-code");
+    } catch {
+      setDeleteMsg("Something went wrong. Please try again.");
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleDeleteNoTwoFA = async () => {
     setDeleting(true);
     try {
       const res = await fetch("/api/auth/delete-account", { method: "DELETE" });
       if (res.ok) {
         await signOut({ callbackUrl: "/" });
+      } else {
+        setDeleteMsg("Failed to delete account. Please try again.");
+        setDeleting(false);
       }
     } catch {
+      setDeleteMsg("Something went wrong.");
       setDeleting(false);
-      setDeleteConfirm(false);
+    }
+  };
+
+  const handleVerifyAndDelete = async () => {
+    if (deleteCode.length < 6) { setDeleteMsg("Enter the 6-digit code."); return; }
+    setDeleting(true);
+    setDeleteMsg("");
+    try {
+      const r = await fetch("/api/auth/2fa/verify-deletion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: deleteCode }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setDeleteMsg(d.error || "Invalid code."); setDeleting(false); return; }
+      await signOut({ callbackUrl: "/" });
+    } catch {
+      setDeleteMsg("Something went wrong.");
+      setDeleting(false);
     }
   };
 
@@ -186,21 +270,71 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       <div style={{ marginTop: 32, padding: "20px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, background: "rgba(239,68,68,0.04)" }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, color: "#ef4444", margin: "0 0 6px" }}>Delete Account</h3>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>Permanently delete your account and cancel any active subscriptions. This cannot be undone.</p>
-        {!deleteConfirm ? (
-          <button onClick={() => setDeleteConfirm(true)} style={{ ...styles.dangerBtn, borderColor: "rgba(239,68,68,0.3)" }}
+
+        {deleteStep === "idle" && (
+          <button onClick={handleConfirm} style={{ ...styles.dangerBtn, borderColor: "rgba(239,68,68,0.3)" }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Delete Account</button>
-        ) : (
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        )}
+
+        {deleteStep === "confirm" && (
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" as const }}>
             <span style={{ fontSize: 13, color: "#f87171" }}>Are you sure? This is permanent.</span>
-            <button onClick={handleDeleteAccount} disabled={deleting}
+            <button onClick={handleDeleteNoTwoFA} disabled={deleting}
               style={{ padding: "8px 16px", background: "#ef4444", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
               {deleting ? "Deleting..." : "Yes, delete"}
             </button>
-            <button onClick={() => setDeleteConfirm(false)}
+            <button onClick={resetDelete}
               style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--muted)", fontSize: 13, cursor: "pointer" }}>
               Cancel
             </button>
+            {deleteMsg && <span style={{ fontSize: 13, color: "#ef4444", width: "100%" }}>{deleteMsg}</span>}
+          </div>
+        )}
+
+        {deleteStep === "choose-method" && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Verify your identity</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Choose how you want to confirm account deletion:</div>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+              {activeMethods.map(m => (
+                <button key={m.id} onClick={() => sendDeletionCode(m.id)} disabled={sendingCode}
+                  style={{ ...styles.methodBtn, opacity: sendingCode ? 0.6 : 1 }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                  {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={resetDelete} style={{ ...styles.ghostBtn, marginTop: 10 }}>Cancel</button>
+            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#ef4444" }}>{deleteMsg}</div>}
+          </div>
+        )}
+
+        {(deleteStep === "enter-code" || deleteStep === "totp-code") && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              {deleteStep === "totp-code" ? "Enter code from your authenticator app" : "Enter verification code"}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>
+              {deleteStep === "totp-code"
+                ? "Open your authenticator app and enter the 6-digit code to confirm deletion."
+                : deleteMethod === "email" ? `Code sent to ${email}` : "Code sent to your phone"}
+            </div>
+            <CodeInput value={deleteCode} onChange={setDeleteCode} onSubmit={handleVerifyAndDelete} />
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
+              <button onClick={handleVerifyAndDelete} disabled={deleting}
+                style={{ padding: "9px 18px", borderRadius: 8, background: "#ef4444", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? "Deleting..." : "Confirm Deletion"}
+              </button>
+              {deleteStep !== "totp-code" && (
+                <button onClick={() => sendDeletionCode(deleteMethod!)} disabled={sendingCode} style={styles.ghostBtn}>
+                  {sendingCode ? "Sending..." : "Resend"}
+                </button>
+              )}
+              <button onClick={resetDelete} style={styles.ghostBtn}>Cancel</button>
+            </div>
+            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#ef4444" }}>{deleteMsg}</div>}
           </div>
         )}
       </div>
