@@ -53,6 +53,12 @@ export async function POST(req: NextRequest) {
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
+      ...(tier.startsWith("ground-station-kit") ? {
+        shipping_address_collection: {
+          allowed_countries: ["US", "CA", "GB", "AU"],
+        },
+        phone_number_collection: { enabled: true },
+      } : {}),
       // Pause subscription billing until user activates their license key
       ...(isOneTime ? {} : {
         subscription_data: {
