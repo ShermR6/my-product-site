@@ -70,7 +70,7 @@ export default function GroundStationKitPage() {
 
             {/* Component images */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 36 }}>
-              [
+              {[
                 { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W Kit" },
                 { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
                 { src: "/ground/51jXcyrG51L._AC_SL1001_.jpg", label: "1090MHz Antenna" },
