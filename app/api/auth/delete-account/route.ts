@@ -40,7 +40,10 @@ export async function DELETE(req: NextRequest) {
       body: JSON.stringify({ email }),
     });
 
-    // Delete web dashboard user — cascades to sessions, licenses (SetNull), 2FA settings
+    // Delete all Prisma-side licenses before deleting the user
+    await prisma.license.deleteMany({ where: { userId: user.id } });
+
+    // Delete web dashboard user — cascades sessions and accounts
     await prisma.user.delete({ where: { email } });
 
     return NextResponse.json({ success: true });

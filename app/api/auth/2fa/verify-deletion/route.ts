@@ -78,6 +78,9 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ email }),
     });
 
+    // Delete all Prisma-side licenses before deleting the user
+    await prisma.license.deleteMany({ where: { userId: user.id } });
+
     await prisma.user.delete({ where: { email } });
 
     return NextResponse.json({ success: true });
