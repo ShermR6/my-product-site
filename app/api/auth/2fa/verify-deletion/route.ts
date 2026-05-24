@@ -10,7 +10,7 @@ const bcrypt = require("bcryptjs");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://aircraft-tracker-backend-production.up.railway.app";
-const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "";
+const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "skyping-internal-secret";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -72,11 +72,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await fetch(`${BACKEND_URL}/api/internal/user`, {
+    const backendRes = await fetch(`${BACKEND_URL}/api/internal/user`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json", "x-internal-secret": INTERNAL_SECRET },
       body: JSON.stringify({ email }),
     });
+    if (!backendRes.ok) {
+      const body = await backendRes.text().catch(() => "");
+      console.error(`Backend user delete failed: ${backendRes.status} ${body}`);
+      throw new Error("Backend user deletion failed");
+    }
 
     // Delete all Prisma-side licenses before deleting the user
     await prisma.license.deleteMany({ where: { userId: user.id } });
