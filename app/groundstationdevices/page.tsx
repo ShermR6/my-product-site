@@ -83,7 +83,7 @@ export default function GroundStationDevicesPage() {
             }}>
               📖 Setup Guide →
             </Link>
-            <Link href="/pricing" style={{
+            <Link href="/groundstationkit" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "9px 18px", borderRadius: 999,
               background: "var(--accent)", border: "1px solid var(--accent)",
@@ -120,6 +120,43 @@ export default function GroundStationDevicesPage() {
               Any RTL-SDR dongle running dump1090, dump1090-fa, readsb, or PiAware will work.
               FinalPing reads the standard JSON feed at port 8080.
             </div>
+          </div>
+        </div>
+
+        {/* FinalPing Bundle teaser */}
+        <Link href="/groundstationkit" style={{ textDecoration: "none", display: "block", marginBottom: 48 }}>
+          <div style={{
+            borderRadius: 16,
+            background: "linear-gradient(135deg, rgba(14,165,233,0.09), rgba(14,165,233,0.02))",
+            border: "1px solid rgba(14,165,233,0.3)",
+            padding: "20px 24px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+            cursor: "pointer",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ fontSize: 28 }}>📦</div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 2 }}>
+                  FinalPing Official Bundle
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>Ground Station Kit — from $200</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Pi Zero 2 W · Pro Stick Plus · Antenna · All cables included. Optional pre-built &amp; flashed for +$25.</div>
+              </div>
+            </div>
+            <div style={{
+              padding: "10px 20px", borderRadius: 10,
+              background: "#0ea5e9", color: "#fff",
+              fontSize: 13, fontWeight: 700, whiteSpace: "nowrap",
+            }}>
+              View Kit →
+            </div>
+          </div>
+        </Link>
+
+        {/* Divider */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted)" }}>
+            — Or source your own parts —
           </div>
         </div>
 
@@ -211,7 +248,7 @@ export default function GroundStationDevicesPage() {
             }}>
               View Setup Guide →
             </Link>
-            <Link href="/pricing" style={{
+            <Link href="/groundstationkit" style={{
               padding: "11px 24px", borderRadius: 999,
               background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
               color: "var(--text)", fontSize: 14, fontWeight: 600, textDecoration: "none",
