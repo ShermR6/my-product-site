@@ -6,6 +6,9 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://aircraft-tracker-backend-production.up.railway.app";
+const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "";
+
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -27,7 +30,17 @@ export async function DELETE(req: NextRequest) {
       }
     }
 
-    // Delete user — cascades to sessions, licenses (SetNull), 2FA settings
+    // Delete all backend data (aircraft, logs, integrations, etc.)
+    await fetch(`${BACKEND_URL}/api/internal/user`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": INTERNAL_SECRET,
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    // Delete web dashboard user — cascades to sessions, licenses (SetNull), 2FA settings
     await prisma.user.delete({ where: { email } });
 
     return NextResponse.json({ success: true });
