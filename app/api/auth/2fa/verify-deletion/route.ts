@@ -10,7 +10,7 @@ const bcrypt = require("bcryptjs");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://aircraft-tracker-backend-production.up.railway.app";
-const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "skyping-internal-secret";
+const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "finalping-internal-secret";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
