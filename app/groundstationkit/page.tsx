@@ -70,10 +70,10 @@ export default function GroundStationKitPage() {
 
             {/* Component images */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 36 }}>
-              {[
-                { src: "https://m.media-amazon.com/images/I/71GnMN3G03L._AC_SL1200_.jpg", label: "Pi Zero 2 W Kit" },
-                { src: "https://m.media-amazon.com/images/I/71it4FmVFbL._AC_SL1500_.jpg", label: "Pro Stick Plus" },
-                { src: "https://m.media-amazon.com/images/I/51mE8r6AATL._AC_SL1500_.jpg", label: "1090MHz Antenna" },
+              [
+                { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W Kit" },
+                { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
+                { src: "/ground/51jXcyrG51L._AC_SL1001_.jpg", label: "1090MHz Antenna" },
               ].map(item => (
                 <div key={item.label} style={{
                   borderRadius: 12, overflow: "hidden",
