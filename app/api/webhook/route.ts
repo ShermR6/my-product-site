@@ -120,8 +120,9 @@ export async function POST(req: NextRequest) {
     if (tier === "ground-station-kit" || tier === "ground-station-kit-built") {
       const built = tier === "ground-station-kit-built";
       const s = session as unknown as Record<string, any>;
-      const shippingAddress = s.shipping_details?.address;
-      const shippingName = s.shipping_details?.name ?? email;
+      const shippingDetails = s.shipping_details ?? s.shipping;
+      const shippingAddress = shippingDetails?.address ?? session.customer_details?.address;
+      const shippingName = shippingDetails?.name ?? session.customer_details?.name ?? email;
       const addressLine = shippingAddress
         ? `${shippingAddress.line1}${shippingAddress.line2 ? ", " + shippingAddress.line2 : ""}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal_code}, ${shippingAddress.country}`
         : "No address captured";
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
             <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
               <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
               <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Aircraft Alerts</div>
-              <p style="font-size:15px;margin-bottom:8px;">Thanks for your order, ${shippingName.split(" ")[0]}!</p>
+              <p style="font-size:15px;margin-bottom:8px;">Thanks for your order!</p>
               <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;margin:20px 0;">
                 <div style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">ORDER SUMMARY</div>
                 <div style="font-size:15px;font-weight:700;">Ground Station Kit${built ? " — Pre-built &amp; Flashed" : ""}</div>
