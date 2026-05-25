@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
       success_url: tier.startsWith("ground-station-kit")
         ? `${process.env.NEXTAUTH_URL}/checkout/kit-success`
         : `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${tier}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
+      cancel_url: tier.startsWith("ground-station-kit")
+        ? `${process.env.NEXTAUTH_URL}/groundstationkit`
+        : `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
