@@ -133,21 +133,7 @@ export async function POST(req: NextRequest) {
           from: "FinalPing <noreply@finalpingapp.com>",
           to: email,
           subject: "Your FinalPing Ground Station Kit order",
-          html: `
-            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
-              <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
-              <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Aircraft Alerts</div>
-              <p style="font-size:15px;margin-bottom:8px;">Thanks for your order!</p>
-              <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;margin:20px 0;">
-                <div style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">ORDER SUMMARY</div>
-                <div style="font-size:15px;font-weight:700;">Ground Station Kit${built ? " — Pre-built &amp; Flashed" : ""}</div>
-                <div style="font-size:13px;color:#bdbdbd;margin-top:4px;">Ships to: ${addressLine}</div>
-              </div>
-              <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">We'll email you within 1 business day with shipping confirmation and a tracking number.</p>
-              <a href="https://finalpingapp.com/groundstationsetup" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Setup Guide</a>
-              <p style="font-size:12px;color:#555;margin-top:28px;">Questions? Reply to this email or contact us at finalpingapp.com/contact</p>
-            </div>
-          `,
+          html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;"><div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div><div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Aircraft Alerts</div><p style="font-size:15px;margin-bottom:8px;">Thanks for your order!</p><div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;margin:20px 0;"><div style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">ORDER SUMMARY</div><div style="font-size:15px;font-weight:700;">Ground Station Kit${built ? " — Pre-built &amp; Flashed" : ""}</div><div style="font-size:13px;color:#bdbdbd;margin-top:4px;">Ships to: ${addressLine}</div></div><p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">We'll email you within 1 business day with shipping confirmation and a tracking number.</p><a href="https://finalpingapp.com/groundstationsetup" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Setup Guide</a><p style="font-size:12px;color:#555;margin-top:28px;">Questions? Reply to this email or contact us at finalpingapp.com/contact</p></div>`,
         }),
         // Internal alert
         resend.emails.send({
