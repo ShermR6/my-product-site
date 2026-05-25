@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
       ...(tier.startsWith("ground-station-kit") ? {
+        payment_method_types: ["card"],
         shipping_address_collection: {
           allowed_countries: ["US", "CA", "GB", "AU"],
         },
