@@ -119,8 +119,9 @@ export async function POST(req: NextRequest) {
     // ── Ground Station Kit physical order ────────────────────────────────
     if (tier === "ground-station-kit" || tier === "ground-station-kit-built") {
       const built = tier === "ground-station-kit-built";
-      const shippingAddress = session.shipping_details?.address;
-      const shippingName = session.shipping_details?.name ?? email;
+      const s = session as unknown as Record<string, any>;
+      const shippingAddress = s.shipping_details?.address;
+      const shippingName = s.shipping_details?.name ?? email;
       const addressLine = shippingAddress
         ? `${shippingAddress.line1}${shippingAddress.line2 ? ", " + shippingAddress.line2 : ""}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal_code}, ${shippingAddress.country}`
         : "No address captured";
