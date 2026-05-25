@@ -58,6 +58,10 @@ export async function POST(req: NextRequest) {
           allowed_countries: ["US", "CA", "GB", "AU"],
         },
         phone_number_collection: { enabled: true },
+        shipping_options: [
+          { shipping_rate: process.env.STRIPE_SHIPPING_STANDARD! },
+          { shipping_rate: process.env.STRIPE_SHIPPING_EXPEDITED! },
+        ],
       } : {}),
       // Pause subscription billing until user activates their license key
       ...(isOneTime ? {} : {
