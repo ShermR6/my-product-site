@@ -116,6 +116,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    // ── Ground Station Kit physical order ────────────────────────────────
+    if (tier === "ground-station-kit" || tier === "ground-station-kit-built") {
+      const built = tier === "ground-station-kit-built";
+      const shippingAddress = session.shipping_details?.address;
+      const shippingName = session.shipping_details?.name ?? email;
+      const addressLine = shippingAddress
+        ? `${shippingAddress.line1}${shippingAddress.line2 ? ", " + shippingAddress.line2 : ""}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal_code}, ${shippingAddress.country}`
+        : "No address captured";
+
+      await Promise.allSettled([
+        // Confirmation to customer
+        resend.emails.send({
+          from: "FinalPing <noreply@finalpingapp.com>",
+          to: email,
+          subject: "Your FinalPing Ground Station Kit order",
+          html: `
+            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+              <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+              <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Aircraft Alerts</div>
+              <p style="font-size:15px;margin-bottom:8px;">Thanks for your order, ${shippingName.split(" ")[0]}!</p>
+              <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;margin:20px 0;">
+                <div style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">ORDER SUMMARY</div>
+                <div style="font-size:15px;font-weight:700;">Ground Station Kit${built ? " — Pre-built &amp; Flashed" : ""}</div>
+                <div style="font-size:13px;color:#bdbdbd;margin-top:4px;">Ships to: ${addressLine}</div>
+              </div>
+              <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">We'll email you within 1 business day with shipping confirmation and a tracking number.</p>
+              <a href="https://finalpingapp.com/groundstationsetup" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Setup Guide</a>
+              <p style="font-size:12px;color:#555;margin-top:28px;">Questions? Reply to this email or contact us at finalpingapp.com/contact</p>
+            </div>
+          `,
+        }),
+        // Internal alert
+        resend.emails.send({
+          from: "FinalPing <noreply@finalpingapp.com>",
+          to: "aircraftalerts@finalpingapp.com",
+          subject: `New kit order${built ? " (Built & Flashed)" : ""}: ${email}`,
+          text: `New Ground Station Kit order\n\nCustomer: ${shippingName}\nEmail: ${email}\nOption: ${built ? "Pre-built & Flashed ($225)" : "Kit only ($200)"}\nShip to: ${addressLine}\n\nStripe session: ${session.id}`,
+        }),
+      ]);
+
+      console.log(`Ground station kit order received from ${email}`);
+      return NextResponse.json({ received: true });
+    }
+
     // ── Regular license purchase ──────────────────────────────────────────
     // Always generate a new unique license key for every purchase
     const licenseKey = generateLicenseKey(tier);
