@@ -5,11 +5,8 @@ export const metadata: Metadata = {
   description: "Download FinalPing for Windows or macOS. Personal and Teams editions available.",
 };
 
-const PERSONAL_VERSION = "1.0.8";
-const TEAMS_VERSION = "1.0.0";
-
-const PERSONAL_BASE = `https://github.com/ShermR6/aircraft-tracker-desktop/releases/download/v${PERSONAL_VERSION}`;
-const TEAMS_BASE = `https://github.com/ShermR6/aircraft-tracker-teams/releases/download/v${TEAMS_VERSION}`;
+const PERSONAL_BASE = `https://github.com/ShermR6/aircraft-tracker-desktop/releases/latest/download`;
+const TEAMS_BASE = `https://github.com/ShermR6/aircraft-tracker-teams/releases/latest/download`;
 
 function PlatformCard({
   emoji,
