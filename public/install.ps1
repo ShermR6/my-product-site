@@ -96,17 +96,17 @@ Write-Success "dump1090 downloaded to $dump1090Dir"
 Write-Step 4 5 "RTL-SDR driver setup"
 Write-Host ""
 Write-Warn "Windows requires a manual driver installation step."
-Write-Host "  After this installer finishes, do the following:" -ForegroundColor White
-Write-Host "  1. Download Zadig from https://zadig.akeo.ie" -ForegroundColor Gray
-Write-Host "  2. Plug in your ADS-B receiver" -ForegroundColor Gray
-Write-Host "  3. Open Zadig → Options → List All Devices" -ForegroundColor Gray
-Write-Host "  4. Select your RTL-SDR device" -ForegroundColor Gray
-Write-Host "  5. Choose WinUSB and click Install Driver" -ForegroundColor Gray
+Write-Host "  Opening Zadig now. Once it loads:" -ForegroundColor White
+Write-Host "  1. In Zadig: Options -> List All Devices" -ForegroundColor Gray
+Write-Host "  2. Select RTL2832U from the dropdown" -ForegroundColor Gray
+Write-Host "  3. Choose WinUSB as the driver" -ForegroundColor Gray
+Write-Host "  4. Click Install Driver and wait for it to finish" -ForegroundColor Gray
+Write-Host "  5. Return here and press Enter to continue" -ForegroundColor Gray
 Write-Host ""
 
-# Open Zadig download page automatically
 Start-Process "https://zadig.akeo.ie"
 Write-Success "Opened Zadig download page in your browser"
+Read-Host "Press Enter once the Zadig driver is installed to continue"
 
 # ── Step 5: FinalPing Ground Station ─────────────────────────
 Write-Step 5 5 "Downloading FinalPing Ground Station"
@@ -122,43 +122,84 @@ Write-Host ""
 $fpEmail = Read-Host "FinalPing email"
 $fpPasswordSecure = Read-Host "FinalPing password" -AsSecureString
 $fpPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($fpPasswordSecure))
-$fpLat = Read-Host "Your latitude (e.g. 33.2001)"
-$fpLon = Read-Host "Your longitude (e.g. -97.1998)"
-$fpElev = Read-Host "Your elevation in feet MSL (e.g. 641)"
+
+# ── Validate account has Ground Station ──────────────────────
+Write-Host ""
+Write-Host "Verifying your account..." -ForegroundColor Cyan
+
+$backendUrl = "https://aircraft-tracker-backend-production.up.railway.app"
+
+try {
+    $loginBody = @{ email = $fpEmail; password = $fpPassword } | ConvertTo-Json
+    $loginResp = Invoke-RestMethod -Uri "$backendUrl/api/auth/login" -Method Post -Body $loginBody -ContentType "application/json" -ErrorAction Stop
+    $token = $loginResp.access_token
+} catch {
+    Write-Host ""
+    $errBody = $_.ErrorDetails.Message
+    if ($errBody -match "license_expired") {
+        Write-Host "Your FinalPing license has expired. Renew it at https://finalpingapp.com/pricing" -ForegroundColor Red
+    } elseif ($errBody -match "license" -or $_.Exception.Response.StatusCode.value__ -eq 401) {
+        Write-Host "No active FinalPing license found. You need an active FinalPing license to use Ground Station." -ForegroundColor Red
+        Write-Host "Purchase one at https://finalpingapp.com/pricing" -ForegroundColor Yellow
+    } else {
+        Write-Host "Login failed. Check your email and password and try again." -ForegroundColor Red
+        Write-Host "Error: $_" -ForegroundColor DarkGray
+    }
+    Read-Host "Press Enter to exit"
+    exit 1
+}
+
+try {
+    $headers = @{ Authorization = "Bearer $token" }
+    Invoke-RestMethod -Uri "$backendUrl/api/ground/validate" -Method Post -Headers $headers -ErrorAction Stop | Out-Null
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Write-Host ""
+    if ($statusCode -eq 403) {
+        Write-Host "This account has not purchased FinalPing Ground Station." -ForegroundColor Red
+        Write-Host "Purchase it at https://finalpingapp.com/pricing then re-run this installer." -ForegroundColor Yellow
+    } else {
+        Write-Host "Could not verify ground station access (HTTP $statusCode). Check your internet connection and try again." -ForegroundColor Red
+        Write-Host "Error: $_" -ForegroundColor DarkGray
+    }
+    Read-Host "Press Enter to exit"
+    exit 1
+}
+
+Write-Success "Ground Station access confirmed"
+Write-Host ""
+Write-Host "  Your location and tracked aircraft are pulled automatically from your FinalPing account." -ForegroundColor Gray
+Write-Host ""
 
 # Update the script with user's credentials
 $content = Get-Content $scriptPath -Raw
-$content = $content -replace 'FINALPING_EMAIL    = "your@email.com"', "FINALPING_EMAIL    = `"$fpEmail`""
-$content = $content -replace 'FINALPING_PASSWORD = "yourpassword"', "FINALPING_PASSWORD = `"$fpPassword`""
-$content = $content -replace 'MY_LAT = 33.2001', "MY_LAT = $fpLat"
-$content = $content -replace 'MY_LON = -97.1998', "MY_LON = $fpLon"
-$content = $content -replace 'MY_ELEVATION_FT = 641', "MY_ELEVATION_FT = $fpElev"
+$content = $content.Replace('FINALPING_EMAIL    = "your@email.com"', 'FINALPING_EMAIL    = "' + $fpEmail + '"')
+$content = $content.Replace('FINALPING_PASSWORD = "yourpassword"', 'FINALPING_PASSWORD = "' + $fpPassword + '"')
 Set-Content $scriptPath $content -Encoding UTF8
 
-# Create a startup batch file that launches dump1090 then FinalPing
-$startupScript = "$INSTALL_DIR\start-finalping-ground.bat"
+# Create a hidden PowerShell launcher (no console windows on startup)
+$startupScript = "$INSTALL_DIR\start-finalping-ground.ps1"
 $dump1090Exe = Get-ChildItem -Path $dump1090Dir -Recurse -Filter "dump1090.exe" | Select-Object -First 1 -ExpandProperty FullName
+$pythonwExe = (Get-Command pythonw -ErrorAction SilentlyContinue)?.Source
+if (-not $pythonwExe) { $pythonwExe = (Get-Command python -ErrorAction SilentlyContinue)?.Source }
 
 @"
-@echo off
-echo Starting FinalPing Ground Station...
-start "dump1090" "$dump1090Exe" --net --quiet
-timeout /t 3 /nobreak > nul
-python "$scriptPath"
+Start-Process -FilePath "$dump1090Exe" -ArgumentList "--net","--quiet" -WindowStyle Hidden
+Start-Sleep -Seconds 3
+Start-Process -FilePath "$pythonwExe" -ArgumentList "`"$scriptPath`"" -WindowStyle Hidden
 "@ | Set-Content $startupScript
 
-# Add to Windows startup via Task Scheduler
+# Add to Windows startup via Task Scheduler (hidden, no window)
 $taskName = "FinalPingGroundStation"
 $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-
 if ($taskExists) {
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
 }
 
-$action = New-ScheduledTaskAction -Execute $startupScript
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -NonInteractive -ExecutionPolicy Bypass -File `"$startupScript`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
-$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -RunLevel Highest
+$principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -RunLevel Highest
 
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
 
@@ -168,21 +209,13 @@ Write-Success "Auto-start configured via Task Scheduler"
 Write-Header "✅ Installation complete!"
 
 Write-Host "  FinalPing Ground Station is installed and configured." -ForegroundColor White
-Write-Host "  It will start automatically every time you log in." -ForegroundColor White
 Write-Host ""
-Write-Host "  To start it now, run:" -ForegroundColor White
-Write-Host "  $startupScript" -ForegroundColor Gray
+Write-Host "  Next steps:" -ForegroundColor White
+Write-Host "  1. Connect your antenna to the Pro Stick Plus" -ForegroundColor Gray
+Write-Host "  2. Plug the Pro Stick Plus into this PC" -ForegroundColor Gray
+Write-Host "  3. Restart your computer" -ForegroundColor Gray
+Write-Host "  4. FinalPing Ground Station will start silently in the background on every login" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Files installed to:" -ForegroundColor White
 Write-Host "  $INSTALL_DIR" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  ⚠  IMPORTANT: Complete the Zadig driver step!" -ForegroundColor Yellow
-Write-Host "  Your browser opened the Zadig download page." -ForegroundColor Yellow
-Write-Host "  Install the WinUSB driver for your RTL-SDR device," -ForegroundColor Yellow
-Write-Host "  then restart your computer." -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  Once restarted, plug in your receiver and FinalPing will start automatically." -ForegroundColor White
-Write-Host ""
-
-# Open the install folder
-Start-Process $INSTALL_DIR
