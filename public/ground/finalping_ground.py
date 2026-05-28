@@ -303,6 +303,33 @@ class GroundStation:
         self.last_notify[key] = datetime.now()
         return True
 
+    def check_disappeared(self, snapshot):
+        """Fire landing alerts for tracked aircraft that vanished while close to the airport."""
+        current = set(snapshot.keys())
+        to_remove = []
+        for icao24, prev in self.state.items():
+            if icao24 in current or icao24 not in self.icao_map:
+                continue
+            tail = self.icao_map[icao24]
+            dist = prev.get("distance")
+            prev_on_ground = prev.get("on_ground", True)
+            sent = self.alerts_sent.get(icao24, set())
+            was_inbound = any(k in sent for k in ["2nm", "5nm", "10nm"])
+            # Aircraft disappeared within 5nm while inbound and not yet marked on ground
+            if dist is not None and dist < 5.0 and not prev_on_ground and was_inbound:
+                if self.should_notify(icao24, "landing", cooldown_minutes=10):
+                    log.info(f"🛬 LANDING: {tail} — signal lost at {dist:.1f}nm (landed)")
+                    self.push_alerts([{
+                        "type": "landing", "tail": tail,
+                        "distance": dist,
+                        "altitude": prev.get("alt_ft", self.elevation_ft),
+                        "speed": 0,
+                    }])
+                    self.alerts_sent[icao24] = set()
+            to_remove.append(icao24)
+        for icao24 in to_remove:
+            self.state.pop(icao24, None)
+
     def process_aircraft(self, icao24, raw):
         if icao24 not in self.icao_map:
             return []
@@ -316,8 +343,12 @@ class GroundStation:
         if lat is None or lon is None:
             return []
 
-        on_ground = raw.get("on_ground", False) or (
-            isinstance(alt, (int, float)) and alt <= self.elevation_ft + 50
+        # Generous on-ground detection: SBS surface flag, altitude within 250ft of field,
+        # or very slow and low (taxiing/rollout where baro alt is still slightly above field)
+        on_ground = (
+            raw.get("on_ground", False)
+            or (isinstance(alt, (int, float)) and alt <= self.elevation_ft + 250)
+            or (speed < 40 and isinstance(alt, (int, float)) and alt <= self.elevation_ft + 500)
         )
         alt_ft = self.elevation_ft if on_ground else (float(alt) if alt else self.elevation_ft)
         distance_nm = haversine_nm(self.lat, self.lon, lat, lon)
@@ -330,11 +361,20 @@ class GroundStation:
         alerts = []
         sent = self.alerts_sent.setdefault(icao24, set())
 
-        if prev_ground is True and not on_ground and speed > 60:
+        # Takeoff: was on ground last poll and now airborne with speed
+        if prev_ground is True and not on_ground and speed > 40:
             if self.should_notify(icao24, "takeoff"):
                 log.info(f"🛫 TAKEOFF: {tail} — {speed}kts")
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
 
+        # Takeoff: first time we hear this aircraft — it's already airborne near the airport
+        # (SDR picked it up just after liftoff)
+        if prev_ground is None and not on_ground and speed > 60 and distance_nm < 8.0 and alt_ft < self.elevation_ft + 3000:
+            if self.should_notify(icao24, "takeoff"):
+                log.info(f"🛫 TAKEOFF: {tail} — first contact airborne, {speed}kts at {distance_nm:.1f}nm")
+                alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
+
+        # Normal landing detection (altitude/flag based)
         if prev_ground is False and on_ground:
             if self.should_notify(icao24, "landing"):
                 log.info(f"🛬 LANDING: {tail}")
@@ -433,6 +473,9 @@ class GroundStation:
                     if datetime.now() - last_range_sync > timedelta(minutes=5):
                         self.sync_range()
                         last_range_sync = datetime.now()
+
+                    # Check for tracked aircraft that disappeared (likely landed)
+                    self.check_disappeared(snapshot)
 
                     all_alerts = []
                     for icao24, raw in snapshot.items():
