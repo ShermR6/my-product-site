@@ -214,10 +214,19 @@ export default function GroundStationSetupPage() {
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Step 2 — Run the FinalPing installer</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            Plug your Pro Stick Plus into the Pi, then power it on. Wait about 60 seconds for it to boot and connect to your WiFi. Then open PowerShell (Windows) or Terminal (Mac) and SSH in:
+            Plug your Pro Stick Plus into the Pi, then power it on. Wait about 60 seconds for it to boot and connect to your WiFi.
           </p>
-          {codeBlock(`ssh pi@raspberrypi.local`)}
-          {note("If you get a warning about a changed host key (REMOTE HOST IDENTIFICATION HAS CHANGED), run this first to clear it — then try SSH again:\n\nssh-keygen -R raspberrypi.local")}
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
+            Next, find the Pi's IP address. Log into your router's admin page (usually <strong style={{ color: "var(--text)" }}>192.168.1.1</strong> or <strong style={{ color: "var(--text)" }}>192.168.0.1</strong> in a browser) and look for a connected device named <strong style={{ color: "var(--text)" }}>raspberrypi</strong>. Note the IPv4 address shown next to it (e.g. 192.168.1.45).
+          </p>
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
+            Then open PowerShell (Windows) or Terminal (Mac) and SSH in using that IP address:
+          </p>
+          {codeBlock(`ssh pi@192.168.1.45`)}
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "8px 0 12px" }}>
+            Replace <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>192.168.1.45</code> with the actual IP from your router. It will ask for the password you set in the Imager — nothing appears as you type, that is normal.
+          </p>
+          {note("If you get a warning about a changed host key (REMOTE HOST IDENTIFICATION HAS CHANGED), run this first to clear it — then SSH in again:\n\nssh-keygen -R <ip-address>")}
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "12px 0" }}>
             Enter your password when prompted. Nothing will appear as you type — that's normal. Once you're in, run the FinalPing installer:
           </p>
@@ -301,7 +310,7 @@ export default function GroundStationSetupPage() {
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Troubleshooting</h2>
           {[
             { q: "Ground Station shows Offline in the app", a: "Check that your Pi or PC is powered on and online. On the Pi, SSH in and run: sudo systemctl status finalping-ground — look for errors. On Windows, check Task Scheduler for the FinalPingGroundStation task." },
-            { q: "SSH gives \"host key changed\" warning", a: "You previously connected to a different Pi at this address. Clear the old key and try again:\n\nssh-keygen -R raspberrypi.local" },
+            { q: "SSH gives \"host key changed\" warning", a: "You previously connected to a different Pi at this IP address. Clear the old key (replace the IP with your Pi's actual IP) and try again:\n\nssh-keygen -R 192.168.1.45" },
             { q: "\"Cannot reach dump1090\" in the logs", a: "dump1090 is not running or the receiver isn't detected. On the Pi: sudo systemctl status finalping-dump1090. Make sure the Pro Stick Plus is plugged in." },
             { q: "\"Ground station not enabled\"", a: "Your account doesn't have the Ground Station add-on. Purchase it at finalpingapp.com/pricing." },
             { q: "\"Login failed\" in the logs", a: "Your FinalPing email or password is wrong. On Pi: nano /home/pi/finalping-ground/finalping_ground.py and correct FINALPING_EMAIL and FINALPING_PASSWORD, then: sudo systemctl restart finalping-ground" },
