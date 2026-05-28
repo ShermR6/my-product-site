@@ -217,7 +217,7 @@ export default function GroundStationSetupPage() {
             Plug your Pro Stick Plus into the Pi, then power it on. Wait about 60 seconds for it to boot and connect to your WiFi.
           </p>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
-            Next, find the Pi's IP address. Pick whichever method works for you:
+            Next, find the Pi's IP address. Use whichever method works for your router:
           </p>
           <div style={{
             background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
@@ -225,16 +225,10 @@ export default function GroundStationSetupPage() {
             display: "flex", flexDirection: "column" as const, gap: 12,
           }}>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router app</span> — If your router has an app (Eero, Google Home, Orbi, etc.) open it and check the connected devices list. Look for a device named <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP address.
+              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router app</span> — If your router has an app (Eero, Google Home, Orbi, Netgear, etc.) open it and look at the connected devices list. Find the device named <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP address.
             </div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router admin page</span> — Check the sticker on the back or bottom of your router for the admin page address. Open it in a browser, log in, and find the connected devices list. Look for <strong style={{ color: "var(--text)" }}>raspberrypi</strong>.
-            </div>
-            <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Windows</span> — Open PowerShell and run <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>ipconfig</code> — look for <strong style={{ color: "var(--text)" }}>Default Gateway</strong>. That address is your router's admin page. Open it in a browser and find raspberrypi in the device list.
-            </div>
-            <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Mac</span> — Open Terminal and run <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>{"ip route | grep default"}</code> — the address after <em>via</em> is your router's admin page. Open it in a browser and find raspberrypi in the device list.
+              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router admin page</span> — Check the sticker on the back or bottom of your router for the admin login address and credentials. Open that address in a browser, log in, and find the connected devices list. Look for <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP.
             </div>
           </div>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
