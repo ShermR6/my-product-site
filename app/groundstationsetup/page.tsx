@@ -230,6 +230,9 @@ export default function GroundStationSetupPage() {
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
               <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router admin page</span> — Check the sticker on the back or bottom of your router for the admin login address and credentials. Open that address in a browser, log in, and find the connected devices list. Look for <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP.
             </div>
+            <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
+              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Windows (find your router address)</span> — Open PowerShell and run <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>ipconfig</code> — look for <strong style={{ color: "var(--text)" }}>Default Gateway</strong>. Type that address into a browser to open your router admin page, then find raspberrypi in the connected devices list.
+            </div>
           </div>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
             Then open PowerShell (Windows) or Terminal (Mac) and SSH in using that IP address:
