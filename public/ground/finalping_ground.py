@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.1
+FinalPing Ground Station v2.2
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -18,6 +18,8 @@ import threading
 import time
 import math
 import logging
+import json
+import os
 from datetime import datetime, timedelta
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -37,6 +39,9 @@ POLL_INTERVAL_SECONDS = 5
 BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app"
 # ══════════════════════════════════════════════════════════════════════════════
 
+RANGE_FILE    = "/home/pi/finalping-ground/range_data.json"
+RANGE_BUCKETS = 36  # one bucket per 10 degrees of compass bearing
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -50,6 +55,14 @@ def haversine_nm(lat1, lon1, lat2, lon2):
     dlat, dlon = lat2 - lat1, lon2 - lon1
     a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
     return 3440.065 * 2 * math.asin(math.sqrt(a))
+
+
+def bearing_deg(lat1, lon1, lat2, lon2):
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    dlon = lon2 - lon1
+    x = math.sin(dlon) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
+    return (math.degrees(math.atan2(x, y)) + 360) % 360
 
 
 class SBSReader(threading.Thread):
@@ -141,7 +154,64 @@ class GroundStation:
         self.alerts_sent = {}
         self.last_notify = {}
 
+        # SDR reception range: max distance seen per 10-degree compass bearing
+        self.range_nm = [0.0] * RANGE_BUCKETS
+        self._load_range()
+
         self.sbs = SBSReader()
+
+    # ── Range tracking ────────────────────────────────────────────────────────
+
+    def _load_range(self):
+        try:
+            if os.path.exists(RANGE_FILE):
+                with open(RANGE_FILE) as f:
+                    data = json.load(f)
+                if isinstance(data, list) and len(data) == RANGE_BUCKETS:
+                    self.range_nm = data
+        except Exception:
+            pass
+
+    def _save_range(self):
+        try:
+            os.makedirs(os.path.dirname(RANGE_FILE), exist_ok=True)
+            with open(RANGE_FILE, "w") as f:
+                json.dump(self.range_nm, f)
+        except Exception:
+            pass
+
+    def _update_range_from_snapshot(self, snapshot):
+        if self.lat is None or self.lon is None:
+            return
+        updated = False
+        for raw in snapshot.values():
+            lat = raw.get("lat")
+            lon = raw.get("lon")
+            if lat is None or lon is None:
+                continue
+            dist = haversine_nm(self.lat, self.lon, lat, lon)
+            brng = bearing_deg(self.lat, self.lon, lat, lon)
+            bucket = int(brng / 10) % RANGE_BUCKETS
+            if dist > self.range_nm[bucket]:
+                self.range_nm[bucket] = round(dist, 1)
+                updated = True
+        return updated
+
+    def sync_range(self):
+        if all(v == 0 for v in self.range_nm):
+            return
+        try:
+            resp = requests.post(
+                f"{BACKEND_URL}/api/ground/range",
+                json={"range_nm": self.range_nm},
+                headers={"Authorization": f"Bearer {self.token}"},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                self._save_range()
+                log.info("📡 Range data synced")
+        except Exception as e:
+            log.warning(f"Range sync error: {e}")
 
     # ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -313,7 +383,7 @@ class GroundStation:
 
     def run(self):
         log.info("=" * 60)
-        log.info("  FinalPing Ground Station v2.1")
+        log.info("  FinalPing Ground Station v2.2")
         log.info("=" * 60)
 
         if not self.login():
@@ -328,10 +398,11 @@ class GroundStation:
         log.info(f"  Polling every {POLL_INTERVAL_SECONDS}s")
         log.info("=" * 60)
 
-        last_login = datetime.now()
+        last_login          = datetime.now()
         last_config_refresh = datetime.now()
-        last_heartbeat = datetime.now() - timedelta(minutes=2)
-        receiver_warned = False
+        last_heartbeat      = datetime.now() - timedelta(minutes=2)
+        last_range_sync     = datetime.now() - timedelta(minutes=6)
+        receiver_warned     = False
 
         while True:
             try:
@@ -354,6 +425,15 @@ class GroundStation:
                 else:
                     receiver_warned = False
                     snapshot = self.sbs.get_snapshot()
+
+                    # Update SDR range from ALL aircraft with positions
+                    self._update_range_from_snapshot(snapshot)
+
+                    # Sync range to backend every 5 minutes
+                    if datetime.now() - last_range_sync > timedelta(minutes=5):
+                        self.sync_range()
+                        last_range_sync = datetime.now()
+
                     all_alerts = []
                     for icao24, raw in snapshot.items():
                         all_alerts.extend(self.process_aircraft(icao24, raw))
