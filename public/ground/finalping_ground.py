@@ -29,6 +29,17 @@ from datetime import datetime, timedelta
 FINALPING_EMAIL    = "your@email.com"
 FINALPING_PASSWORD = "yourpassword"
 
+# Override with credentials from persistent file if present (survives script updates)
+_creds_file = "/etc/finalping/credentials"
+if os.path.exists(_creds_file):
+    try:
+        _lines = open(_creds_file).read().splitlines()
+        if len(_lines) >= 2:
+            FINALPING_EMAIL    = _lines[0].strip()
+            FINALPING_PASSWORD = _lines[1].strip()
+    except Exception:
+        pass
+
 # dump1090 SBS TCP stream (port 30003 is always available with --net)
 DUMP1090_HOST = "localhost"
 DUMP1090_PORT = 30003
