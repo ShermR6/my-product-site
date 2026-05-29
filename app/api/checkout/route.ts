@@ -23,6 +23,7 @@ const PRICE_MAP: Record<string, string> = {
   "ground-station": process.env.STRIPE_PRICE_GROUND_STATION!,
   "ground-station-kit": process.env.STRIPE_PRICE_GROUND_STATION_KIT!,
   "ground-station-kit-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_BUILT!,
+  "stubby-antenna": process.env.STRIPE_PRICE_STUBBY_ANTENNA!,
 };
 
 const ONE_TIME_TIERS = new Set(["ground-station", "ground-station-kit", "ground-station-kit-built"]);
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please log in first", requireLogin: true }, { status: 401 });
     }
 
-    const { tier } = await req.json();
+    const { tier, addons = [] } = await req.json();
 
     const priceId = PRICE_MAP[tier];
     if (!priceId) {
@@ -43,9 +44,16 @@ export async function POST(req: NextRequest) {
 
     const isOneTime = ONE_TIME_TIERS.has(tier);
 
+    const lineItems = [
+      { price: priceId, quantity: 1 },
+      ...((addons as string[])
+        .map((addon) => ({ price: PRICE_MAP[addon], quantity: 1 }))
+        .filter((item) => item.price)),
+    ];
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: isOneTime ? "payment" : "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: lineItems,
       success_url: tier.startsWith("ground-station-kit")
         ? `${process.env.NEXTAUTH_URL}/checkout/kit-success`
         : `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${tier}`,

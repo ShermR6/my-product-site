@@ -47,10 +47,11 @@ export default function GroundStationKitPage() {
     setError(null);
     try {
       const tier = builtAndFlashed ? "ground-station-kit-built" : "ground-station-kit";
+      const addons = stubbyAntenna ? ["stubby-antenna"] : [];
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
+        body: JSON.stringify({ tier, addons }),
       });
       const data = await res.json();
       if (res.status === 401 || data.requireLogin) {
