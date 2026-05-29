@@ -39,7 +39,7 @@ export default function GroundStationKitPage() {
   const router = useRouter();
   const basePrice = 200;
   const addonPrice = 25;
-  const stubbyPrice = 30;
+  const stubbyPrice = 20;
   const total = basePrice + (builtAndFlashed ? addonPrice : 0) + (stubbyAntenna ? stubbyPrice : 0);
 
   const handleOrder = async () => {
@@ -107,6 +107,7 @@ export default function GroundStationKitPage() {
                 { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W Kit" },
                 { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
                 { src: "/ground/51jXcyrG51L._AC_SL1001_.jpg", label: "1090MHz Antenna" },
+                { src: "/ground/stubby-antenna.jpg", label: "6dBi Stubby Antenna (Add-on)" },
               ].map(item => (
                 <div key={item.label} style={{
                   borderRadius: 12, overflow: "hidden",
@@ -259,7 +260,7 @@ export default function GroundStationKitPage() {
                       padding: "2px 8px", borderRadius: 999,
                       background: "rgba(14,165,233,0.15)", color: "var(--accent)",
                       border: "1px solid rgba(14,165,233,0.3)",
-                    }}>+$30</span>
+                    }}>+$20</span>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
                     Higher gain 5dBi antenna that screws directly onto the receiver — better range than the included 2.5dBi cable antenna with a smaller, cleaner setup.
