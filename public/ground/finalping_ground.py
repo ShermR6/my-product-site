@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.2
+FinalPing Ground Station v2.3
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -354,12 +354,12 @@ class GroundStation:
         if lat is None or lon is None:
             return []
 
-        # Generous on-ground detection: SBS surface flag, altitude within 250ft of field,
-        # or very slow and low (taxiing/rollout where baro alt is still slightly above field)
+        # On-ground detection: SBS surface flag OR altitude within 150ft of field elevation.
+        # Deliberately tight — a slow final approach at 400ft should NOT be treated as on_ground
+        # or the False→True landing transition will never fire.
         on_ground = (
             raw.get("on_ground", False)
-            or (isinstance(alt, (int, float)) and alt <= self.elevation_ft + 250)
-            or (speed < 40 and isinstance(alt, (int, float)) and alt <= self.elevation_ft + 500)
+            or (isinstance(alt, (int, float)) and alt <= self.elevation_ft + 150)
         )
         alt_ft = self.elevation_ft if on_ground else (float(alt) if alt else self.elevation_ft)
         distance_nm = haversine_nm(self.lat, self.lon, lat, lon)
@@ -379,8 +379,8 @@ class GroundStation:
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
 
         # Takeoff: first time we hear this aircraft — it's already airborne near the airport
-        # (SDR picked it up just after liftoff)
-        if prev_ground is None and not on_ground and speed > 60 and distance_nm < 8.0 and alt_ft < self.elevation_ft + 3000:
+        # (SDR picked it up just after liftoff; 15nm window because Pi may not be at the airport)
+        if prev_ground is None and not on_ground and speed > 60 and distance_nm < 15.0 and alt_ft < self.elevation_ft + 5000:
             if self.should_notify(icao24, "takeoff"):
                 log.info(f"🛫 TAKEOFF: {tail} — first contact airborne, {speed}kts at {distance_nm:.1f}nm")
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
