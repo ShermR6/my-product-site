@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.3
+FinalPing Ground Station v2.4
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -373,14 +373,14 @@ class GroundStation:
         sent = self.alerts_sent.setdefault(icao24, set())
 
         # Takeoff: was on ground last poll and now airborne with speed
-        if prev_ground is True and not on_ground and speed > 40:
+        if prev_ground is True and not on_ground and speed > 30:
             if self.should_notify(icao24, "takeoff"):
                 log.info(f"🛫 TAKEOFF: {tail} — {speed}kts")
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
 
-        # Takeoff: first time we hear this aircraft — it's already airborne near the airport
-        # (SDR picked it up just after liftoff; 15nm window because Pi may not be at the airport)
-        if prev_ground is None and not on_ground and speed > 60 and distance_nm < 15.0 and alt_ft < self.elevation_ft + 5000:
+        # Takeoff: first contact — aircraft already airborne (Pi likely not at airport, hears it
+        # once it climbs high enough). Wide window: 20nm, 40kts+, under 8000ft AGL.
+        if prev_ground is None and not on_ground and speed > 40 and distance_nm < 20.0 and alt_ft < self.elevation_ft + 8000:
             if self.should_notify(icao24, "takeoff"):
                 log.info(f"🛫 TAKEOFF: {tail} — first contact airborne, {speed}kts at {distance_nm:.1f}nm")
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
