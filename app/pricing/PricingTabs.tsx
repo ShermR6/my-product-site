@@ -416,7 +416,10 @@ export default function PricingTabs() {
       {/* Ground Station Add-on */}
       <section style={{ marginTop: 56 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div className="small" style={{ letterSpacing: "0.08em", marginBottom: 6 }}>ADD-ON</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 6 }}>
+            <div className="small" style={{ letterSpacing: "0.08em" }}>ADD-ON</div>
+            <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(245,180,0,0.15)", color: "#f5b400", border: "1px solid rgba(245,180,0,0.3)", borderRadius: 999, padding: "2px 8px", letterSpacing: "0.06em" }}>BETA</span>
+          </div>
           <h2 style={{ fontSize: 26 }}>FinalPing Ground Station</h2>
           <p style={{ maxWidth: 520, margin: "8px auto 0" }}>
             Plug in your own ADS-B receiver for ultra-accurate landing and takeoff detection. Your local antenna captures what cloud APIs miss, with no reliance on adsb.lol or any third-party data feed.
