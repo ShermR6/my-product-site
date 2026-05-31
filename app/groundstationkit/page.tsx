@@ -4,13 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+type CartItem = { tier: string; name: string; price: number; quantity: number };
+
 const KITS = [
   {
     id: "standard",
     name: "Standard Kit",
-    subtitle: "Pi + Pro Stick Plus + Stand Antenna",
+    subtitle: "Raspberry Pi Zero 2 W + Pro Stick Plus + Stand Antenna",
     description: "Everything you need to run a full ADS-B ground station. Self-assemble and flash, or have it done for you.",
-    img: "/ground/51jXcyrG51L._AC_SL1001_.jpg",
+    imgs: [
+      { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W" },
+      { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
+      { src: "/ground/51jXcyrG51L._AC_SL1001_.jpg", label: "Stand Antenna" },
+    ],
     basePrice: 200,
     builtPrice: 225,
     tier: "ground-station-kit",
@@ -20,9 +26,13 @@ const KITS = [
   {
     id: "stubby",
     name: "Stubby Kit",
-    subtitle: "Pi + Pro Stick Plus + Stubby Antenna",
+    subtitle: "Raspberry Pi Zero 2 W + Pro Stick Plus + Stubby Antenna",
     description: "Same full kit with the compact 6dBi stubby antenna — direct mount, higher gain, cleaner setup.",
-    img: "/ground/stubby-antenna.jpg",
+    imgs: [
+      { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W" },
+      { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
+      { src: "/ground/stubby-antenna.jpg", label: "Stubby Antenna" },
+    ],
     basePrice: 220,
     builtPrice: 245,
     tier: "ground-station-kit-stubby",
@@ -36,7 +46,7 @@ const PARTS = [
   {
     id: "pro-stick-plus",
     name: "FlightAware Pro Stick Plus",
-    description: "1090MHz bandpass filter with 19dB low-noise amplifier. The SDR dongle at the core of every kit.",
+    description: "1090MHz bandpass filter with 19dB low-noise amplifier.",
     img: "/ground/ProStick_Plus_open.jpg",
     price: 60,
     tier: "pro-stick-plus",
@@ -44,7 +54,7 @@ const PARTS = [
   {
     id: "stand-antenna",
     name: "1090MHz Stand Antenna",
-    description: "2.5dBi magnetic base antenna with 1m RG174 cable and MCX-to-SMA adapter.",
+    description: "2.5dBi magnetic base with 1m RG174 cable and MCX-to-SMA adapter.",
     img: "/ground/51jXcyrG51L._AC_SL1001_.jpg",
     price: 15,
     tier: "stand-antenna",
@@ -58,6 +68,159 @@ const PARTS = [
     tier: "stubby-antenna-solo",
   },
 ];
+
+function CartSidebar({
+  cart,
+  onClose,
+  onRemove,
+  onQty,
+}: {
+  cart: CartItem[];
+  onClose: () => void;
+  onRemove: (tier: string) => void;
+  onQty: (tier: string, delta: number) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartItems: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.requireLogin) {
+        router.push("/login?callbackUrl=/groundstationkit");
+        return;
+      }
+      if (data.url) window.location.href = data.url;
+      else setError("Something went wrong.");
+    } catch {
+      setError("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          zIndex: 100, backdropFilter: "blur(2px)",
+        }}
+      />
+      {/* Panel */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: 380,
+        background: "var(--panel, #111)", borderLeft: "1px solid var(--border)",
+        zIndex: 101, display: "flex", flexDirection: "column",
+        boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 24px", borderBottom: "1px solid var(--border)",
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>
+            Cart ({cart.reduce((s, i) => s + i.quantity, 0)})
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--muted)", fontSize: 20, lineHeight: 1, padding: 4,
+            }}
+          >✕</button>
+        </div>
+
+        {/* Items */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+          {cart.length === 0 ? (
+            <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginTop: 48 }}>
+              Your cart is empty
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {cart.map(item => (
+                <div key={item.tier} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "12px 14px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)",
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{item.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>${item.price} each</div>
+                  </div>
+                  {/* Qty controls */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      onClick={() => item.quantity === 1 ? onRemove(item.tier) : onQty(item.tier, -1)}
+                      style={{
+                        width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)",
+                        background: "rgba(255,255,255,0.05)", color: "var(--text)",
+                        cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >−</button>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", minWidth: 16, textAlign: "center" }}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => onQty(item.tier, 1)}
+                      style={{
+                        width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)",
+                        background: "rgba(255,255,255,0.05)", color: "var(--text)",
+                        cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >+</button>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", minWidth: 40, textAlign: "right" }}>
+                    ${item.price * item.quantity}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        {cart.length > 0 && (
+          <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>Subtotal</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>${total}</span>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 16 }}>
+              Shipping calculated at checkout
+            </div>
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              style={{
+                display: "block", width: "100%", padding: "13px",
+                borderRadius: 10, border: "none",
+                background: loading ? "rgba(14,165,233,0.5)" : "#0ea5e9",
+                color: "#fff", fontSize: 14, fontWeight: 800,
+                cursor: loading ? "default" : "pointer",
+              }}
+            >
+              {loading ? "Loading..." : `Checkout — $${total}`}
+            </button>
+            {error && <div style={{ fontSize: 11, color: "#f87171", marginTop: 8, textAlign: "center" }}>{error}</div>}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 function KitCard({ kit }: { kit: typeof KITS[0] }) {
   const [built, setBuilt] = useState(false);
@@ -94,8 +257,7 @@ function KitCard({ kit }: { kit: typeof KITS[0] }) {
       borderRadius: 16, overflow: "hidden",
       border: kit.popular ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
       background: "rgba(255,255,255,0.02)",
-      display: "flex", flexDirection: "column",
-      position: "relative",
+      display: "flex", flexDirection: "column", position: "relative",
     }}>
       {kit.popular && (
         <div style={{
@@ -106,23 +268,30 @@ function KitCard({ kit }: { kit: typeof KITS[0] }) {
         }}>Popular</div>
       )}
 
-      {/* Image */}
+      {/* 3-image grid */}
       <div style={{
-        background: "rgba(255,255,255,0.04)", padding: 32,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        borderBottom: "1px solid var(--border)", height: 200,
+        display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+        borderBottom: "1px solid var(--border)",
       }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={kit.img} alt={kit.name} style={{ maxHeight: 140, maxWidth: "100%", objectFit: "contain" }} />
+        {kit.imgs.map((img, i) => (
+          <div key={img.label} style={{
+            background: "rgba(255,255,255,0.04)", padding: "20px 12px",
+            borderRight: i < 2 ? "1px solid var(--border)" : "none",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={img.src} alt={img.label} style={{ height: 80, width: "100%", objectFit: "contain" }} />
+            <div style={{ fontSize: 10, color: "var(--muted)", fontWeight: 600, textAlign: "center" }}>{img.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Info */}
       <div style={{ padding: "20px 20px 0", flex: 1 }}>
         <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", marginBottom: 4 }}>{kit.name}</div>
-        <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginBottom: 10 }}>{kit.subtitle}</div>
+        <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>{kit.subtitle}</div>
         <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, marginBottom: 16 }}>{kit.description}</div>
 
-        {/* Includes */}
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
           {kit.includes.map(item => (
             <div key={item} style={{ fontSize: 12, color: "var(--muted)", display: "flex", gap: 6, alignItems: "center" }}>
@@ -180,8 +349,7 @@ function KitCard({ kit }: { kit: typeof KITS[0] }) {
           onClick={handleOrder}
           disabled={loading}
           style={{
-            display: "block", width: "100%", padding: "12px",
-            borderRadius: 10, border: "none",
+            display: "block", width: "100%", padding: "12px", borderRadius: 10, border: "none",
             background: loading ? "rgba(14,165,233,0.5)" : "#0ea5e9",
             color: "#fff", fontSize: 14, fontWeight: 800,
             cursor: loading ? "default" : "pointer",
@@ -195,29 +363,13 @@ function KitCard({ kit }: { kit: typeof KITS[0] }) {
   );
 }
 
-function PartCard({ part }: { part: typeof PARTS[0] }) {
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+function PartCard({ part, onAdd }: { part: typeof PARTS[0]; onAdd: (tier: string, name: string, price: number) => void }) {
+  const [added, setAdded] = useState(false);
 
-  const handleOrder = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: part.tier }),
-      });
-      const data = await res.json();
-      if (res.status === 401 || data.requireLogin) {
-        router.push("/login?callbackUrl=/groundstationkit");
-        return;
-      }
-      if (data.url) window.location.href = data.url;
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
+  const handleAdd = () => {
+    onAdd(part.tier, part.name, part.price);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
   };
 
   return (
@@ -241,17 +393,17 @@ function PartCard({ part }: { part: typeof PARTS[0] }) {
       <div style={{ padding: "12px 16px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>${part.price}</span>
         <button
-          onClick={handleOrder}
-          disabled={loading}
+          onClick={handleAdd}
           style={{
             padding: "8px 16px", borderRadius: 8,
-            border: "1px solid rgba(14,165,233,0.3)",
-            background: "rgba(14,165,233,0.1)",
-            color: "var(--accent)", fontSize: 13, fontWeight: 700,
-            cursor: loading ? "default" : "pointer",
+            border: added ? "1px solid rgba(34,211,163,0.4)" : "1px solid rgba(14,165,233,0.3)",
+            background: added ? "rgba(34,211,163,0.1)" : "rgba(14,165,233,0.1)",
+            color: added ? "#22d3a3" : "var(--accent)",
+            fontSize: 13, fontWeight: 700, cursor: "pointer",
+            transition: "all 0.15s",
           }}
         >
-          {loading ? "..." : "Buy →"}
+          {added ? "✓ Added" : "Add to Cart"}
         </button>
       </div>
     </div>
@@ -259,15 +411,55 @@ function PartCard({ part }: { part: typeof PARTS[0] }) {
 }
 
 export default function GroundStationKitPage() {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+
+  const addToCart = (tier: string, name: string, price: number) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.tier === tier);
+      if (existing) return prev.map(i => i.tier === tier ? { ...i, quantity: i.quantity + 1 } : i);
+      return [...prev, { tier, name, price, quantity: 1 }];
+    });
+    setCartOpen(true);
+  };
+
+  const removeFromCart = (tier: string) => setCart(prev => prev.filter(i => i.tier !== tier));
+
+  const updateQty = (tier: string, delta: number) => {
+    setCart(prev => prev.map(i => i.tier === tier ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i));
+  };
+
   return (
     <main className="page">
       <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
 
-        {/* Breadcrumb */}
-        <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 40, display: "flex", gap: 6, alignItems: "center" }}>
-          <Link href="/groundstationdevices" style={{ color: "var(--muted)", textDecoration: "none" }}>Hardware Guide</Link>
-          <span>›</span>
-          <span style={{ color: "var(--text)" }}>Ground Station Hardware</span>
+        {/* Breadcrumb + cart button */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
+          <div style={{ fontSize: 12, color: "var(--muted)", display: "flex", gap: 6, alignItems: "center" }}>
+            <Link href="/groundstationdevices" style={{ color: "var(--muted)", textDecoration: "none" }}>Hardware Guide</Link>
+            <span>›</span>
+            <span style={{ color: "var(--text)" }}>Ground Station Hardware</span>
+          </div>
+          <button
+            onClick={() => setCartOpen(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+              border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)",
+              color: "var(--text)", fontSize: 13, fontWeight: 600,
+              position: "relative",
+            }}
+          >
+            🛒 Cart
+            {cartCount > 0 && (
+              <span style={{
+                fontSize: 11, fontWeight: 800, minWidth: 20, height: 20,
+                borderRadius: 999, background: "#0ea5e9", color: "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
+              }}>{cartCount}</span>
+            )}
+          </button>
         </div>
 
         {/* Header */}
@@ -275,8 +467,7 @@ export default function GroundStationKitPage() {
           <div style={{
             display: "inline-block", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
             textTransform: "uppercase", padding: "3px 12px", borderRadius: 999, marginBottom: 14,
-            background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)",
-            color: "var(--accent)",
+            background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", color: "var(--accent)",
           }}>
             FinalPing Official Store
           </div>
@@ -301,7 +492,7 @@ export default function GroundStationKitPage() {
 
         {/* Individual Parts */}
         <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>Individual Parts</h2>
             <span style={{ fontSize: 12, color: "var(--muted)" }}>3 products</span>
           </div>
@@ -309,7 +500,7 @@ export default function GroundStationKitPage() {
             Already have some of the hardware? Pick up just what you need.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            {PARTS.map(part => <PartCard key={part.id} part={part} />)}
+            {PARTS.map(part => <PartCard key={part.id} part={part} onAdd={addToCart} />)}
           </div>
         </div>
 
@@ -330,6 +521,15 @@ export default function GroundStationKitPage() {
         </div>
 
       </div>
+
+      {cartOpen && (
+        <CartSidebar
+          cart={cart}
+          onClose={() => setCartOpen(false)}
+          onRemove={removeFromCart}
+          onQty={updateQty}
+        />
+      )}
     </main>
   );
 }

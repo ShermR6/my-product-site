@@ -48,7 +48,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please log in first", requireLogin: true }, { status: 401 });
     }
 
-    const { tier, addons = [] } = await req.json();
+    const { tier, addons = [], cartItems } = await req.json();
+
+    const HARDWARE_TIERS = new Set([
+      "ground-station-kit", "ground-station-kit-built",
+      "ground-station-kit-stubby", "ground-station-kit-stubby-built",
+      "pro-stick-plus", "stand-antenna", "stubby-antenna-solo",
+    ]);
+
+    const shippingOptions = {
+      payment_method_types: ["card"] as const,
+      shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU"] as const },
+      phone_number_collection: { enabled: true },
+      shipping_options: [
+        { shipping_rate: process.env.STRIPE_SHIPPING_STANDARD! },
+        { shipping_rate: process.env.STRIPE_SHIPPING_EXPEDITED! },
+      ],
+    };
+
+    // Cart checkout — multiple individual parts in one session
+    if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
+      const lineItems = (cartItems as { tier: string; quantity: number }[])
+        .map(item => ({ price: PRICE_MAP[item.tier], quantity: item.quantity || 1 }))
+        .filter(item => item.price);
+      if (lineItems.length === 0) {
+        return NextResponse.json({ error: "No valid items" }, { status: 400 });
+      }
+      const checkoutSession = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: lineItems,
+        success_url: `${process.env.NEXTAUTH_URL}/checkout/kit-success`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/groundstationkit`,
+        customer_email: session.user.email,
+        metadata: { email: session.user.email, cart: "true" },
+        allow_promotion_codes: true,
+        ...shippingOptions,
+      });
+      return NextResponse.json({ url: checkoutSession.url });
+    }
 
     const priceId = PRICE_MAP[tier];
     if (!priceId) {
@@ -56,6 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isOneTime = ONE_TIME_TIERS.has(tier);
+    const isHardware = HARDWARE_TIERS.has(tier);
 
     const lineItems = [
       { price: priceId, quantity: 1 },
@@ -67,31 +105,18 @@ export async function POST(req: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: isOneTime ? "payment" : "subscription",
       line_items: lineItems,
-      success_url: tier.startsWith("ground-station-kit")
+      success_url: isHardware
         ? `${process.env.NEXTAUTH_URL}/checkout/kit-success`
         : `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${tier}`,
-      cancel_url: tier.startsWith("ground-station-kit")
+      cancel_url: isHardware
         ? `${process.env.NEXTAUTH_URL}/groundstationkit`
         : `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
-      ...(tier.startsWith("ground-station-kit") || ["pro-stick-plus", "stand-antenna", "stubby-antenna-solo"].includes(tier) ? {
-        payment_method_types: ["card"],
-        shipping_address_collection: {
-          allowed_countries: ["US", "CA", "GB", "AU"],
-        },
-        phone_number_collection: { enabled: true },
-        shipping_options: [
-          { shipping_rate: process.env.STRIPE_SHIPPING_STANDARD! },
-          { shipping_rate: process.env.STRIPE_SHIPPING_EXPEDITED! },
-        ],
-      } : {}),
-      // Pause subscription billing until user activates their license key
+      ...(isHardware ? shippingOptions : {}),
       ...(isOneTime ? {} : {
-        subscription_data: {
-          metadata: { tier, email: session.user.email },
-        },
+        subscription_data: { metadata: { tier, email: session.user.email } },
       }),
     });
 
