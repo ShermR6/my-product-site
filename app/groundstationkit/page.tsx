@@ -445,11 +445,11 @@ export default function GroundStationKitPage() {
                     onClick={() => handlePartOrder(part.tier)}
                     disabled={partLoading === part.tier}
                     style={{
-                      padding: "9px 18px", borderRadius: 10, border: "none",
+                      padding: "9px 18px", borderRadius: 10,
+                      border: "1px solid rgba(14,165,233,0.3)",
                       background: partLoading === part.tier ? "rgba(14,165,233,0.4)" : "rgba(14,165,233,0.15)",
                       color: "var(--accent)", fontSize: 13, fontWeight: 700,
                       cursor: partLoading === part.tier ? "default" : "pointer",
-                      border: "1px solid rgba(14,165,233,0.3)" as any,
                     }}
                   >
                     {partLoading === part.tier ? "..." : "Buy →"}
