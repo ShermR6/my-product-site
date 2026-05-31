@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         carrier: r.provider as string,
         service: r.servicelevel.name as string,
         token: r.servicelevel.token as string,
-        amount: parseFloat(r.amount),
+        amount: parseFloat(r.amount) + 2,
         days: r.estimated_days as number | null,
       }));
 
