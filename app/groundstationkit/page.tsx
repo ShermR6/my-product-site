@@ -48,7 +48,7 @@ const PARTS = [
     name: "FlightAware Pro Stick Plus",
     description: "1090MHz bandpass filter with 19dB low-noise amplifier.",
     img: "/ground/ProStick_Plus_open.jpg",
-    price: 60,
+    price: 57,
     tier: "pro-stick-plus",
   },
   {
