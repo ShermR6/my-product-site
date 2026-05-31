@@ -108,6 +108,7 @@ const NAV_ITEMS = [
   { id: "licenses", label: "Licenses", icon: "🔑" },
   { id: "create", label: "Create License", icon: "➕" },
   { id: "waitlist", label: "Waitlist", icon: "📋" },
+  { id: "orders", label: "Orders", icon: "📦" },
 ];
 
 // ── Overview Tab ─────────────────────────────────────────────────────────────
@@ -546,6 +547,76 @@ export default function AdminPage() {
     );
   }
 
+  // ── Orders Tab ──────────────────────────────────────────────────────────────
+  function OrdersTab() {
+    const [email, setEmail] = React.useState("");
+    const [trackingNumber, setTrackingNumber] = React.useState("");
+    const [customerName, setCustomerName] = React.useState("");
+    const [loading, setLoading] = React.useState(false);
+    const [result, setResult] = React.useState<{ ok: boolean; msg: string } | null>(null);
+
+    const handleSend = async () => {
+      if (!email || !trackingNumber) return;
+      setLoading(true);
+      setResult(null);
+      try {
+        const res = await fetch("/api/admin/ship-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, trackingNumber, customerName }),
+        });
+        if (res.ok) {
+          setResult({ ok: true, msg: `Shipping email sent to ${email}` });
+          setEmail(""); setTrackingNumber(""); setCustomerName("");
+        } else {
+          setResult({ ok: false, msg: "Failed to send email" });
+        }
+      } catch {
+        setResult({ ok: false, msg: "Network error" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div>
+        <div style={s.tabHeader}>
+          <h2 style={s.tabTitle}>Orders</h2>
+          <p style={s.tabSub}>Send shipping notifications to customers</p>
+        </div>
+        <div style={{ ...s.card, maxWidth: 480 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#f9fafb", marginBottom: 20 }}>Send Tracking Email</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={s.label}>Customer Email *</label>
+              <input style={s.input} type="email" placeholder="customer@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div>
+              <label style={s.label}>Customer Name (optional)</label>
+              <input style={s.input} type="text" placeholder="John Smith" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+            </div>
+            <div>
+              <label style={s.label}>USPS Tracking Number *</label>
+              <input style={s.input} type="text" placeholder="9400111899223456789012" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value.replace(/\s/g, ""))} />
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={loading || !email || !trackingNumber}
+              style={{ ...s.primaryBtn, opacity: loading || !email || !trackingNumber ? 0.5 : 1, marginTop: 4 }}
+            >
+              {loading ? "Sending..." : "Send Shipping Email"}
+            </button>
+            {result && (
+              <div style={{ fontSize: 12, fontWeight: 600, color: result.ok ? "#22d3a3" : "#f87171" }}>
+                {result.ok ? "✓" : "✕"} {result.msg}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!stats) {
     return <div style={{ padding: 40, color: "#6b7280", fontSize: 14 }}>Loading admin panel...</div>;
   }
@@ -583,6 +654,7 @@ export default function AdminPage() {
         {activeTab === "licenses" && <LicensesTab />}
         {activeTab === "create" && <CreateLicenseTab />}
         {activeTab === "waitlist" && <WaitlistTab />}
+        {activeTab === "orders" && <OrdersTab />}
       </div>
     </div>
   );

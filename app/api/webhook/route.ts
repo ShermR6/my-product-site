@@ -116,11 +116,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // ── Ground Station Kit physical order ────────────────────────────────
-    if (tier === "ground-station-kit" || tier === "ground-station-kit-built") {
-      const built = tier === "ground-station-kit-built";
+    // ── Physical hardware order (kits, parts, or cart) ───────────────────
+    const HARDWARE_TIERS = new Set([
+      "ground-station-kit", "ground-station-kit-built",
+      "ground-station-kit-stubby", "ground-station-kit-stubby-built",
+      "pro-stick-plus", "stand-antenna", "stubby-antenna-solo",
+    ]);
+    const isCartOrder = session.metadata?.cart === "true";
 
-      // Retrieve full session to get shipping address and line items
+    if (isCartOrder || HARDWARE_TIERS.has(tier)) {
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
         expand: ["line_items", "shipping_details"],
       });
@@ -129,44 +133,64 @@ export async function POST(req: NextRequest) {
       const shippingAddress = shippingDetails?.address ?? fullSession.customer_details?.address;
       const shippingName = shippingDetails?.name ?? fullSession.customer_details?.name ?? email;
       const addressLine = shippingAddress
-        ? `${shippingAddress.line1}${shippingAddress.line2 ? ", " + shippingAddress.line2 : ""}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal_code}, ${shippingAddress.country}`
+        ? `${shippingAddress.line1}${shippingAddress.line2 ? ", " + shippingAddress.line2 : ""}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal_code}`
         : "No address captured";
 
-      // Build add-ons list from line items (anything beyond the main kit)
       const lineItems = fullSession.line_items?.data ?? [];
-      const addonLines = lineItems
-        .filter(item => {
-          const desc = (item.description ?? "").toLowerCase();
-          return !desc.includes("ground station kit") && !desc.includes("pre-built");
-        })
-        .map(item => {
-          const price = item.amount_total ? ` (+$${(item.amount_total / 100).toFixed(0)})` : "";
-          return `${item.description ?? "Add-on"}${price}`;
-        });
+      const amountTotal = fullSession.amount_total ?? 0;
 
-      const addonHtml = addonLines.length > 0
-        ? addonLines.map(a => `<div style="font-size:13px;color:#bdbdbd;margin-top:4px;">+ ${a}</div>`).join("")
-        : "";
-      const addonText = addonLines.length > 0 ? `\nAdd-ons: ${addonLines.join(", ")}` : "";
+      const itemsHtml = lineItems.map(item => {
+        const qty = item.quantity ?? 1;
+        const price = item.amount_total ? `$${(item.amount_total / 100).toFixed(2)}` : "";
+        return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #222;">
+          <span style="font-size:13px;color:#fff;">${qty > 1 ? `${qty}x ` : ""}${item.description ?? "Item"}</span>
+          <span style="font-size:13px;color:#bdbdbd;">${price}</span>
+        </div>`;
+      }).join("");
+
+      const itemsText = lineItems.map(item => {
+        const qty = item.quantity ?? 1;
+        const price = item.amount_total ? `$${(item.amount_total / 100).toFixed(2)}` : "";
+        return `${qty > 1 ? `${qty}x ` : ""}${item.description ?? "Item"} — ${price}`;
+      }).join("\n");
 
       await Promise.allSettled([
-        // Confirmation to customer
         resend.emails.send({
           from: "FinalPing <noreply@finalpingapp.com>",
           to: email,
-          subject: "Your FinalPing Ground Station Kit order",
-          html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;"><div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div><div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Aircraft Alerts</div><p style="font-size:15px;margin-bottom:8px;">Thanks for your order!</p><div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;margin:20px 0;"><div style="font-size:13px;color:#bdbdbd;margin-bottom:6px;">ORDER SUMMARY</div><div style="font-size:15px;font-weight:700;">Ground Station Kit${built ? " — Pre-built &amp; Flashed" : ""}</div>${addonHtml}<div style="font-size:13px;color:#bdbdbd;margin-top:8px;">Ships to: ${addressLine}</div></div><p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">We'll email you within 1 business day with shipping confirmation and a tracking number.</p><a href="https://finalpingapp.com/groundstationsetup" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Setup Guide</a><p style="font-size:12px;color:#555;margin-top:28px;">Questions? Reply to this email or contact us at finalpingapp.com/contact</p></div>`,
+          subject: "Your FinalPing order is confirmed",
+          html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#fff;border-radius:12px;">
+            <div style="font-size:22px;font-weight:700;margin-bottom:4px;">FinalPing</div>
+            <div style="font-size:13px;color:#bdbdbd;margin-bottom:28px;">Aircraft Alerts</div>
+            <p style="font-size:15px;font-weight:700;margin-bottom:4px;">Order confirmed!</p>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">Thanks for your order, ${shippingName.split(" ")[0]}. We'll get it packed and on its way soon.</p>
+            <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:18px;margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666;margin-bottom:10px;">Order Summary</div>
+              ${itemsHtml}
+              <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;">
+                <span style="font-size:13px;font-weight:700;color:#fff;">Total paid</span>
+                <span style="font-size:13px;font-weight:700;color:#f5b400;">$${(amountTotal / 100).toFixed(2)}</span>
+              </div>
+            </div>
+            <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666;margin-bottom:6px;">Ships to</div>
+              <div style="font-size:13px;color:#bdbdbd;">${shippingName}</div>
+              <div style="font-size:13px;color:#bdbdbd;">${addressLine}</div>
+            </div>
+            <p style="font-size:13px;color:#bdbdbd;margin-bottom:20px;">We'll send you a tracking number as soon as your order ships — usually within 1–3 business days.</p>
+            <a href="https://finalpingapp.com/groundstationsetup" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;">View Setup Guide →</a>
+            <p style="font-size:12px;color:#555;margin-top:28px;">Questions? Reply to this email or visit <a href="https://finalpingapp.com/contact" style="color:#f5b400;">finalpingapp.com/contact</a></p>
+          </div>`,
         }),
-        // Internal alert
         resend.emails.send({
           from: "FinalPing <noreply@finalpingapp.com>",
-          to: "aircraftalerts@finalpingapp.com",
-          subject: `New kit order${built ? " (Built & Flashed)" : ""}: ${email}`,
-          text: `New Ground Station Kit order\n\nCustomer: ${shippingName}\nEmail: ${email}\nOption: ${built ? "Pre-built & Flashed ($225)" : "Kit only ($200)"}${addonText}\nShip to: ${addressLine}\n\nStripe session: ${session.id}`,
+          to: process.env.ADMIN_EMAIL!,
+          subject: `New hardware order: ${email}`,
+          text: `New order received\n\nCustomer: ${shippingName}\nEmail: ${email}\nShip to: ${addressLine}\n\nItems:\n${itemsText}\n\nTotal: $${(amountTotal / 100).toFixed(2)}\nStripe session: ${session.id}`,
         }),
       ]);
 
-      console.log(`Ground station kit order received from ${email}`);
+      console.log(`Hardware order received from ${email}`);
       return NextResponse.json({ received: true });
     }
 
