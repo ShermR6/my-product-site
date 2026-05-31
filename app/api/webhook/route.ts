@@ -6,6 +6,7 @@ import crypto from "crypto";
 import * as React from "react";
 
 import { OrderConfirmation } from "@/emails/OrderConfirmation";
+import { AdminOrderAlert } from "@/emails/AdminOrderAlert";
 import { ShippingNotification } from "@/emails/ShippingNotification";
 import { LicenseKey } from "@/emails/LicenseKey";
 import { GroundStationEnabled } from "@/emails/GroundStationEnabled";
@@ -128,11 +129,11 @@ export async function POST(req: NextRequest) {
 
       const items = lineItems.map(item => ({
         description: item.description ?? "Item",
-        amount: item.amount_total ? `$${(item.amount_total / 100).toFixed(2)}` : "",
+        amount: item.amount_total != null ? `$${(item.amount_total / 100).toFixed(2)}` : "",
         quantity: item.quantity ?? 1,
       }));
 
-      const itemsText = items.map(i => `${i.quantity > 1 ? `${i.quantity}x ` : ""}${i.description} — ${i.amount}`).join("\n");
+      const totalFormatted = `$${(amountTotal / 100).toFixed(2)}`;
 
       await Promise.allSettled([
         resend.emails.send({
@@ -144,14 +145,21 @@ export async function POST(req: NextRequest) {
             shippingName,
             shippingAddress: addressLine,
             items,
-            totalFormatted: `$${(amountTotal / 100).toFixed(2)}`,
+            totalFormatted,
           }),
         }),
         resend.emails.send({
           from: "FinalPing <noreply@finalpingapp.com>",
           to: process.env.ADMIN_EMAIL!,
-          subject: `New hardware order: ${email}`,
-          text: `New order received\n\nCustomer: ${shippingName}\nEmail: ${email}\nShip to: ${addressLine}\n\nItems:\n${itemsText}\n\nTotal: $${(amountTotal / 100).toFixed(2)}\nStripe session: ${session.id}`,
+          subject: `New order: ${shippingName} — ${totalFormatted}`,
+          react: React.createElement(AdminOrderAlert, {
+            customerName: shippingName,
+            customerEmail: email,
+            shippingAddress: addressLine,
+            items,
+            totalFormatted,
+            stripeSession: session.id,
+          }),
         }),
       ]);
 
