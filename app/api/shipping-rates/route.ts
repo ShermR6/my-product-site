@@ -81,6 +81,17 @@ export async function POST(req: NextRequest) {
         days: null,
       }));
 
+    // Dev-only free shipping option — never shown in production
+    if (process.env.FREE_SHIPPING_TEST === "true") {
+      rates.unshift({
+        carrier: "USPS",
+        service: "Free Shipping (Dev Only)",
+        token: "free_test",
+        amount: 0,
+        days: null,
+      });
+    }
+
     return NextResponse.json({ rates });
   } catch (err) {
     console.error("Shipping rates error:", err);
