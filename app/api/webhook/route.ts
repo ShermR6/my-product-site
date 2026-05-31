@@ -116,12 +116,25 @@ export async function POST(req: NextRequest) {
         expand: ["line_items"],
       });
 
-      const shippingDetails = (fullSession as any).shipping_details ?? (fullSession as any).shipping;
-      const shippingAddress = shippingDetails?.address ?? fullSession.customer_details?.address;
-      const shippingName = shippingDetails?.name ?? fullSession.customer_details?.name ?? email;
-      const addressLine = shippingAddress
-        ? `${shippingAddress.line1}${shippingAddress.line2 ? ", " + shippingAddress.line2 : ""}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal_code}`
-        : "No address captured";
+      let shippingName = fullSession.customer_details?.name ?? email;
+      let addressLine = "No address captured";
+
+      const rawAddr = session.metadata?.shippingAddress;
+      if (rawAddr) {
+        try {
+          const addr = JSON.parse(rawAddr);
+          shippingName = addr.name || shippingName;
+          const parts = [addr.line1];
+          if (addr.line2) parts.push(addr.line2);
+          parts.push(`${addr.city}, ${addr.state} ${addr.zip}`);
+          addressLine = parts.join(", ");
+        } catch {}
+      } else {
+        const sd = (fullSession as any).shipping_details ?? (fullSession as any).shipping;
+        const sa = sd?.address ?? fullSession.customer_details?.address;
+        if (sd?.name) shippingName = sd.name;
+        if (sa) addressLine = `${sa.line1}${sa.line2 ? ", " + sa.line2 : ""}, ${sa.city}, ${sa.state} ${sa.postal_code}`;
+      }
 
       const lineItems = fullSession.line_items?.data ?? [];
       const amountTotal = fullSession.amount_total ?? 0;

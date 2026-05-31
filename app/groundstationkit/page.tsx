@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type CartItem = { tier: string; name: string; price: number; quantity: number };
 type ShippingRate = { carrier: string; service: string; token: string; amount: number; days: number | null };
+type Address = { name: string; line1: string; line2: string; city: string; state: string; zip: string };
 
 const KITS = [
   {
@@ -81,7 +82,7 @@ function CartSidebar({
   onRemove: (tier: string) => void;
   onQty: (tier: string, delta: number) => void;
 }) {
-  const [zip, setZip] = useState("");
+  const [address, setAddress] = useState<Address>({ name: "", line1: "", line2: "", city: "", state: "", zip: "" });
   const [rates, setRates] = useState<ShippingRate[]>([]);
   const [ratesLoading, setRatesLoading] = useState(false);
   const [ratesError, setRatesError] = useState<string | null>(null);
@@ -92,18 +93,18 @@ function CartSidebar({
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const total = subtotal + (selectedRate?.amount ?? 0);
+  const canGetRates = !!(address.name && address.line1 && address.city && address.state && /^\d{5}$/.test(address.zip));
 
-  // Clear rates whenever cart contents change
+  const setField = (f: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setAddress(prev => ({ ...prev, [f]: e.target.value }));
+
   useEffect(() => {
     setRates([]);
     setSelectedRate(null);
-  }, [cart]);
+  }, [cart, address.zip]);
 
   const fetchRates = async () => {
-    if (!/^\d{5}$/.test(zip)) {
-      setRatesError("Enter a valid 5-digit ZIP code");
-      return;
-    }
+    if (!canGetRates) return;
     setRatesLoading(true);
     setRatesError(null);
     setRates([]);
@@ -112,7 +113,7 @@ function CartSidebar({
       const res = await fetch("/api/shipping-rates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zip, items: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
+        body: JSON.stringify({ zip: address.zip, items: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
       });
       const data = await res.json();
       if (data.rates && data.rates.length > 0) {
@@ -138,11 +139,8 @@ function CartSidebar({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cartItems: cart.map(i => ({ tier: i.tier, quantity: i.quantity })),
-          shippingRate: {
-            label: `${selectedRate.carrier} ${selectedRate.service}`,
-            amount: selectedRate.amount,
-            days: selectedRate.days,
-          },
+          shippingRate: { label: selectedRate.service, amount: selectedRate.amount, days: selectedRate.days },
+          shippingAddress: address,
         }),
       });
       const data = await res.json();
@@ -159,6 +157,12 @@ function CartSidebar({
     }
   };
 
+  const inp: React.CSSProperties = {
+    width: "100%", padding: "9px 12px", borderRadius: 8,
+    border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)",
+    color: "var(--text)", fontSize: 13, outline: "none", boxSizing: "border-box",
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -168,7 +172,7 @@ function CartSidebar({
       />
       {/* Panel */}
       <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0, width: 380,
+        position: "fixed", top: 0, right: 0, bottom: 0, width: 400,
         background: "var(--panel, #111)", borderLeft: "1px solid var(--border)",
         zIndex: 101, display: "flex", flexDirection: "column",
         boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
@@ -228,43 +232,53 @@ function CartSidebar({
               {/* Shipping section */}
               <div style={{ borderTop: "1px solid var(--border)", paddingTop: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
-                  Shipping
+                  Shipping Address
                 </div>
-                <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="ZIP code"
-                    value={zip}
-                    onChange={e => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-                    onKeyDown={e => e.key === "Enter" && fetchRates()}
-                    style={{
-                      flex: 1, padding: "9px 12px", borderRadius: 8,
-                      border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)",
-                      color: "var(--text)", fontSize: 13, outline: "none",
-                    }}
-                  />
-                  <button
-                    onClick={fetchRates}
-                    disabled={ratesLoading || zip.length !== 5}
-                    style={{
-                      padding: "9px 14px", borderRadius: 8, border: "none",
-                      background: ratesLoading || zip.length !== 5 ? "rgba(14,165,233,0.3)" : "#0ea5e9",
-                      color: "#fff", fontSize: 12, fontWeight: 700,
-                      cursor: ratesLoading || zip.length !== 5 ? "default" : "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {ratesLoading ? "..." : "Get Rates"}
-                  </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <input style={inp} placeholder="Full name *" value={address.name} onChange={setField("name")} />
+                  <input style={inp} placeholder="Street address *" value={address.line1} onChange={setField("line1")} />
+                  <input style={{ ...inp, color: address.line2 ? "var(--text)" : "var(--muted)" }} placeholder="Apt, suite, etc. (optional)" value={address.line2} onChange={setField("line2")} />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input style={{ ...inp, flex: 1 }} placeholder="City *" value={address.city} onChange={setField("city")} />
+                    <input
+                      style={{ ...inp, width: 56, flex: "none", textTransform: "uppercase" }}
+                      placeholder="State"
+                      maxLength={2}
+                      value={address.state}
+                      onChange={e => setAddress(prev => ({ ...prev, state: e.target.value.toUpperCase().replace(/[^A-Z]/g, "") }))}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      style={{ ...inp, flex: 1 }}
+                      placeholder="ZIP code *"
+                      inputMode="numeric"
+                      value={address.zip}
+                      onChange={e => setAddress(prev => ({ ...prev, zip: e.target.value.replace(/\D/g, "").slice(0, 5) }))}
+                      onKeyDown={e => e.key === "Enter" && fetchRates()}
+                    />
+                    <button
+                      onClick={fetchRates}
+                      disabled={ratesLoading || !canGetRates}
+                      style={{
+                        padding: "9px 14px", borderRadius: 8, border: "none",
+                        background: ratesLoading || !canGetRates ? "rgba(14,165,233,0.3)" : "#0ea5e9",
+                        color: "#fff", fontSize: 12, fontWeight: 700,
+                        cursor: ratesLoading || !canGetRates ? "default" : "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {ratesLoading ? "..." : "Get Rates"}
+                    </button>
+                  </div>
                 </div>
 
                 {ratesError && (
-                  <div style={{ fontSize: 11, color: "#f87171", marginBottom: 10 }}>{ratesError}</div>
+                  <div style={{ fontSize: 11, color: "#f87171", marginTop: 8 }}>{ratesError}</div>
                 )}
 
                 {rates.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12 }}>
                     {rates.map(rate => (
                       <button
                         key={rate.token}
@@ -283,9 +297,7 @@ function CartSidebar({
                       >
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{rate.service}</div>
-                          <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                            {rate.days ? `Est. ${rate.days} days` : "Ships via USPS"}
-                          </div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>Ships via USPS</div>
                         </div>
                         <div style={{
                           fontSize: 13, fontWeight: 800,
@@ -312,7 +324,7 @@ function CartSidebar({
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
               <span style={{ fontSize: 12, color: "var(--muted)" }}>Shipping</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: selectedRate ? "var(--text)" : "var(--muted)" }}>
-                {selectedRate ? `$${selectedRate.amount.toFixed(2)}` : "Enter ZIP above"}
+                {selectedRate ? `$${selectedRate.amount.toFixed(2)}` : "Enter address above"}
               </span>
             </div>
             <button

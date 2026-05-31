@@ -50,10 +50,7 @@ const HARDWARE_TIERS = new Set([
 type ShippingRateInput = { label: string; amount: number; days?: number | null };
 
 async function buildShippingParams(rate: ShippingRateInput | null | undefined) {
-  const base: Partial<Stripe.Checkout.SessionCreateParams> = {
-    shipping_address_collection: { allowed_countries: ["US"] },
-    phone_number_collection: { enabled: true },
-  };
+  const base: Partial<Stripe.Checkout.SessionCreateParams> = {};
 
   if (rate?.amount != null) {
     const sr = await stripe.shippingRates.create({
@@ -85,7 +82,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please log in first", requireLogin: true }, { status: 401 });
     }
 
-    const { tier, addons = [], cartItems, shippingRate } = await req.json();
+    const { tier, addons = [], cartItems, shippingRate, shippingAddress } = await req.json();
+    const addrMeta = shippingAddress ? JSON.stringify(shippingAddress) : undefined;
 
     // Cart checkout — multiple items
     if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
@@ -102,7 +100,7 @@ export async function POST(req: NextRequest) {
         success_url: `${process.env.NEXTAUTH_URL}/checkout/kit-success`,
         cancel_url: `${process.env.NEXTAUTH_URL}/groundstationkit`,
         customer_email: session.user.email,
-        metadata: { email: session.user.email, cart: "true" },
+        metadata: { email: session.user.email, cart: "true", ...(addrMeta ? { shippingAddress: addrMeta } : {}) },
         allow_promotion_codes: true,
         ...shippingParams,
       });
