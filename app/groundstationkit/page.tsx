@@ -481,9 +481,20 @@ export default function GroundStationKitPage() {
 
         {/* Kits */}
         <div style={{ marginBottom: 64 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>Complete Kits</h2>
             <span style={{ fontSize: 12, color: "var(--muted)" }}>2 products</span>
+          </div>
+
+          {/* Disclaimer */}
+          <div style={{
+            padding: "14px 18px", borderRadius: 12, marginBottom: 20,
+            background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)",
+            fontSize: 13, color: "var(--muted)", lineHeight: 1.7,
+          }}>
+            💡 <strong style={{ color: "var(--text)" }}>Perfect if your computer isn&apos;t on 24/7.</strong>{" "}
+            The Raspberry Pi runs silently in the background on its own power — no PC required, no interruptions to your tracking.
+            Set it up once and forget it; updates to the ground station software are a single command.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             {KITS.map(kit => <KitCard key={kit.id} kit={kit} />)}
