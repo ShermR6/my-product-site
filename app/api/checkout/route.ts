@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
       "pro-stick-plus", "stand-antenna", "stubby-antenna-solo",
     ]);
 
-    const shippingOptions = {
-      payment_method_types: ["card"] as const,
-      shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU"] as const },
+    const shippingOptions: Stripe.Checkout.SessionCreateParams = {
+      payment_method_types: ["card"],
+      shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU"] },
       phone_number_collection: { enabled: true },
       shipping_options: [
         { shipping_rate: process.env.STRIPE_SHIPPING_STANDARD! },
