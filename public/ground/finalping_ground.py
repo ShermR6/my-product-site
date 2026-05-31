@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.4
+FinalPing Ground Station v2.5
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -118,8 +118,9 @@ class SBSReader(threading.Thread):
                         s["lon"] = float(parts[15])
                     if len(parts) > 21:
                         s["on_ground"] = parts[21].strip() == "-1"
-                elif t == 4 and len(parts) >= 13:  # velocity
+                elif t == 4 and len(parts) >= 14:  # velocity — speed + track/heading
                     if parts[12]: s["speed"] = float(parts[12])
+                    if parts[13]: s["heading"] = float(parts[13])
                 elif t == 2:                       # surface position = on ground
                     s["on_ground"] = True
             except (ValueError, IndexError):
@@ -411,6 +412,36 @@ class GroundStation:
         }
         return alerts
 
+    def push_positions(self, snapshot):
+        """Push tracked aircraft positions to backend for the live map."""
+        positions = {}
+        for icao24, raw in snapshot.items():
+            if icao24 not in self.icao_map:
+                continue
+            lat = raw.get("lat")
+            lon = raw.get("lon")
+            if lat is None or lon is None:
+                continue
+            positions[icao24] = {
+                "lat": lat,
+                "lon": lon,
+                "altitude": raw.get("altitude"),
+                "speed": raw.get("speed", 0),
+                "heading": raw.get("heading"),
+                "on_ground": raw.get("on_ground", False),
+            }
+        if not positions:
+            return
+        try:
+            requests.post(
+                f"{BACKEND_URL}/api/ground/positions",
+                json={"positions": positions},
+                headers={"Authorization": f"Bearer {self.token}"},
+                timeout=5,
+            )
+        except Exception:
+            pass
+
     def push_alerts(self, alerts):
         for alert in alerts:
             try:
@@ -487,6 +518,8 @@ class GroundStation:
 
                     # Check for tracked aircraft that disappeared (likely landed)
                     self.check_disappeared(snapshot)
+
+                    self.push_positions(snapshot)
 
                     all_alerts = []
                     for icao24, raw in snapshot.items():
