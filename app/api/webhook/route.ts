@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         }),
         resend.emails.send({
           from: "FinalPing <noreply@finalpingapp.com>",
-          to: process.env.ADMIN_EMAIL!,
+          to: process.env.ADMIN_NOTIFY_EMAIL || process.env.ADMIN_EMAIL!,
           subject: `New order: ${shippingName} — ${totalFormatted}`,
           react: React.createElement(AdminOrderAlert, {
             customerName: shippingName,
