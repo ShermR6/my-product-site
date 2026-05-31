@@ -16,11 +16,16 @@ const ALLOWED_SERVICE_TOKENS = ["usps_ground_advantage", "usps_priority"];
 
 export async function POST(req: NextRequest) {
   try {
-    const { zip, items } = await req.json();
+    const { zip, address, items } = await req.json();
 
-    if (!zip || !/^\d{5}$/.test(zip)) {
+    const destZip = address?.zip ?? zip;
+    if (!destZip || !/^\d{5}$/.test(destZip)) {
       return NextResponse.json({ error: "Invalid ZIP code" }, { status: 400 });
     }
+
+    const addressTo = address
+      ? { street1: address.line1, street2: address.line2 || "", city: address.city, state: address.state, zip: address.zip, country: "US" }
+      : { zip: destZip, country: "US" };
 
     // Combine all items into one parcel
     let totalWeight = 0;
@@ -57,7 +62,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         address_from: { zip: FROM_ZIP, country: "US" },
-        address_to: { zip, country: "US" },
+        address_to: addressTo,
         parcels: [parcel],
         async: false,
       }),

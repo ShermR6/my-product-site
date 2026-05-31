@@ -113,7 +113,7 @@ function CartSidebar({
       const res = await fetch("/api/shipping-rates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zip: address.zip, items: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
+        body: JSON.stringify({ address, items: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
       });
       const data = await res.json();
       if (data.rates && data.rates.length > 0) {
