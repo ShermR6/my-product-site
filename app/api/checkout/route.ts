@@ -23,10 +23,23 @@ const PRICE_MAP: Record<string, string> = {
   "ground-station": process.env.STRIPE_PRICE_GROUND_STATION!,
   "ground-station-kit": process.env.STRIPE_PRICE_GROUND_STATION_KIT!,
   "ground-station-kit-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_BUILT!,
-  "stubby-antenna": process.env.STRIPE_PRICE_STUBBY_ANTENNA!,
+  "ground-station-kit-stubby": process.env.STRIPE_PRICE_GROUND_STATION_KIT_STUBBY!,
+  "ground-station-kit-stubby-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_STUBBY_BUILT!,
+  "pro-stick-plus": process.env.STRIPE_PRICE_PRO_STICK_PLUS!,
+  "stand-antenna": process.env.STRIPE_PRICE_STAND_ANTENNA!,
+  "stubby-antenna-solo": process.env.STRIPE_PRICE_STUBBY_ANTENNA_SOLO!,
 };
 
-const ONE_TIME_TIERS = new Set(["ground-station", "ground-station-kit", "ground-station-kit-built"]);
+const ONE_TIME_TIERS = new Set([
+  "ground-station",
+  "ground-station-kit",
+  "ground-station-kit-built",
+  "ground-station-kit-stubby",
+  "ground-station-kit-stubby-built",
+  "pro-stick-plus",
+  "stand-antenna",
+  "stubby-antenna-solo",
+]);
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,7 +76,7 @@ export async function POST(req: NextRequest) {
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
-      ...(tier.startsWith("ground-station-kit") ? {
+      ...(tier.startsWith("ground-station-kit") || ["pro-stick-plus", "stand-antenna", "stubby-antenna-solo"].includes(tier) ? {
         payment_method_types: ["card"],
         shipping_address_collection: {
           allowed_countries: ["US", "CA", "GB", "AU"],

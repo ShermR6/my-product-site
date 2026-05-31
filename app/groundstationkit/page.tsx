@@ -4,7 +4,34 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const INCLUDED = [
+const KITS = [
+  {
+    id: "standard",
+    name: "Standard Kit",
+    antenna: "2.5dBi Stand Antenna",
+    antennaDetail: "Magnetic base · 1m RG174 cable · MCX-to-SMA adapter",
+    antennaImg: "/ground/51jXcyrG51L._AC_SL1001_.jpg",
+    basePrice: 200,
+    builtPrice: 225,
+    tier: "ground-station-kit",
+    builtTier: "ground-station-kit-built",
+    highlight: false,
+  },
+  {
+    id: "stubby",
+    name: "Stubby Kit",
+    antenna: "6dBi Stubby Antenna",
+    antennaDetail: "Direct-mount · compact profile · higher gain",
+    antennaImg: "/ground/stubby-antenna.jpg",
+    basePrice: 220,
+    builtPrice: 245,
+    tier: "ground-station-kit-stubby",
+    builtTier: "ground-station-kit-stubby-built",
+    highlight: true,
+  },
+];
+
+const INCLUDED_BASE = [
   {
     icon: "🖥️",
     name: "CanaKit Raspberry Pi Zero 2 W Starter Kit",
@@ -14,11 +41,6 @@ const INCLUDED = [
     icon: "📻",
     name: "FlightAware Pro Stick Plus",
     detail: "Built-in 1090MHz bandpass filter · 19dB low-noise amplifier",
-  },
-  {
-    icon: "📡",
-    name: "1090MHz ADS-B Magnetic Antenna",
-    detail: "Magnet base · 1m RG174 cable · MCX-to-SMA adapter included",
   },
 ];
 
@@ -31,27 +53,53 @@ const SPECS = [
   { label: "OS", value: "Raspberry Pi OS Lite (pre-loaded)" },
 ];
 
+const INDIVIDUAL_PARTS = [
+  {
+    id: "pro-stick-plus",
+    name: "FlightAware Pro Stick Plus",
+    detail: "1090MHz bandpass filter · 19dB LNA · USB dongle",
+    img: "/ground/ProStick_Plus_open.jpg",
+    price: 60,
+    tier: "pro-stick-plus",
+  },
+  {
+    id: "stand-antenna",
+    name: "1090MHz Stand Antenna",
+    detail: "2.5dBi · magnetic base · 1m RG174 cable · MCX-to-SMA adapter",
+    img: "/ground/51jXcyrG51L._AC_SL1001_.jpg",
+    price: 15,
+    tier: "stand-antenna",
+  },
+  {
+    id: "stubby-antenna",
+    name: "6dBi Stubby Antenna",
+    detail: "Direct-mount · compact · higher gain than included stand antenna",
+    img: "/ground/stubby-antenna.jpg",
+    price: 30,
+    tier: "stubby-antenna-solo",
+  },
+];
+
 export default function GroundStationKitPage() {
+  const [selectedKit, setSelectedKit] = useState<"standard" | "stubby">("standard");
   const [builtAndFlashed, setBuiltAndFlashed] = useState(false);
-  const [stubbyAntenna, setStubbyAntenna] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [partLoading, setPartLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const basePrice = 200;
-  const addonPrice = 25;
-  const stubbyPrice = 20;
-  const total = basePrice + (builtAndFlashed ? addonPrice : 0) + (stubbyAntenna ? stubbyPrice : 0);
+
+  const kit = KITS.find(k => k.id === selectedKit)!;
+  const total = builtAndFlashed ? kit.builtPrice : kit.basePrice;
 
   const handleOrder = async () => {
     setLoading(true);
     setError(null);
     try {
-      const tier = builtAndFlashed ? "ground-station-kit-built" : "ground-station-kit";
-      const addons = stubbyAntenna ? ["stubby-antenna"] : [];
+      const tier = builtAndFlashed ? kit.builtTier : kit.tier;
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, addons }),
+        body: JSON.stringify({ tier }),
       });
       const data = await res.json();
       if (res.status === 401 || data.requireLogin) {
@@ -70,6 +118,27 @@ export default function GroundStationKitPage() {
     }
   };
 
+  const handlePartOrder = async (tier: string) => {
+    setPartLoading(tier);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || data.requireLogin) {
+        router.push("/login?callbackUrl=/groundstationkit");
+        return;
+      }
+      if (data.url) window.location.href = data.url;
+    } catch {
+      // silent
+    } finally {
+      setPartLoading(null);
+    }
+  };
+
   return (
     <main className="page">
       <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
@@ -85,7 +154,6 @@ export default function GroundStationKitPage() {
 
           {/* Left — product info */}
           <div>
-            {/* Badge */}
             <div style={{
               display: "inline-block", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
               textTransform: "uppercase", padding: "3px 12px", borderRadius: 999,
@@ -102,24 +170,50 @@ export default function GroundStationKitPage() {
               A complete, ready-to-run ADS-B ground station. Plug it in, connect to WiFi, and start receiving live aircraft positions with 1–2 second latency — directly from the sky, no third-party data feeds required.
             </p>
 
-            {/* Component images */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 36 }}>
-              {[
-                { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W Kit" },
-                { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
-                { src: "/ground/51jXcyrG51L._AC_SL1001_.jpg", label: "1090MHz Antenna" },
-                { src: "/ground/stubby-antenna.jpg", label: "6dBi Stubby Antenna (Add-on)" },
-              ].map(item => (
-                <div key={item.label} style={{
-                  borderRadius: 12, overflow: "hidden",
-                  background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
-                  padding: 12, textAlign: "center",
-                }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.src} alt={item.label} style={{ width: "100%", height: 100, objectFit: "contain", marginBottom: 8 }} />
-                  <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>{item.label}</div>
-                </div>
-              ))}
+            {/* Kit selector */}
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 14 }}>
+                Choose Your Kit
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {KITS.map(k => (
+                  <div
+                    key={k.id}
+                    onClick={() => setSelectedKit(k.id as "standard" | "stubby")}
+                    style={{
+                      padding: "18px 20px", borderRadius: 14, cursor: "pointer",
+                      border: selectedKit === k.id ? "2px solid #0ea5e9" : "1px solid var(--border)",
+                      background: selectedKit === k.id ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.02)",
+                      transition: "all 0.15s", position: "relative",
+                    }}
+                  >
+                    {k.highlight && (
+                      <div style={{
+                        position: "absolute", top: -1, right: 12,
+                        fontSize: 9, fontWeight: 800, letterSpacing: "0.08em",
+                        textTransform: "uppercase", padding: "2px 8px", borderRadius: 999,
+                        background: "var(--accent)", color: "#000",
+                      }}>Popular</div>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                        border: selectedKit === k.id ? "5px solid #0ea5e9" : "2px solid rgba(255,255,255,0.3)",
+                        background: selectedKit === k.id ? "#fff" : "transparent",
+                        transition: "all 0.15s",
+                      }} />
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{k.name}</div>
+                    </div>
+                    <div style={{ fontSize: 13, color: "var(--accent)", fontWeight: 600, marginBottom: 4, paddingLeft: 28 }}>
+                      📡 {k.antenna}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", paddingLeft: 28 }}>{k.antennaDetail}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)", marginTop: 12, paddingLeft: 28 }}>
+                      ${k.basePrice}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* What's included */}
@@ -127,8 +221,8 @@ export default function GroundStationKitPage() {
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 14 }}>
                 What&apos;s Included
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {INCLUDED.map(item => (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {INCLUDED_BASE.map(item => (
                   <div key={item.name} style={{
                     display: "flex", gap: 14, alignItems: "flex-start",
                     padding: "14px 16px", borderRadius: 12,
@@ -145,11 +239,33 @@ export default function GroundStationKitPage() {
                     </div>
                   </div>
                 ))}
+                <div style={{
+                  display: "flex", gap: 14, alignItems: "flex-start",
+                  padding: "14px 16px", borderRadius: 12,
+                  background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)",
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                    background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17,
+                  }}>📡</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>
+                      {kit.antenna}
+                      <span style={{
+                        marginLeft: 8, fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999,
+                        background: "rgba(14,165,233,0.15)", color: "var(--accent)",
+                        border: "1px solid rgba(14,165,233,0.3)",
+                      }}>Selected</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>{kit.antennaDetail}</div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Specs */}
-            <div>
+            <div style={{ marginBottom: 48 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 14 }}>
                 Specs
               </div>
@@ -174,21 +290,29 @@ export default function GroundStationKitPage() {
               background: "linear-gradient(160deg, rgba(14,165,233,0.08), rgba(14,165,233,0.02))",
               padding: "28px 24px",
             }}>
-
               {/* Price */}
-              <div style={{ marginBottom: 24 }}>
+              <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                   <span style={{ fontSize: 44, fontWeight: 900, color: "var(--text)", letterSpacing: "-0.02em" }}>
                     ${total}
                   </span>
-                  {builtAndFlashed && (
-                    <span style={{ fontSize: 14, color: "var(--muted)", textDecoration: "line-through" }}>$200</span>
-                  )}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Free shipping · Ships within 3–5 business days</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                  + shipping · Ships within 3–5 business days
+                </div>
               </div>
 
-              {/* Add-on toggle */}
+              {/* Selected kit summary */}
+              <div style={{
+                padding: "12px 14px", borderRadius: 10, marginBottom: 16,
+                background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)",
+                fontSize: 13, color: "var(--text)",
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>{kit.name}</div>
+                <div style={{ fontSize: 12, color: "var(--muted)" }}>Pi Zero 2 W · Pro Stick Plus · {kit.antenna}</div>
+              </div>
+
+              {/* Pre-built toggle */}
               <div
                 onClick={() => setBuiltAndFlashed(v => !v)}
                 style={{
@@ -199,7 +323,6 @@ export default function GroundStationKitPage() {
                   cursor: "pointer", transition: "all 0.15s",
                 }}
               >
-                {/* Checkbox */}
                 <div style={{
                   width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
                   border: builtAndFlashed ? "2px solid #0ea5e9" : "2px solid rgba(255,255,255,0.2)",
@@ -224,47 +347,7 @@ export default function GroundStationKitPage() {
                     }}>+$25</span>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
-                    We assemble the hardware and pre-load FinalPing software. Plug in power, connect to WiFi, done.
-                  </div>
-                </div>
-              </div>
-
-              {/* Stubby antenna add-on */}
-              <div
-                onClick={() => setStubbyAntenna(v => !v)}
-                style={{
-                  display: "flex", alignItems: "flex-start", gap: 14,
-                  padding: "16px", borderRadius: 12, marginBottom: 20,
-                  border: stubbyAntenna ? "1px solid rgba(14,165,233,0.5)" : "1px solid var(--border)",
-                  background: stubbyAntenna ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
-                  cursor: "pointer", transition: "all 0.15s",
-                }}
-              >
-                <div style={{
-                  width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                  border: stubbyAntenna ? "2px solid #0ea5e9" : "2px solid rgba(255,255,255,0.2)",
-                  background: stubbyAntenna ? "#0ea5e9" : "transparent",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.15s",
-                }}>
-                  {stubbyAntenna && (
-                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>
-                    Stubby Antenna Add-on
-                    <span style={{
-                      marginLeft: 8, fontSize: 11, fontWeight: 700,
-                      padding: "2px 8px", borderRadius: 999,
-                      background: "rgba(14,165,233,0.15)", color: "var(--accent)",
-                      border: "1px solid rgba(14,165,233,0.3)",
-                    }}>+$20</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
-                    Higher gain 5dBi antenna that screws directly onto the receiver — better range than the included 2.5dBi cable antenna with a smaller, cleaner setup.
+                    We assemble and pre-load FinalPing software. Plug in power, connect to WiFi, done.
                   </div>
                 </div>
               </div>
@@ -289,7 +372,7 @@ export default function GroundStationKitPage() {
               )}
 
               <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>
-                Secure checkout via Stripe. We&apos;ll collect shipping details after payment.
+                Secure checkout via Stripe · Shipping calculated at checkout
               </div>
 
               {/* PC note */}
@@ -298,9 +381,8 @@ export default function GroundStationKitPage() {
                 background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
                 fontSize: 12, color: "var(--muted)", lineHeight: 1.7,
               }}>
-                💡 <strong style={{ color: "var(--text)" }}>Don&apos;t need a Pi?</strong> If your PC runs 24/7 you can skip the kit and plug a Pro Stick Plus directly into your computer. Buy the{" "}
-                <a href="https://flightaware.store/products/pro-stick-plus" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>Pro Stick Plus from FlightAware</a>
-                {" "}and follow the <a href="/groundstationsetup" style={{ color: "var(--accent)" }}>Windows or Mac setup guide</a>.
+                💡 <strong style={{ color: "var(--text)" }}>Don&apos;t need a Pi?</strong> If your PC runs 24/7, plug a Pro Stick Plus directly into your computer. Buy individual parts below or{" "}
+                <a href="https://flightaware.store/products/pro-stick-plus" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>from FlightAware</a>.
               </div>
 
               {/* Trust points */}
@@ -315,7 +397,6 @@ export default function GroundStationKitPage() {
               </div>
             </div>
 
-            {/* Setup guide link */}
             <div style={{ textAlign: "center", marginTop: 14 }}>
               <Link href="/groundstationsetup" style={{ fontSize: 12, color: "var(--muted)", textDecoration: "none" }}>
                 View full setup guide →
@@ -325,10 +406,64 @@ export default function GroundStationKitPage() {
 
         </div>
 
-        {/* ── When your kit arrives ── */}
+        {/* Individual Parts */}
+        <div style={{ marginTop: 72, borderTop: "1px solid var(--border)", paddingTop: 56 }}>
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
+              Individual Parts
+            </div>
+            <h2 style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+              Already have some of the hardware?
+            </h2>
+            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, maxWidth: 560, margin: 0 }}>
+              Pick up just what you need. All parts are the same ones included in the kits.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {INDIVIDUAL_PARTS.map(part => (
+              <div key={part.id} style={{
+                borderRadius: 16, border: "1px solid var(--border)",
+                background: "rgba(255,255,255,0.02)", padding: "24px 20px",
+                display: "flex", flexDirection: "column", gap: 16,
+              }}>
+                <div style={{
+                  borderRadius: 10, overflow: "hidden",
+                  background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+                  padding: 12, textAlign: "center",
+                }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={part.img} alt={part.name} style={{ width: "100%", height: 100, objectFit: "contain" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>{part.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>{part.detail}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>${part.price}</span>
+                  <button
+                    onClick={() => handlePartOrder(part.tier)}
+                    disabled={partLoading === part.tier}
+                    style={{
+                      padding: "9px 18px", borderRadius: 10, border: "none",
+                      background: partLoading === part.tier ? "rgba(14,165,233,0.4)" : "rgba(14,165,233,0.15)",
+                      color: "var(--accent)", fontSize: 13, fontWeight: 700,
+                      cursor: partLoading === part.tier ? "default" : "pointer",
+                      border: "1px solid rgba(14,165,233,0.3)" as any,
+                    }}
+                  >
+                    {partLoading === part.tier ? "..." : "Buy →"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Setup guide section */}
         <div style={{ marginTop: 72, borderTop: "1px solid var(--border)", paddingTop: 56 }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--accent)", marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 10 }}>
               Getting Started
             </div>
             <h2 style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
@@ -339,7 +474,6 @@ export default function GroundStationKitPage() {
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-
               {/* Pre-built path */}
               <div style={{
                 borderRadius: 16, border: "1px solid rgba(14,165,233,0.3)",
@@ -355,12 +489,12 @@ export default function GroundStationKitPage() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
                   {[
-                    { n: 1, text: "Screw the antenna onto the Pro Stick Plus and plug it into the Pi's USB port via the included OTG cable." },
+                    { n: 1, text: "Attach the antenna to the Pro Stick Plus and plug it into the Pi's USB port via the included OTG cable." },
                     { n: 2, text: "Connect power to the Pi and wait about 60 seconds for it to boot." },
                     { n: 3, text: "On your phone, open WiFi settings and connect to FinalPing-Setup (password: finalping)." },
-                    { n: 4, text: "The setup page opens automatically on your phone. Enter your home WiFi, FinalPing account credentials, location coordinates, and aircraft tail numbers." },
-                    { n: 5, text: "Tap Connect Ground Station. Your Pi will reboot and start tracking within 30 seconds." },
-                    { n: 6, text: "Alerts will fire through your existing FinalPing notification channels. You can verify your station is live at finalpingapp.com/dashboard." },
+                    { n: 4, text: "The setup page opens automatically. Enter your home WiFi, FinalPing credentials, coordinates, and aircraft tail numbers." },
+                    { n: 5, text: "Tap Connect Ground Station. Your Pi reboots and starts tracking within 30 seconds." },
+                    { n: 6, text: "Alerts fire through your existing FinalPing notification channels. Verify live status at finalpingapp.com/dashboard." },
                   ].map(step => (
                     <div key={step.n} style={{ display: "flex", gap: 14 }}>
                       <div style={{
@@ -378,15 +512,14 @@ export default function GroundStationKitPage() {
                   background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
                   fontSize: 12, color: "#fcd34d", lineHeight: 1.6,
                 }}>
-                  Use your phone — not a laptop — to connect to FinalPing-Setup. iPhones and Android phones open the setup page automatically. Computers do not.
+                  Use your phone — not a laptop — to connect to FinalPing-Setup. iPhones and Android phones open the setup page automatically.
                 </div>
               </div>
 
               {/* Kit-only path */}
               <div style={{
                 borderRadius: 16, border: "1px solid var(--border)",
-                background: "rgba(255,255,255,0.02)",
-                padding: "28px 24px",
+                background: "rgba(255,255,255,0.02)", padding: "28px 24px",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
                   <div style={{
@@ -398,10 +531,10 @@ export default function GroundStationKitPage() {
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
                   {[
                     { n: 1, text: "Assemble the Pi: attach the case, insert the SD card, connect the Pro Stick Plus via the OTG cable." },
-                    { n: 2, text: "Screw the antenna onto the Pro Stick Plus." },
+                    { n: 2, text: "Attach the antenna to the Pro Stick Plus." },
                     { n: 3, text: "Connect power and SSH into the Pi (or use the full setup guide below)." },
                     { n: 4, text: "Run the one-line Raspberry Pi installer — it handles drivers, dump1090, and FinalPing Ground Station automatically." },
-                    { n: 5, text: "Follow the prompts to enter your account credentials, coordinates, and aircraft." },
+                    { n: 5, text: "Follow the prompts to enter your credentials, coordinates, and aircraft." },
                     { n: 6, text: "Ground Station starts automatically on every boot." },
                   ].map(step => (
                     <div key={step.n} style={{ display: "flex", gap: 14 }}>
@@ -426,7 +559,6 @@ export default function GroundStationKitPage() {
                   </Link>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
