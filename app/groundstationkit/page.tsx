@@ -55,15 +55,15 @@ const PARTS = [
   {
     id: "stand-antenna",
     name: "1090MHz Stand Antenna",
-    description: "2.5dBi magnetic base with 1m RG174 cable and MCX-to-SMA adapter.",
+    description: "2.5dBi magnetic base with 1m cable and adapter.",
     img: "/ground/51jXcyrG51L._AC_SL1001_.jpg",
     price: 15,
     tier: "stand-antenna",
   },
   {
     id: "stubby-antenna",
-    name: "6dBi Stubby Antenna",
-    description: "Compact direct-mount antenna with higher gain than the standard stand antenna.",
+    name: "1090MHz Stubby Antenna",
+    description: "Compact direct-mount 6dBi antenna with higher gain than the standard stand antenna.",
     img: "/ground/stubby-antenna.jpg",
     price: 30,
     tier: "stubby-antenna-solo",
