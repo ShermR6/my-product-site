@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     if (isCartOrder || HARDWARE_TIERS.has(tier)) {
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-        expand: ["line_items", "shipping_details"],
+        expand: ["line_items"],
       });
 
       const shippingDetails = (fullSession as any).shipping_details ?? (fullSession as any).shipping;
