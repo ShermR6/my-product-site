@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         service: r.servicelevel.token === "usps_ground_advantage" ? "USPS Ground Advantage (4–7 days)" : "USPS Priority Mail (2–3 days)",
         token: r.servicelevel.token as string,
         amount: parseFloat(r.amount) + 2,
-        days: r.estimated_days as number | null,
+        days: null,
       }));
 
     return NextResponse.json({ rates });
