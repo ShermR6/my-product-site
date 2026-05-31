@@ -618,10 +618,7 @@ export default function GroundStationKitPage() {
           <div style={{ fontSize: 13, color: "var(--muted)" }}>
             All orders ship within 3–5 business days. USPS shipping calculated at checkout.
           </div>
-          <div style={{ display: "flex", gap: 20 }}>
-            <Link href="/groundstationsetup" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Setup guide →</Link>
-            <Link href="/groundstationdevices" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Hardware guide →</Link>
-          </div>
+          <Link href="/groundstationsetup" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Setup guide →</Link>
         </div>
 
       </div>
