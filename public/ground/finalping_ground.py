@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.5
+FinalPing Ground Station v2.6
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -392,6 +392,19 @@ class GroundStation:
                 log.info(f"🛬 LANDING: {tail}")
                 alerts.append({"type": "landing", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
                 sent.clear()
+
+        # Stale-signal landing: dump1090 keeps aircraft in memory ~60s after last message.
+        # If signal hasn't updated in >20s and the aircraft is within 3nm, fire landing now
+        # rather than waiting for dump1090 to purge the entry (~60s later).
+        if not on_ground and not alerts:
+            seen_time = raw.get("seen")
+            stale_secs = (time.time() - seen_time) if seen_time else 0
+            if prev_ground is False and stale_secs > 20 and distance_nm < 3.0:
+                if self.should_notify(icao24, "landing"):
+                    log.info(f"🛬 LANDING: {tail} — stale signal ({stale_secs:.0f}s) at {distance_nm:.1f}nm")
+                    alerts.append({"type": "landing", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
+                    sent.clear()
+                on_ground = True  # reflect landed state going forward
 
         if not on_ground and prev_distance is not None:
             for alert_dist in sorted(self.alert_distances_nm, reverse=True):
