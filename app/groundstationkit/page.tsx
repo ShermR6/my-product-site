@@ -241,7 +241,7 @@ function CartSidebar({
                   <div style={{ display: "flex", gap: 8 }}>
                     <input style={{ ...inp, flex: 1 }} placeholder="City *" value={address.city} onChange={setField("city")} />
                     <input
-                      style={{ ...inp, width: 56, flex: "none", textTransform: "uppercase" }}
+                      style={{ ...inp, width: 80, flex: "none", textTransform: "uppercase" }}
                       placeholder="State"
                       maxLength={2}
                       value={address.state}
