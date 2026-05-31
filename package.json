@@ -12,6 +12,7 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^6.19.2",
     "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.8",
     "bcryptjs": "^3.0.3",
     "next": "16.1.6",
     "next-auth": "^4.24.13",
