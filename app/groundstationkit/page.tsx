@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type CartItem = { tier: string; name: string; price: number; quantity: number };
+type ShippingRate = { carrier: string; service: string; token: string; amount: number; days: number | null };
 
 const KITS = [
   {
@@ -80,19 +81,69 @@ function CartSidebar({
   onRemove: (tier: string) => void;
   onQty: (tier: string, delta: number) => void;
 }) {
+  const [zip, setZip] = useState("");
+  const [rates, setRates] = useState<ShippingRate[]>([]);
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+  const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const total = subtotal + (selectedRate?.amount ?? 0);
+
+  // Clear rates whenever cart contents change
+  useEffect(() => {
+    setRates([]);
+    setSelectedRate(null);
+  }, [cart]);
+
+  const fetchRates = async () => {
+    if (!/^\d{5}$/.test(zip)) {
+      setRatesError("Enter a valid 5-digit ZIP code");
+      return;
+    }
+    setRatesLoading(true);
+    setRatesError(null);
+    setRates([]);
+    setSelectedRate(null);
+    try {
+      const res = await fetch("/api/shipping-rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zip, items: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
+      });
+      const data = await res.json();
+      if (data.rates && data.rates.length > 0) {
+        setRates(data.rates);
+        setSelectedRate(data.rates[0]);
+      } else {
+        setRatesError(data.error ?? "No shipping rates found for this ZIP");
+      }
+    } catch {
+      setRatesError("Could not fetch shipping rates");
+    } finally {
+      setRatesLoading(false);
+    }
+  };
 
   const handleCheckout = async () => {
+    if (!selectedRate) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cartItems: cart.map(i => ({ tier: i.tier, quantity: i.quantity })) }),
+        body: JSON.stringify({
+          cartItems: cart.map(i => ({ tier: i.tier, quantity: i.quantity })),
+          shippingRate: {
+            label: `${selectedRate.carrier} ${selectedRate.service}`,
+            amount: selectedRate.amount,
+            days: selectedRate.days,
+          },
+        }),
       });
       const data = await res.json();
       if (res.status === 401 || data.requireLogin) {
@@ -113,10 +164,7 @@ function CartSidebar({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-          zIndex: 100, backdropFilter: "blur(2px)",
-        }}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, backdropFilter: "blur(2px)" }}
       />
       {/* Panel */}
       <div style={{
@@ -135,84 +183,150 @@ function CartSidebar({
           </div>
           <button
             onClick={onClose}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--muted)", fontSize: 20, lineHeight: 1, padding: 4,
-            }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 20, lineHeight: 1, padding: 4 }}
           >✕</button>
         </div>
 
-        {/* Items */}
+        {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
           {cart.length === 0 ? (
             <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginTop: 48 }}>
               Your cart is empty
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {cart.map(item => (
-                <div key={item.tier} style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "12px 14px", borderRadius: 10,
-                  background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)",
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{item.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--muted)" }}>${item.price} each</div>
+            <>
+              {/* Items */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                {cart.map(item => (
+                  <div key={item.tier} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 14px", borderRadius: 10,
+                    background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)",
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{item.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)" }}>${item.price} each</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        onClick={() => item.quantity === 1 ? onRemove(item.tier) : onQty(item.tier, -1)}
+                        style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)", background: "rgba(255,255,255,0.05)", color: "var(--text)", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >−</button>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", minWidth: 16, textAlign: "center" }}>{item.quantity}</span>
+                      <button
+                        onClick={() => onQty(item.tier, 1)}
+                        style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)", background: "rgba(255,255,255,0.05)", color: "var(--text)", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >+</button>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", minWidth: 40, textAlign: "right" }}>
+                      ${item.price * item.quantity}
+                    </div>
                   </div>
-                  {/* Qty controls */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button
-                      onClick={() => item.quantity === 1 ? onRemove(item.tier) : onQty(item.tier, -1)}
-                      style={{
-                        width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)",
-                        background: "rgba(255,255,255,0.05)", color: "var(--text)",
-                        cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                      }}
-                    >−</button>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", minWidth: 16, textAlign: "center" }}>
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => onQty(item.tier, 1)}
-                      style={{
-                        width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)",
-                        background: "rgba(255,255,255,0.05)", color: "var(--text)",
-                        cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                      }}
-                    >+</button>
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", minWidth: 40, textAlign: "right" }}>
-                    ${item.price * item.quantity}
-                  </div>
+                ))}
+              </div>
+
+              {/* Shipping section */}
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+                  Shipping
                 </div>
-              ))}
-            </div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="ZIP code"
+                    value={zip}
+                    onChange={e => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    onKeyDown={e => e.key === "Enter" && fetchRates()}
+                    style={{
+                      flex: 1, padding: "9px 12px", borderRadius: 8,
+                      border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)",
+                      color: "var(--text)", fontSize: 13, outline: "none",
+                    }}
+                  />
+                  <button
+                    onClick={fetchRates}
+                    disabled={ratesLoading || zip.length !== 5}
+                    style={{
+                      padding: "9px 14px", borderRadius: 8, border: "none",
+                      background: ratesLoading || zip.length !== 5 ? "rgba(14,165,233,0.3)" : "#0ea5e9",
+                      color: "#fff", fontSize: 12, fontWeight: 700,
+                      cursor: ratesLoading || zip.length !== 5 ? "default" : "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {ratesLoading ? "..." : "Get Rates"}
+                  </button>
+                </div>
+
+                {ratesError && (
+                  <div style={{ fontSize: 11, color: "#f87171", marginBottom: 10 }}>{ratesError}</div>
+                )}
+
+                {rates.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                    {rates.map(rate => (
+                      <button
+                        key={rate.token}
+                        onClick={() => setSelectedRate(rate)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10px 12px", borderRadius: 8, cursor: "pointer",
+                          border: selectedRate?.token === rate.token
+                            ? "1px solid rgba(14,165,233,0.6)"
+                            : "1px solid var(--border)",
+                          background: selectedRate?.token === rate.token
+                            ? "rgba(14,165,233,0.08)"
+                            : "rgba(255,255,255,0.02)",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{rate.service}</div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                            {rate.days ? `Est. ${rate.days} day${rate.days !== 1 ? "s" : ""}` : "Estimated delivery varies"}
+                          </div>
+                        </div>
+                        <div style={{
+                          fontSize: 13, fontWeight: 800,
+                          color: selectedRate?.token === rate.token ? "var(--accent)" : "var(--text)",
+                        }}>
+                          ${rate.amount.toFixed(2)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Fixed footer */}
         {cart.length > 0 && (
           <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontSize: 13, color: "var(--muted)" }}>Subtotal</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>${total}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>Subtotal</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>${subtotal}</span>
             </div>
-            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 16 }}>
-              Shipping calculated at checkout
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>Shipping</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: selectedRate ? "var(--text)" : "var(--muted)" }}>
+                {selectedRate ? `$${selectedRate.amount.toFixed(2)}` : "Enter ZIP above"}
+              </span>
             </div>
             <button
               onClick={handleCheckout}
-              disabled={loading}
+              disabled={loading || !selectedRate}
               style={{
                 display: "block", width: "100%", padding: "13px",
                 borderRadius: 10, border: "none",
-                background: loading ? "rgba(14,165,233,0.5)" : "#0ea5e9",
+                background: loading || !selectedRate ? "rgba(14,165,233,0.4)" : "#0ea5e9",
                 color: "#fff", fontSize: 14, fontWeight: 800,
-                cursor: loading ? "default" : "pointer",
+                cursor: loading || !selectedRate ? "default" : "pointer",
               }}
             >
-              {loading ? "Loading..." : `Checkout — $${total}`}
+              {loading ? "Loading..." : selectedRate ? `Checkout — $${total.toFixed(2)}` : "Select Shipping to Continue"}
             </button>
             {error && <div style={{ fontSize: 11, color: "#f87171", marginTop: 8, textAlign: "center" }}>{error}</div>}
           </div>
@@ -222,35 +336,9 @@ function CartSidebar({
   );
 }
 
-function KitCard({ kit }: { kit: typeof KITS[0] }) {
+function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, name: string, price: number) => void }) {
   const [built, setBuilt] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const price = built ? kit.builtPrice : kit.basePrice;
-
-  const handleOrder = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: built ? kit.builtTier : kit.tier }),
-      });
-      const data = await res.json();
-      if (res.status === 401 || data.requireLogin) {
-        router.push("/login?callbackUrl=/groundstationkit");
-        return;
-      }
-      if (data.url) window.location.href = data.url;
-      else setError("Something went wrong.");
-    } catch {
-      setError("Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div style={{
@@ -269,10 +357,7 @@ function KitCard({ kit }: { kit: typeof KITS[0] }) {
       )}
 
       {/* 3-image grid */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-        borderBottom: "1px solid var(--border)",
-      }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderBottom: "1px solid var(--border)" }}>
         {kit.imgs.map((img, i) => (
           <div key={img.label} style={{
             background: "rgba(255,255,255,0.04)", padding: "20px 12px",
@@ -339,25 +424,25 @@ function KitCard({ kit }: { kit: typeof KITS[0] }) {
         </div>
       </div>
 
-      {/* Buy */}
+      {/* Add to Cart */}
       <div style={{ padding: "0 20px 20px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
           <span style={{ fontSize: 28, fontWeight: 900, color: "var(--text)" }}>${price}</span>
           <span style={{ fontSize: 12, color: "var(--muted)" }}>+ shipping</span>
         </div>
         <button
-          onClick={handleOrder}
-          disabled={loading}
+          onClick={() => onAdd(
+            built ? kit.builtTier : kit.tier,
+            built ? `${kit.name} (Pre-built)` : kit.name,
+            price
+          )}
           style={{
             display: "block", width: "100%", padding: "12px", borderRadius: 10, border: "none",
-            background: loading ? "rgba(14,165,233,0.5)" : "#0ea5e9",
-            color: "#fff", fontSize: 14, fontWeight: 800,
-            cursor: loading ? "default" : "pointer",
+            background: "#0ea5e9", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer",
           }}
         >
-          {loading ? "Loading..." : "Buy Now →"}
+          Add to Cart →
         </button>
-        {error && <div style={{ fontSize: 11, color: "#f87171", marginTop: 6, textAlign: "center" }}>{error}</div>}
       </div>
     </div>
   );
@@ -399,8 +484,7 @@ function PartCard({ part, onAdd }: { part: typeof PARTS[0]; onAdd: (tier: string
             border: added ? "1px solid rgba(34,211,163,0.4)" : "1px solid rgba(14,165,233,0.3)",
             background: added ? "rgba(34,211,163,0.1)" : "rgba(14,165,233,0.1)",
             color: added ? "#22d3a3" : "var(--accent)",
-            fontSize: 13, fontWeight: 700, cursor: "pointer",
-            transition: "all 0.15s",
+            fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
           }}
         >
           {added ? "✓ Added" : "Add to Cart"}
@@ -448,7 +532,6 @@ export default function GroundStationKitPage() {
               padding: "8px 16px", borderRadius: 10, cursor: "pointer",
               border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)",
               color: "var(--text)", fontSize: 13, fontWeight: 600,
-              position: "relative",
             }}
           >
             🛒 Cart
@@ -485,8 +568,6 @@ export default function GroundStationKitPage() {
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>Complete Kits</h2>
             <span style={{ fontSize: 12, color: "var(--muted)" }}>2 products</span>
           </div>
-
-          {/* Disclaimer */}
           <div style={{
             padding: "14px 18px", borderRadius: 12, marginBottom: 20,
             background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)",
@@ -497,7 +578,7 @@ export default function GroundStationKitPage() {
             Set it up once and forget it; updates to the ground station software are a single command.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-            {KITS.map(kit => <KitCard key={kit.id} kit={kit} />)}
+            {KITS.map(kit => <KitCard key={kit.id} kit={kit} onAdd={addToCart} />)}
           </div>
         </div>
 
@@ -523,7 +604,7 @@ export default function GroundStationKitPage() {
           flexWrap: "wrap" as const, gap: 16,
         }}>
           <div style={{ fontSize: 13, color: "var(--muted)" }}>
-            All orders ship within 3–5 business days. Shipping calculated at checkout.
+            All orders ship within 3–5 business days. USPS shipping calculated at checkout.
           </div>
           <div style={{ display: "flex", gap: 20 }}>
             <Link href="/groundstationsetup" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Setup guide →</Link>
