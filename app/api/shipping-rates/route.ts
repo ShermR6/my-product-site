@@ -12,7 +12,7 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
   "stubby-antenna-solo":          { length: 6,  width: 4,  height: 2,  weight: 0.25 },
 };
 
-const BLOCKED_SERVICE_TOKENS = ["parcel_select", "parcel_select_lightweight", "media_mail", "library_mail"];
+const ALLOWED_SERVICE_TOKENS = ["usps_ground_advantage", "usps_priority"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,12 +71,11 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
 
     const rates = ((data.rates as any[]) || [])
-      .filter(r => r.provider === "USPS")
-      .filter(r => !BLOCKED_SERVICE_TOKENS.some(t => r.servicelevel?.token?.includes(t)))
+      .filter(r => ALLOWED_SERVICE_TOKENS.includes(r.servicelevel?.token))
       .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))
       .map(r => ({
         carrier: r.provider as string,
-        service: r.servicelevel.name as string,
+        service: r.servicelevel.token === "usps_ground_advantage" ? "USPS Ground Advantage (4–7 days)" : "USPS Priority Mail (2–3 days)",
         token: r.servicelevel.token as string,
         amount: parseFloat(r.amount) + 2,
         days: r.estimated_days as number | null,
