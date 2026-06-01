@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.8
+FinalPing Ground Station v2.9
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -23,7 +23,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 
-VERSION = "2.8"
+VERSION = "2.9"
 PRODUCT_SITE_URL = "https://finalpingapp.com"
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -127,6 +127,7 @@ class SBSReader(threading.Thread):
                     if parts[13]: s["heading"] = float(parts[13])
                 elif t == 2:                       # surface position = on ground
                     s["on_ground"] = True
+                    if len(parts) > 12 and parts[12]: s["speed"] = float(parts[12])
             except (ValueError, IndexError):
                 pass
 
@@ -351,8 +352,11 @@ class GroundStation:
             prev_on_ground = prev.get("on_ground", True)
             sent = self.alerts_sent.get(icao24, set())
             was_inbound = any(k in sent for k in ["2nm", "5nm", "10nm"])
-            # Aircraft disappeared within 5nm while inbound and not yet marked on ground
-            if dist is not None and dist < 5.0 and not prev_on_ground and was_inbound:
+            # Home-airport case: aircraft departed from within 2nm so never sent proximity
+            # alerts outbound; still fire landing if signal lost while airborne and very close.
+            home_airport_landing = dist is not None and dist < 2.0
+            # Aircraft disappeared within 5nm while airborne after being inbound, OR within 2nm (home airport)
+            if dist is not None and dist < 5.0 and not prev_on_ground and (was_inbound or home_airport_landing):
                 if self.should_notify(icao24, "landing", cooldown_minutes=10):
                     log.info(f"🛬 LANDING: {tail} — signal lost at {dist:.1f}nm (landed)")
                     self.push_alerts([{
@@ -397,15 +401,18 @@ class GroundStation:
         alerts = []
         sent = self.alerts_sent.setdefault(icao24, set())
 
-        # Takeoff: was on ground last poll and now airborne with speed
-        if prev_ground is True and not on_ground and speed > 30:
-            if self.should_notify(icao24, "takeoff"):
+        # Takeoff: was on ground last poll, now airborne.
+        # Speed may be 0 at the exact liftoff moment (type 4 velocity hasn't arrived yet),
+        # so use altitude > 200ft AGL as a fallback confirmation instead of requiring speed.
+        if prev_ground is True and not on_ground:
+            clearly_airborne = speed > 30 or alt_ft > self.elevation_ft + 200
+            if clearly_airborne and self.should_notify(icao24, "takeoff"):
                 log.info(f"🛫 TAKEOFF: {tail} — {speed}kts")
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
 
         # Takeoff: first contact — aircraft already airborne (Pi likely not at airport, hears it
-        # once it climbs high enough). Wide window: 20nm, 40kts+, under 8000ft AGL.
-        if prev_ground is None and not on_ground and speed > 40 and distance_nm < 20.0 and alt_ft < self.elevation_ft + 8000:
+        # once it climbs high enough). Wide window: 20nm, under 8000ft AGL.
+        if prev_ground is None and not on_ground and distance_nm < 20.0 and alt_ft > self.elevation_ft + 200 and alt_ft < self.elevation_ft + 8000:
             if self.should_notify(icao24, "takeoff"):
                 log.info(f"🛫 TAKEOFF: {tail} — first contact airborne, {speed}kts at {distance_nm:.1f}nm")
                 alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
