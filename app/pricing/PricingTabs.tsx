@@ -343,8 +343,7 @@ export default function PricingTabs() {
                   key={p.name}
                   style={{
                     background: "var(--panel)",
-                    border: `1px solid ${isPopular ? "rgba(14,165,233,0.35)" : "var(--border)"}`,
-                    boxShadow: isPopular ? "0 0 0 1px rgba(14,165,233,0.15)" : "none",
+                    border: "1px solid var(--border)",
                     borderRadius: 20,
                     padding: "28px",
                     position: "relative",
