@@ -15,9 +15,20 @@ type Entry = {
 
 const entries: Entry[] = [
   {
+    version: "1.0.9",
+    date: "June 2026",
+    tag: "latest",
+    changes: [
+      { type: "new", text: "Live Map trail now records the full flight path in the background — switch to any tab and come back to see the complete route from takeoff" },
+      { type: "new", text: "App now checks for updates hourly in addition to on launch" },
+      { type: "fix", text: "Landing alerts now fire reliably — cloud tracker detects on-ground transitions directly instead of waiting for signal loss" },
+      { type: "fix", text: "Takeoff alerts now fire from the cloud tracker when an aircraft transitions from on-ground to airborne" },
+      { type: "fix", text: "Dashboard Recent Alerts timestamps now display correctly instead of showing \"Just now\"" },
+    ],
+  },
+  {
     version: "1.0.8",
     date: "May 2026",
-    tag: "latest",
     changes: [
       { type: "new", text: "New app icon with runway and radar design" },
       { type: "new", text: "Formatting syntax guide in alert message editor — bold, italic, underline, and strikethrough reference chips" },
