@@ -352,18 +352,11 @@ export default function PricingTabs() {
                     marginTop: isPopular ? "-12px" : "0",
                     marginBottom: isPopular ? "-12px" : "0",
                     boxShadow: isPopular
-                      ? "0 0 60px rgba(14,165,233,0.12), 0 20px 60px rgba(0,0,0,0.35)"
+                      ? "0 0 40px rgba(14,165,233,0.2), 0 20px 60px rgba(0,0,0,0.35)"
                       : "0 4px 24px rgba(0,0,0,0.15)",
                     zIndex: isPopular ? 1 : 0,
                   }}
                 >
-                  {/* Top accent line */}
-                  <div style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: 2, borderRadius: "20px 20px 0 0",
-                    background: isPopular
-                      ? "var(--accent)"
-                      : "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)",
-                  }} />
 
                   {/* Most Popular badge */}
                   {isPopular && (
