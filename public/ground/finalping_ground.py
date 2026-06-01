@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.6
+FinalPing Ground Station v2.7
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -20,7 +20,11 @@ import math
 import logging
 import json
 import os
+import sys
 from datetime import datetime, timedelta
+
+VERSION = "2.7"
+PRODUCT_SITE_URL = "https://finalpingapp.com"
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  USER CONFIGURATION
@@ -150,6 +154,26 @@ class SBSReader(threading.Thread):
                 try: sock.close()
                 except: pass
             time.sleep(5)
+
+
+def check_for_update():
+    """Fetch version.txt from the product site. If newer, download and restart."""
+    try:
+        r = requests.get(f"{PRODUCT_SITE_URL}/ground/version.txt", timeout=5)
+        latest = r.text.strip()
+        if latest == VERSION:
+            return
+        log.info(f"🔄 Update available: v{VERSION} → v{latest}. Downloading...")
+        r2 = requests.get(f"{PRODUCT_SITE_URL}/ground/finalping_ground.py", timeout=30)
+        script_path = os.path.abspath(__file__)
+        tmp_path = script_path + ".tmp"
+        with open(tmp_path, "w") as f:
+            f.write(r2.text)
+        os.replace(tmp_path, script_path)
+        log.info(f"✅ Updated to v{latest}. Restarting...")
+        os.execv(sys.executable, [sys.executable, script_path] + sys.argv[1:])
+    except Exception as e:
+        log.warning(f"Update check failed: {e}")
 
 
 class GroundStation:
@@ -477,8 +501,9 @@ class GroundStation:
     # ── Main loop ─────────────────────────────────────────────────────────────
 
     def run(self):
+        check_for_update()
         log.info("=" * 60)
-        log.info("  FinalPing Ground Station v2.2")
+        log.info(f"  FinalPing Ground Station v{VERSION}")
         log.info("=" * 60)
 
         if not self.login():
