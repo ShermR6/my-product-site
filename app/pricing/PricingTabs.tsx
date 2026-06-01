@@ -233,7 +233,7 @@ export default function PricingTabs() {
 
       { label: "History & Reporting", sectionHeader: true, values: [] },
       { label: "Alert log", values: [true, true, true] },
-      { label: "Export history (CSV)", values: [false, true, true] },
+      { label: "Export history (CSV)", values: [true, true, true] },
 
       { label: "Support", sectionHeader: true, values: [] },
       { label: "Priority support", values: [false, false, true] },
@@ -343,7 +343,8 @@ export default function PricingTabs() {
                   key={p.name}
                   style={{
                     background: "var(--panel)",
-                    border: `1px solid ${isPopular ? "var(--accent)" : "var(--border)"}`,
+                    border: `1px solid ${isPopular ? "rgba(14,165,233,0.35)" : "var(--border)"}`,
+                    boxShadow: isPopular ? "0 0 0 1px rgba(14,165,233,0.15)" : "none",
                     borderRadius: 20,
                     padding: "28px",
                     position: "relative",
