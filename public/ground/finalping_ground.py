@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.7
+FinalPing Ground Station v2.8
 ─────────────────────────────
 Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
 No HTTP server required — works with any dump1090 build.
@@ -23,7 +23,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 
-VERSION = "2.7"
+VERSION = "2.8"
 PRODUCT_SITE_URL = "https://finalpingapp.com"
 
 # ══════════════════════════════════════════════════════════════════════════════
