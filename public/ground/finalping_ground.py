@@ -522,10 +522,15 @@ class GroundStation:
         last_config_refresh = datetime.now()
         last_heartbeat      = datetime.now() - timedelta(minutes=2)
         last_range_sync     = datetime.now() - timedelta(minutes=6)
+        last_update_check   = datetime.now()
         receiver_warned     = False
 
         while True:
             try:
+                if datetime.now() - last_update_check > timedelta(hours=1):
+                    check_for_update()
+                    last_update_check = datetime.now()
+
                 if datetime.now() - last_login > timedelta(hours=23):
                     self.login()
                     last_login = datetime.now()
