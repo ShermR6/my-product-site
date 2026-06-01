@@ -352,7 +352,7 @@ export default function PricingTabs() {
                     marginTop: isPopular ? "-12px" : "0",
                     marginBottom: isPopular ? "-12px" : "0",
                     boxShadow: isPopular
-                      ? "0 0 40px rgba(14,165,233,0.2), 0 20px 60px rgba(0,0,0,0.35)"
+                      ? "0 0 60px rgba(14,165,233,0.45), 0 20px 60px rgba(0,0,0,0.35)"
                       : "0 4px 24px rgba(0,0,0,0.15)",
                     zIndex: isPopular ? 1 : 0,
                   }}
