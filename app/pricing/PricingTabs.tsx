@@ -133,6 +133,7 @@ export default function PricingTabs() {
           "2 custom distance alert zones",
           "1 notification channel",
           "Approach zone alerts",
+          "Custom alert templates",
           "Basic alert log",
         ],
       },
@@ -225,7 +226,7 @@ export default function PricingTabs() {
       { label: "Discord & Email", values: [true, true, true] },
       { label: "Slack, Teams, Google Chat", values: [false, true, true] },
       { label: "SMS, Telegram, Webhook", values: [false, false, true] },
-      { label: "Custom alert templates", values: [false, true, true] },
+      { label: "Custom alert templates", values: [true, true, true] },
       { label: "Quiet hours", values: [true, true, true] },
 
       { label: "Ground Station", sectionHeader: true, values: [] },
