@@ -22,7 +22,7 @@ export default function RefundPolicyPage() {
         <p>Once your return is approved, we will email you a prepaid USPS return label. Simply bring it to any post office — packaging is included with the label. The cost of the return label will be deducted from your refund amount.</p>
 
         <h2>3. Refund Processing</h2>
-        <p>Once we receive and inspect the returned item, a full refund will be issued to your original payment method within 5–10 business days. You will receive an email confirmation when your refund has been processed. Refunds are not issued until the item has been received.</p>
+        <p>Once we receive and inspect the returned item, a refund minus the cost of the return label will be issued to your original payment method within 5–10 business days. You will receive an email confirmation when your refund has been processed. Refunds are not issued until the item has been received.</p>
 
         <h2>4. Defective or Damaged Items</h2>
         <p>If your item arrives defective or is damaged in transit, contact us within 30 days of delivery and we will make it right at no cost to you:</p>
