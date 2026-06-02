@@ -399,9 +399,11 @@ function CartSidebar({
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{rate.service}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+                            {rate.token === "ups_second_day_air" ? "UPS 2nd Day Air" : "UPS Ground"}
+                          </div>
                           <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                            {rate.token === "ups_second_day_air" ? "2–3 business days" : "3–5 business days"}
+                            {rate.token === "ups_second_day_air" ? "2–3 Business Days" : "3–5 Business Days"}
                           </div>
                         </div>
                         <div style={{
