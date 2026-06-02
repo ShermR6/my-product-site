@@ -480,7 +480,7 @@ export default function PricingTabs() {
                     className={`pt-cell${p.popular ? " pt-popular-col" : ""}`}
                     style={{ flexDirection: "column", gap: 4, position: "relative" }}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 800, color: p.popular ? "var(--accent)" : "var(--text)" }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>
                       {p.name}
                     </span>
                     <span style={{ fontSize: 11, color: "var(--muted)" }}>{p.price}</span>
