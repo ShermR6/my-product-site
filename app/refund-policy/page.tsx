@@ -19,7 +19,7 @@ export default function RefundPolicyPage() {
         <p>We accept returns on ground station kits and individual parts within <strong>30 days of the delivery date</strong> as confirmed by your UPS tracking number. Items must be returned in their original condition and original packaging. We do not accept returns on items that show signs of physical damage not caused by shipping.</p>
 
         <h2>2. Return Shipping</h2>
-        <p>Customers are responsible for all return shipping costs, including the box, packaging materials, and shipping label. We do not provide prepaid return labels for standard returns. Please pack the item securely with adequate padding — FinalPing is not responsible for items damaged in return transit due to inadequate packaging. We recommend shipping with a trackable method, as we are not responsible for return packages lost in transit.</p>
+        <p>Once your return is approved, we will email you a prepaid USPS return label. Simply bring it to any post office — USPS will provide the packaging. The cost of the return label will be deducted from your refund amount. FinalPing is not responsible for items damaged in return transit due to inadequate packaging.</p>
 
         <h2>3. Refund Processing</h2>
         <p>Once we receive and inspect the returned item, a full refund will be issued to your original payment method within 5–10 business days. You will receive an email confirmation when your refund has been processed. Refunds are not issued until the item has been received.</p>
