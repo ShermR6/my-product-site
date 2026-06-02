@@ -12,7 +12,7 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
   "stubby-antenna-solo":          { length: 6,  width: 4,  height: 2,  weight: 0.25 },
 };
 
-const ALLOWED_SERVICE_TOKENS = ["usps_ground_advantage", "ups_ground", "ups_second_day_air"];
+const ALLOWED_SERVICE_TOKENS = ["ups_ground", "ups_second_day_air"];
 
 export async function POST(req: NextRequest) {
   try {
