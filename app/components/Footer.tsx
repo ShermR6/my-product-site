@@ -16,6 +16,7 @@ export default function Footer() {
             <Link href="/status">Status</Link>
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
+            <Link href="/refund-policy">Refunds</Link>
           </div>
         </div>
       </div>
