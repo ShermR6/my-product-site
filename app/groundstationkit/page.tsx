@@ -694,7 +694,7 @@ export default function GroundStationKitPage() {
           }}>
             💡 <strong style={{ color: "var(--text)" }}>Perfect if your computer isn&apos;t on 24/7.</strong>{" "}
             The Raspberry Pi runs silently in the background on its own power — no PC required, no interruptions to your tracking.
-            Set it up once and forget it; updates to the ground station software are a single command.
+            Set it up once and forget it; the ground station software updates automatically in the background.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             {KITS.map(kit => <KitCard key={kit.id} kit={kit} onAdd={addToCart} />)}
@@ -723,7 +723,7 @@ export default function GroundStationKitPage() {
           flexWrap: "wrap" as const, gap: 16,
         }}>
           <div style={{ fontSize: 13, color: "var(--muted)" }}>
-            All orders ship within 3–5 business days. USPS shipping calculated at checkout.
+            All orders ship within 3–5 business days. UPS shipping calculated at checkout.
           </div>
           <Link href="/groundstationsetup" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Setup guide →</Link>
         </div>
