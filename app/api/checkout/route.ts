@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
       const shippingParams = await buildShippingParams(shippingRate);
       const checkoutSession = await stripe.checkout.sessions.create({
         mode: "payment",
+        payment_method_types: ["card"],
         line_items: lineItems,
         success_url: `${process.env.NEXTAUTH_URL}/checkout/kit-success`,
         cancel_url: `${process.env.NEXTAUTH_URL}/groundstationkit`,
@@ -125,6 +126,7 @@ export async function POST(req: NextRequest) {
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: isOneTime ? "payment" : "subscription",
+      payment_method_types: ["card"],
       line_items: lineItems,
       success_url: isHardware
         ? `${process.env.NEXTAUTH_URL}/checkout/kit-success`
