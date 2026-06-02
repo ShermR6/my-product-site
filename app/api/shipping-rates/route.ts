@@ -12,7 +12,7 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
   "stubby-antenna-solo":          { length: 6,  width: 4,  height: 2,  weight: 0.25 },
 };
 
-const EXCLUDED_SERVICE_TOKENS = ["ups_next_day_air", "usps_express"];
+const ALLOWED_SERVICE_TOKENS = ["usps_ground_advantage", "ups_ground", "ups_second_day_air"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
 
     const rates = ((data.rates as any[]) || [])
-      .filter(r => r.servicelevel?.token && !EXCLUDED_SERVICE_TOKENS.includes(r.servicelevel.token))
+      .filter(r => ALLOWED_SERVICE_TOKENS.includes(r.servicelevel?.token))
       .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))
       .map(r => ({
         carrier: r.provider as string,
