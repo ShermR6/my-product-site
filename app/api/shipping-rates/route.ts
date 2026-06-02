@@ -12,7 +12,7 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
   "stubby-antenna-solo":          { length: 6,  width: 4,  height: 2,  weight: 0.25 },
 };
 
-const ALLOWED_SERVICE_TOKENS = ["usps_ground_advantage", "usps_priority"];
+const EXCLUDED_SERVICE_TOKENS = ["ups_next_day_air", "usps_express"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,14 +76,14 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
 
     const rates = ((data.rates as any[]) || [])
-      .filter(r => ALLOWED_SERVICE_TOKENS.includes(r.servicelevel?.token))
+      .filter(r => r.servicelevel?.token && !EXCLUDED_SERVICE_TOKENS.includes(r.servicelevel.token))
       .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))
       .map(r => ({
         carrier: r.provider as string,
-        service: r.servicelevel.token === "usps_ground_advantage" ? "USPS Ground Advantage (4–7 days)" : "USPS Priority Mail (2–3 days)",
+        service: r.servicelevel.name as string,
         token: r.servicelevel.token as string,
         amount: parseFloat(r.amount) + 2,
-        days: null,
+        days: (r.estimated_days as number | null) ?? null,
       }));
 
     // Dev-only free shipping option — never shown in production

@@ -400,7 +400,9 @@ function CartSidebar({
                       >
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{rate.service}</div>
-                          <div style={{ fontSize: 11, color: "var(--muted)" }}>Ships via USPS</div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                            {rate.days ? `${rate.days} business day${rate.days === 1 ? "" : "s"}` : "Estimated delivery varies"}
+                          </div>
                         </div>
                         <div style={{
                           fontSize: 13, fontWeight: 800,
