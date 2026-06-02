@@ -89,7 +89,42 @@ function CartSidebar({
   const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<{ id: string; place_name: string; context: { id: string; text: string }[]; address: string; text: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+
+  const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+
+  const fetchSuggestions = (value: string) => {
+    if (suggestTimeout.current) clearTimeout(suggestTimeout.current);
+    if (value.length < 3) { setSuggestions([]); return; }
+    suggestTimeout.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value)}.json?country=US&types=address&autocomplete=true&limit=5&access_token=${MAPBOX_TOKEN}`
+        );
+        const data = await res.json();
+        setSuggestions(data.features || []);
+        setShowSuggestions(true);
+      } catch { setSuggestions([]); }
+    }, 250);
+  };
+
+  const applySuggestion = (feature: typeof suggestions[0]) => {
+    const street = `${feature.address ?? ""} ${feature.text ?? ""}`.trim();
+    const ctx = feature.context || [];
+    const place = ctx.find((c) => c.id.startsWith("place"))?.text ?? "";
+    const region = ctx.find((c) => c.id.startsWith("region"))?.text ?? "";
+    const postcode = ctx.find((c) => c.id.startsWith("postcode"))?.text ?? "";
+    const stateAbbr = postcode ? "" : region;
+    // Mapbox region.text is full state name — map to 2-letter code via short_code if available
+    const regionCtx = ctx.find((c) => c.id.startsWith("region")) as (typeof ctx[0] & { short_code?: string }) | undefined;
+    const stateCode = regionCtx?.short_code?.replace("US-", "") ?? region.slice(0, 2).toUpperCase();
+    setAddress(prev => ({ ...prev, line1: street, city: place, state: stateCode, zip: postcode }));
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const total = subtotal + (selectedRate?.amount ?? 0);
@@ -236,7 +271,39 @@ function CartSidebar({
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <input style={inp} placeholder="Full name *" value={address.name} onChange={setField("name")} />
-                  <input style={inp} placeholder="Street address *" value={address.line1} onChange={setField("line1")} />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      style={inp}
+                      placeholder="Street address *"
+                      value={address.line1}
+                      autoComplete="off"
+                      onChange={e => { setField("line1")(e); fetchSuggestions(e.target.value); }}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                      onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div style={{
+                        position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                        background: "#1a1a2e", border: "1px solid var(--border)", borderRadius: 8,
+                        marginTop: 2, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                      }}>
+                        {suggestions.map(s => (
+                          <div
+                            key={s.id}
+                            onMouseDown={() => applySuggestion(s)}
+                            style={{
+                              padding: "9px 12px", fontSize: 12, color: "var(--text)", cursor: "pointer",
+                              borderBottom: "1px solid var(--border)",
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(14,165,233,0.1)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          >
+                            {s.place_name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <input style={{ ...inp, color: address.line2 ? "var(--text)" : "var(--muted)" }} placeholder="Apt, suite, etc. (optional)" value={address.line2} onChange={setField("line2")} />
                   <div style={{ display: "flex", gap: 8 }}>
                     <input style={{ ...inp, flex: 1 }} placeholder="City *" value={address.city} onChange={setField("city")} />
