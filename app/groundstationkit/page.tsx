@@ -91,6 +91,7 @@ function CartSidebar({
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<{ id: string; place_name: string; context: { id: string; text: string }[]; address: string; text: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
   const suggestTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
@@ -126,20 +127,51 @@ function CartSidebar({
     setShowSuggestions(false);
   };
 
+  const validateAddress = async (): Promise<boolean> => {
+    if (!canGetRates) return false;
+    setAddressError(null);
+    try {
+      const query = `${address.line1}, ${address.city}, ${address.state} ${address.zip}`;
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=US&types=address&limit=1&access_token=${MAPBOX_TOKEN}`
+      );
+      const data = await res.json();
+      const feature = data.features?.[0];
+      if (!feature) {
+        setAddressError("Address not found — please check your entry");
+        return false;
+      }
+      const ctx = feature.context || [];
+      const returnedZip = ctx.find((c: { id: string; text: string }) => c.id.startsWith("postcode"))?.text ?? "";
+      if (returnedZip && returnedZip !== address.zip) {
+        setAddressError(`Invalid address — ZIP ${address.zip} doesn't match this location (expected ${returnedZip})`);
+        return false;
+      }
+    } catch {
+      // If Mapbox fails, allow proceeding — don't block on network error
+    }
+    return true;
+  };
+
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const total = subtotal + (selectedRate?.amount ?? 0);
   const canGetRates = !!(address.name && address.line1 && address.city && address.state && /^\d{5}$/.test(address.zip));
 
-  const setField = (f: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const setField = (f: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddress(prev => ({ ...prev, [f]: e.target.value }));
+    setAddressError(null);
+  };
 
   useEffect(() => {
     setRates([]);
     setSelectedRate(null);
+    setAddressError(null);
   }, [cart, address.zip]);
 
   const fetchRates = async () => {
     if (!canGetRates) return;
+    const valid = await validateAddress();
+    if (!valid) return;
     setRatesLoading(true);
     setRatesError(null);
     setRates([]);
@@ -277,7 +309,7 @@ function CartSidebar({
                       placeholder="Street address *"
                       value={address.line1}
                       autoComplete="off"
-                      onChange={e => { setField("line1")(e); fetchSuggestions(e.target.value); }}
+                      onChange={e => { setField("line1")(e); setAddressError(null); fetchSuggestions(e.target.value); }}
                       onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                       onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                     />
@@ -312,7 +344,7 @@ function CartSidebar({
                       placeholder="State"
                       maxLength={2}
                       value={address.state}
-                      onChange={e => setAddress(prev => ({ ...prev, state: e.target.value.toUpperCase().replace(/[^A-Z]/g, "") }))}
+                      onChange={e => { setAddress(prev => ({ ...prev, state: e.target.value.toUpperCase().replace(/[^A-Z]/g, "") })); setAddressError(null); }}
                     />
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -321,7 +353,7 @@ function CartSidebar({
                       placeholder="ZIP code *"
                       inputMode="numeric"
                       value={address.zip}
-                      onChange={e => setAddress(prev => ({ ...prev, zip: e.target.value.replace(/\D/g, "").slice(0, 5) }))}
+                      onChange={e => { setAddress(prev => ({ ...prev, zip: e.target.value.replace(/\D/g, "").slice(0, 5) })); setAddressError(null); }}
                       onKeyDown={e => e.key === "Enter" && fetchRates()}
                     />
                     <button
@@ -339,6 +371,10 @@ function CartSidebar({
                     </button>
                   </div>
                 </div>
+
+                {addressError && (
+                  <div style={{ fontSize: 11, color: "#f87171", marginTop: 8 }}>{addressError}</div>
+                )}
 
                 {ratesError && (
                   <div style={{ fontSize: 11, color: "#f87171", marginTop: 8 }}>{ratesError}</div>
