@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
         <p>This policy covers returns and refunds for FinalPing ground station hardware purchased through finalpingapp.com. For questions, contact us at <a href="mailto:support@finalpingapp.com" style={{ color: "var(--accent)" }}>support@finalpingapp.com</a>.</p>
 
         <h2>1. Hardware Returns</h2>
-        <p>We accept returns on ground station kits and individual parts within <strong>30 days of the delivery date</strong> as confirmed by your UPS tracking number. Items must be returned in their original condition and original packaging. We do not accept returns on items that have been assembled, modified, or show signs of use.</p>
+        <p>We accept returns on ground station kits and individual parts within <strong>30 days of the delivery date</strong> as confirmed by your UPS tracking number. Items must be returned in their original condition and original packaging. We do not accept returns on items that show signs of physical damage not caused by shipping.</p>
 
         <h2>2. Return Shipping</h2>
         <p>Customers are responsible for the cost of return shipping. The actual cost of your original outbound shipping will be deducted from your refund amount. We recommend using a trackable shipping method — FinalPing is not responsible for return packages lost in transit.</p>
@@ -38,7 +38,7 @@ export default function RefundPolicyPage() {
         <ul>
           <li>Items returned after 30 days of the delivery date</li>
           <li>Items not in original condition or packaging</li>
-          <li>Items that have been assembled, flashed, or modified</li>
+          <li>Items that show signs of physical damage not caused by shipping</li>
           <li>Software license keys (see our <a href="/terms" style={{ color: "var(--accent)" }}>Terms of Service</a> for license refund terms)</li>
         </ul>
 
