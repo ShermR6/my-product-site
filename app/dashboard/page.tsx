@@ -798,7 +798,7 @@ function SecurityTab({ email }: { email: string }) {
     if (!newPassword || !confirmPassword) { setPwMsg({ text: "Fill in all fields.", type: "error" }); return; }
     if (newPassword !== confirmPassword) { setPwMsg({ text: "Passwords do not match.", type: "error" }); return; }
     if (newPassword.length < 8) { setPwMsg({ text: "Password must be at least 8 characters.", type: "error" }); return; }
-    if (!twoFA || activeMethods.length === 0) { setPwMsg({ text: "Set up at least one 2FA method before changing your password.", type: "error" }); return; }
+    if (!twoFA || activeMethods.length === 0) { await sendPwCode("email"); return; }
     if (activeMethods.length === 1) { await sendPwCode(activeMethods[0].id); }
     else setPwStep("choose-method");
   };
@@ -915,7 +915,7 @@ function SecurityTab({ email }: { email: string }) {
       <div style={styles.card}>
         {pwStep === "form" && (
           <div>
-            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>A verification code via your 2FA method will be required to confirm the change.</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>A verification code will be sent to confirm the change. {twoFA && activeMethods.length > 0 ? "You can choose your preferred 2FA method." : "A code will be sent to your account email."}</div>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
               <div><label style={styles.inputLabel}>New Password</label><input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
               <div><label style={styles.inputLabel}>Confirm New Password</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
