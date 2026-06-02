@@ -9,7 +9,7 @@ export default function Footer() {
           <div>© {new Date().getFullYear()} FinalPing</div>
           <div className="footer-links">
             <Link href="/docs">Help</Link>
-            <Link href="/contact">Support</Link>
+            <Link href="/contact">Contact</Link>
             <Link href="/download">Download</Link>
             <Link href="/pricing">Purchase</Link>
             <Link href="/changelog">Changelog</Link>
