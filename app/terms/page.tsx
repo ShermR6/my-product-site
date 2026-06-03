@@ -46,7 +46,7 @@ export default function TermsPage() {
         </ul>
 
         <h2>5. Third-Party Data and Services</h2>
-        <p>FinalPing relies on third-party ADS-B data providers including but not limited to adsb.lol and ADS-B Exchange. FinalPingApp makes no warranties regarding the accuracy, completeness, timeliness, continuity, or availability of flight data provided by these third parties. Data gaps, delays, dropped signals, and inaccuracies are inherent characteristics of ADS-B technology, crowd-sourced receiver networks, and internet-based data delivery.</p>
+        <p>FinalPing relies on adsb.lol for publicly available ADS-B flight data. FinalPingApp makes no warranties regarding the accuracy, completeness, timeliness, continuity, or availability of flight data provided by this provider. Data gaps, delays, dropped signals, and inaccuracies are inherent characteristics of ADS-B technology, crowd-sourced receiver networks, and internet-based data delivery.</p>
         <p>FinalPingApp is not responsible for outages, rate limiting, policy changes, or discontinuation of service by any third-party data provider. Interruption of third-party services does not entitle you to a refund or credit.</p>
         <p>The Software integrates with third-party platforms (Discord, Slack, Microsoft Teams, Twilio SMS, webhooks, and others) as configured by you. FinalPingApp is not responsible for the availability, reliability, or policies of these platforms.</p>
 
