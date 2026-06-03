@@ -25,8 +25,8 @@ function DesktopCompleteContent() {
 
   return (
     <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#0a0e1a", fontFamily: "'Segoe UI', system-ui, sans-serif", padding: "24px",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "80px 24px", fontFamily: "'Segoe UI', system-ui, sans-serif",
     }}>
       <div style={{
         background: "#0f1117", border: "1px solid #1f2937", borderRadius: "20px",
