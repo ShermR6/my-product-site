@@ -13,8 +13,8 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
 };
 
 const ALLOWED_SERVICES = [
-  { carrier: "UPS", service: "Ground",    token: "ups_ground" },
-  { carrier: "UPS", service: "2ndDayAir", token: "ups_second_day_air" },
+  { carrier: "UPS", service: "UPSGround",    token: "ups_ground" },
+  { carrier: "UPS", service: "UPS2ndDayAir", token: "ups_second_day_air" },
 ];
 
 export async function POST(req: NextRequest) {
@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await res.json();
+
+    console.log("EasyPost rates:", JSON.stringify((data.rates || []).map((r: any) => ({ carrier: r.carrier, service: r.service, rate: r.rate }))));
 
     const rates = ((data.rates as any[]) || [])
       .filter(r => ALLOWED_SERVICES.some(s => s.carrier === r.carrier && s.service === r.service))
