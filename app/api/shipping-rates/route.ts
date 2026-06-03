@@ -13,8 +13,8 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
 };
 
 const ALLOWED_SERVICES = [
-  { carrier: "UPS", service: "UPSGround",    token: "ups_ground" },
-  { carrier: "UPS", service: "UPS2ndDayAir", token: "ups_second_day_air" },
+  { carrier: "USPS", service: "GroundAdvantage", token: "usps_ground_advantage" },
+  { carrier: "USPS", service: "Priority",        token: "usps_priority" },
 ];
 
 export async function POST(req: NextRequest) {
@@ -78,18 +78,19 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json();
 
-    console.log("EasyPost rates:", JSON.stringify((data.rates || []).map((r: any) => ({ carrier: r.carrier, service: r.service, rate: r.rate }))));
-
-    // DEBUG: return all rates unfiltered to identify correct service names
     const rates = ((data.rates as any[]) || [])
+      .filter(r => ALLOWED_SERVICES.some(s => s.carrier === r.carrier && s.service === r.service))
       .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
-      .map(r => ({
-        carrier: r.carrier as string,
-        service: `${r.carrier}::${r.service}`,  // raw names for debugging
-        token: `debug_${(r.service as string).toLowerCase().replace(/\s+/g, "_")}`,
-        amount: parseFloat(r.rate) + 2,
-        days: (r.estimated_delivery_days as number | null) ?? null,
-      }));
+      .map(r => {
+        const svc = ALLOWED_SERVICES.find(s => s.carrier === r.carrier && s.service === r.service)!;
+        return {
+          carrier: r.carrier as string,
+          service: svc.token === "usps_priority" ? "USPS Priority Mail" : "USPS Ground Advantage",
+          token: svc.token,
+          amount: parseFloat(r.rate) + 2,
+          days: (r.estimated_delivery_days as number | null) ?? null,
+        };
+      });
 
     // Dev-only free shipping option — never shown in production
     if (process.env.FREE_SHIPPING_TEST === "true") {
