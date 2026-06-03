@@ -154,7 +154,7 @@ export default function LoginForm() {
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/signin/google";
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
