@@ -12,7 +12,10 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
   "stubby-antenna-solo":          { length: 6,  width: 4,  height: 2,  weight: 0.25 },
 };
 
-const ALLOWED_SERVICE_TOKENS = ["ups_ground", "ups_second_day_air"];
+const ALLOWED_SERVICES = [
+  { carrier: "UPS", service: "Ground",    token: "ups_ground" },
+  { carrier: "UPS", service: "2ndDayAir", token: "ups_second_day_air" },
+];
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,46 +48,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No valid items" }, { status: 400 });
     }
 
-    const parcel = {
-      length: String(maxL),
-      width: String(maxW),
-      height: String(Math.max(totalH, 2)),
-      distance_unit: "in",
-      weight: String(Math.max(totalWeight, 0.1)),
-      mass_unit: "lb",
-    };
+    const apiKey = process.env.EASYPOST_API_KEY!;
+    const auth = Buffer.from(`${apiKey}:`).toString("base64");
 
-    const res = await fetch("https://api.goshippo.com/shipments/", {
+    const res = await fetch("https://api.easypost.com/v2/shipments", {
       method: "POST",
       headers: {
-        Authorization: `ShippoToken ${process.env.SHIPPO_API_KEY}`,
+        Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        address_from: { zip: FROM_ZIP, country: "US" },
-        address_to: addressTo,
-        parcels: [parcel],
-        async: false,
+        shipment: {
+          from_address: { zip: FROM_ZIP, country: "US" },
+          to_address: addressTo,
+          parcel: {
+            length: maxL,
+            width: maxW,
+            height: Math.max(totalH, 2),
+            weight: Math.max(totalWeight * 16, 1.6), // EasyPost uses ounces
+          },
+        },
       }),
     });
 
     if (!res.ok) {
-      console.error("Shippo error:", await res.text());
+      console.error("EasyPost error:", await res.text());
       return NextResponse.json({ error: "Failed to fetch rates" }, { status: 500 });
     }
 
     const data = await res.json();
 
     const rates = ((data.rates as any[]) || [])
-      .filter(r => ALLOWED_SERVICE_TOKENS.includes(r.servicelevel?.token))
-      .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))
-      .map(r => ({
-        carrier: r.provider as string,
-        service: r.servicelevel.name as string,
-        token: r.servicelevel.token as string,
-        amount: parseFloat(r.amount) + 2,
-        days: (r.estimated_days as number | null) ?? null,
-      }));
+      .filter(r => ALLOWED_SERVICES.some(s => s.carrier === r.carrier && s.service === r.service))
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
+      .map(r => {
+        const svc = ALLOWED_SERVICES.find(s => s.carrier === r.carrier && s.service === r.service)!;
+        return {
+          carrier: r.carrier as string,
+          service: svc.token === "ups_ground" ? "UPS Ground" : "UPS 2nd Day Air",
+          token: svc.token,
+          amount: parseFloat(r.rate) + 2,
+          days: (r.estimated_delivery_days as number | null) ?? null,
+        };
+      });
 
     // Dev-only free shipping option — never shown in production
     if (process.env.FREE_SHIPPING_TEST === "true") {
