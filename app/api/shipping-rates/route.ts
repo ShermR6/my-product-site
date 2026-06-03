@@ -80,19 +80,16 @@ export async function POST(req: NextRequest) {
 
     console.log("EasyPost rates:", JSON.stringify((data.rates || []).map((r: any) => ({ carrier: r.carrier, service: r.service, rate: r.rate }))));
 
+    // DEBUG: return all rates unfiltered to identify correct service names
     const rates = ((data.rates as any[]) || [])
-      .filter(r => ALLOWED_SERVICES.some(s => s.carrier === r.carrier && s.service === r.service))
       .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
-      .map(r => {
-        const svc = ALLOWED_SERVICES.find(s => s.carrier === r.carrier && s.service === r.service)!;
-        return {
-          carrier: r.carrier as string,
-          service: svc.token === "ups_ground" ? "UPS Ground" : "UPS 2nd Day Air",
-          token: svc.token,
-          amount: parseFloat(r.rate) + 2,
-          days: (r.estimated_delivery_days as number | null) ?? null,
-        };
-      });
+      .map(r => ({
+        carrier: r.carrier as string,
+        service: `${r.carrier} ${r.service}`,
+        token: `${r.carrier}_${r.service}`.toLowerCase(),
+        amount: parseFloat(r.rate) + 2,
+        days: (r.estimated_delivery_days as number | null) ?? null,
+      }));
 
     // Dev-only free shipping option — never shown in production
     if (process.env.FREE_SHIPPING_TEST === "true") {
