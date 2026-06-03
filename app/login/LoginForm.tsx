@@ -14,6 +14,7 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const router = useRouter();
 
   // 2FA state
@@ -220,7 +221,7 @@ export default function LoginForm() {
           padding: "4px", marginBottom: "24px",
         }}>
           {(["signin", "signup"] as const).map((t) => (
-            <button key={t} onClick={() => { setTab(t); setError(""); }}
+            <button key={t} onClick={() => { setTab(t); setError(""); setAgreedToTerms(false); }}
               style={{
                 padding: "9px", borderRadius: "8px", border: "none",
                 background: tab === t ? "#111827" : "transparent",
@@ -307,13 +308,33 @@ export default function LoginForm() {
             </div>
           )}
 
-          <button type="submit" disabled={loading} style={{
+          {tab === "signup" && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "16px" }}>
+              <div onClick={() => setAgreedToTerms(v => !v)} style={{
+                width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0, marginTop: "1px",
+                border: `2px solid ${agreedToTerms ? "#0ea5e9" : "#374151"}`,
+                background: agreedToTerms ? "#0ea5e9" : "transparent",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.15s",
+              }}>
+                {agreedToTerms && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>✓</span>}
+              </div>
+              <span onClick={() => setAgreedToTerms(v => !v)} style={{ fontSize: "13px", color: "#9ca3af", cursor: "pointer", userSelect: "none" as const, lineHeight: "1.5" }}>
+                I agree to the{" "}
+                <a href="/terms" onClick={e => e.stopPropagation()} style={{ color: "#60a5fa", textDecoration: "underline" }}>Terms of Service</a>
+                {" "}and{" "}
+                <a href="/privacy" onClick={e => e.stopPropagation()} style={{ color: "#60a5fa", textDecoration: "underline" }}>Privacy Policy</a>
+              </span>
+            </div>
+          )}
+
+          <button type="submit" disabled={loading || (tab === "signup" && !agreedToTerms)} style={{
             width: "100%", padding: "13px", borderRadius: "10px", border: "none",
-            background: loading ? "#1f2937" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
-            color: loading ? "#6b7280" : "#fff", fontSize: "15px", fontWeight: 600,
-            cursor: loading ? "not-allowed" : "pointer",
+            background: loading || (tab === "signup" && !agreedToTerms) ? "#1f2937" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
+            color: loading || (tab === "signup" && !agreedToTerms) ? "#6b7280" : "#fff", fontSize: "15px", fontWeight: 600,
+            cursor: loading || (tab === "signup" && !agreedToTerms) ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            boxShadow: loading ? "none" : "0 4px 20px rgba(14,165,233,0.3)",
+            boxShadow: loading || (tab === "signup" && !agreedToTerms) ? "none" : "0 4px 20px rgba(14,165,233,0.3)",
             transition: "all 0.2s",
           }}>
             {loading ? "Please wait..." : tab === "signin" ? "🔒  Sign In" : "Create Account"}
@@ -406,15 +427,17 @@ export default function LoginForm() {
         </div>
       )}
 
-      <div style={{
-        marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #1f2937",
-        textAlign: "center", fontSize: "12px", color: "#6b7280",
-      }}>
-        By continuing, you agree to our{" "}
-        <a href="/terms" style={{ color: "#60a5fa", textDecoration: "underline" }}>Terms of Service</a>
-        {" "}and{" "}
-        <a href="/privacy" style={{ color: "#60a5fa", textDecoration: "underline" }}>Privacy Policy</a>
-      </div>
+      {step === "credentials" && tab === "signin" && (
+        <div style={{
+          marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #1f2937",
+          textAlign: "center", fontSize: "12px", color: "#6b7280",
+        }}>
+          By signing in, you agree to our{" "}
+          <a href="/terms" style={{ color: "#60a5fa", textDecoration: "underline" }}>Terms of Service</a>
+          {" "}and{" "}
+          <a href="/privacy" style={{ color: "#60a5fa", textDecoration: "underline" }}>Privacy Policy</a>
+        </div>
+      )}
     </div>
   );
 }
