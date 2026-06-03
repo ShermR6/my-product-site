@@ -22,7 +22,6 @@ export async function GET() {
     scope: "openid email profile",
     state,
     access_type: "offline",
-    prompt: "select_account",
   });
 
   return NextResponse.redirect(
