@@ -74,6 +74,17 @@ model User {
   // Pending 2FA login
   pendingLoginToken       String?
   pendingLoginExpiry      DateTime?
+
+  // Desktop OAuth token exchange
+  desktopOAuthToken       String?
+  desktopOAuthExpiry      DateTime?
+}
+
+model OAuthState {
+  id        String   @id @default(cuid())
+  state     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model VerificationToken {

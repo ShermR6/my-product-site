@@ -1,11 +1,16 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 const bcrypt = require("bcryptjs");
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -59,10 +64,22 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
+        if (account?.provider === "google") {
+          const email = user.email!.toLowerCase();
+          let dbUser = await prisma.user.findUnique({ where: { email } });
+          if (!dbUser) {
+            dbUser = await prisma.user.create({
+              data: { email, name: user.name, image: user.image },
+            });
+          }
+          token.id = dbUser.id;
+          token.email = dbUser.email;
+        } else {
+          token.id = user.id;
+          token.email = user.email;
+        }
       }
       return token;
     },
