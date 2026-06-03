@@ -10,7 +10,7 @@ function DesktopCompleteContent() {
   const token = searchParams.get("token");
   const email = searchParams.get("email");
   const error = searchParams.get("error");
-  const [status, setStatus] = useState<"opening" | "done" | "error">("opening");
+  const [status, setStatus] = useState<"opening" | "error">("opening");
 
   useEffect(() => {
     if (error || !token || !email) {
@@ -19,8 +19,6 @@ function DesktopCompleteContent() {
     }
     const deepLink = `finalpingapp://auth?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
     window.location.href = deepLink;
-    const timer = setTimeout(() => setStatus("done"), 1500);
-    return () => clearTimeout(timer);
   }, [token, email, error]);
 
   return (
@@ -59,11 +57,12 @@ function DesktopCompleteContent() {
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
               <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>
-            <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#f9fafb", margin: "0 0 8px 0" }}>You&apos;re signed in</h2>
-            <p style={{ fontSize: "14px", color: "#6b7280", margin: "0 0 28px 0", lineHeight: 1.6 }}>
-              {status === "opening"
-                ? "Opening FinalPing…"
-                : "FinalPing has been opened. You can close this tab."}
+            <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#f9fafb", margin: "0 0 8px 0" }}>Signed in successfully</h2>
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: "0 0 6px 0", lineHeight: 1.6 }}>
+              FinalPing should open automatically. You can close this tab.
+            </p>
+            <p style={{ fontSize: "12px", color: "#4b5563", margin: "0 0 28px 0", lineHeight: 1.6 }}>
+              If the app didn&apos;t open, make sure FinalPing is installed and try again.
             </p>
           </>
         )}
