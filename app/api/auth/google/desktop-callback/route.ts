@@ -8,20 +8,20 @@ export async function GET(req: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
+  const base = process.env.NEXTAUTH_URL ?? "https://finalpingapp.com";
+
   if (error) {
-    return NextResponse.redirect(
-      `finalpingapp://auth?error=${encodeURIComponent(error)}`
-    );
+    return NextResponse.redirect(`${base}/auth/desktop-complete?error=${encodeURIComponent(error)}`);
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(`finalpingapp://auth?error=missing_params`);
+    return NextResponse.redirect(`${base}/auth/desktop-complete?error=missing_params`);
   }
 
   // Verify state
   const storedState = await prisma.oAuthState.findUnique({ where: { state } });
   if (!storedState || storedState.expiresAt < new Date()) {
-    return NextResponse.redirect(`finalpingapp://auth?error=invalid_state`);
+    return NextResponse.redirect(`${base}/auth/desktop-complete?error=invalid_state`);
   }
   await prisma.oAuthState.delete({ where: { state } });
 
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(`finalpingapp://auth?error=token_exchange_failed`);
+    return NextResponse.redirect(`${base}/auth/desktop-complete?error=token_exchange_failed`);
   }
 
   const tokens = await tokenRes.json();
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
   });
 
   if (!userRes.ok) {
-    return NextResponse.redirect(`finalpingapp://auth?error=userinfo_failed`);
+    return NextResponse.redirect(`${base}/auth/desktop-complete?error=userinfo_failed`);
   }
 
   const googleUser = await userRes.json();
@@ -75,6 +75,6 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.redirect(
-    `finalpingapp://auth?token=${desktopToken}&email=${encodeURIComponent(email)}`
+    `${base}/auth/desktop-complete?token=${desktopToken}&email=${encodeURIComponent(email)}`
   );
 }
