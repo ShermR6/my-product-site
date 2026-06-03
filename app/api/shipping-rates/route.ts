@@ -85,8 +85,8 @@ export async function POST(req: NextRequest) {
       .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
       .map(r => ({
         carrier: r.carrier as string,
-        service: `${r.carrier} ${r.service}`,
-        token: `${r.carrier}_${r.service}`.toLowerCase(),
+        service: `${r.carrier}::${r.service}`,  // raw names for debugging
+        token: `debug_${(r.service as string).toLowerCase().replace(/\s+/g, "_")}`,
         amount: parseFloat(r.rate) + 2,
         days: (r.estimated_delivery_days as number | null) ?? null,
       }));
