@@ -54,52 +54,56 @@ export default function TermsPage() {
         <p>THE SOFTWARE IS EXPRESSLY NOT INTENDED FOR USE IN ANY SAFETY-CRITICAL APPLICATION, INCLUDING BUT NOT LIMITED TO AIR TRAFFIC CONTROL, COLLISION AVOIDANCE, EMERGENCY RESPONSE, FLIGHT OPERATIONS, OR ANY OTHER CONTEXT WHERE RELIANCE ON THE SOFTWARE COULD AFFECT THE SAFETY OF PERSONS OR PROPERTY.</p>
         <p>DO NOT USE FINALPINGAPP AS A SOLE OR PRIMARY SOURCE OF AIRCRAFT POSITION INFORMATION FOR ANY PURPOSE WHERE ACCURACY OR TIMELINESS IS REQUIRED FOR SAFETY. FinalPingApp assumes no liability whatsoever for any injury, death, property damage, or other loss arising from safety-critical reliance on the Software.</p>
 
-        <h2>7. Disclaimer of Warranties</h2>
+        <h2>7. Not for Regulatory or FAA Use</h2>
+        <p>FinalPing is not an FAA-approved tool and may not be used to log, document, verify, or substantiate flight hours, flight time, aircraft movements, or any other data for regulatory, certification, or compliance purposes. FinalPingApp makes no representation that data produced by the Software meets any FAA, ICAO, or other regulatory standard.</p>
+        <p>FinalPingApp is not responsible for any consequences, penalties, violations, enforcement actions, or disputes arising from your use of the Software in connection with any regulatory body, including the FAA. You are solely responsible for ensuring your compliance with all applicable aviation regulations.</p>
+
+        <h2>9. Disclaimer of Warranties</h2>
         <p>THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, FINALPINGAPP EXPRESSLY DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO: WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, ACCURACY, RELIABILITY, UNINTERRUPTED SERVICE, ERROR-FREE OPERATION, OR THAT ALL AIRCRAFT WILL BE DETECTED, REPORTED, OR NOTIFIED AT ANY GIVEN TIME.</p>
         <p>FINALPINGAPP DOES NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS, THAT DEFECTS WILL BE CORRECTED, OR THAT THE SOFTWARE OR SERVERS ARE FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.</p>
 
-        <h2>8. Limitation of Liability</h2>
+        <h2>10. Limitation of Liability</h2>
         <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, FINALPINGAPP, ITS OWNER, OFFICERS, EMPLOYEES, CONTRACTORS, AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES OF ANY KIND, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, LOSS OF REVENUE, LOSS OF DATA, LOSS OF GOODWILL, BUSINESS INTERRUPTION, OR COST OF SUBSTITUTE GOODS OR SERVICES, ARISING FROM OR RELATED TO YOUR USE OF OR INABILITY TO USE THE SOFTWARE, REGARDLESS OF WHETHER FINALPINGAPP HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, AND REGARDLESS OF THE THEORY OF LIABILITY (CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, OR OTHERWISE).</p>
         <p>IN NO EVENT SHALL FINALPINGAPP'S TOTAL CUMULATIVE LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATED TO THESE TERMS OR THE SOFTWARE EXCEED THE TOTAL AMOUNT ACTUALLY PAID BY YOU TO FINALPINGAPP IN THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING THE EVENT GIVING RISE TO THE CLAIM. IF YOU HAVE PAID NOTHING, FINALPINGAPP'S MAXIMUM LIABILITY IS $0.00.</p>
         <p>SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IN SUCH JURISDICTIONS, THE ABOVE LIMITATIONS SHALL APPLY TO THE FULLEST EXTENT PERMITTED BY LAW.</p>
 
-        <h2>9. Indemnification</h2>
+        <h2>11. Indemnification</h2>
         <p>You agree to defend, indemnify, and hold harmless FinalPingApp, its owner, officers, employees, contractors, agents, licensors, and suppliers from and against any claims, liabilities, damages, judgments, awards, losses, costs, expenses, or fees (including reasonable attorneys' fees) arising out of or relating to: (a) your use of the Software; (b) your violation of these Terms; (c) your violation of any applicable law or regulation; (d) your violation of any third-party right, including any intellectual property, privacy, or proprietary right; or (e) any claim by a third party arising from your use of the Software.</p>
 
-        <h2>10. Intellectual Property</h2>
+        <h2>12. Intellectual Property</h2>
         <p>The Software, including all code, design, graphics, interfaces, content, and documentation, is the exclusive intellectual property of FinalPingApp and is protected by applicable copyright, trademark, trade secret, and other intellectual property laws. You may not copy, modify, distribute, or create derivative works of any part of the Software without express written permission from FinalPingApp.</p>
         <p>FinalPing and FinalPingApp are trademarks of FinalPingApp. You may not use these marks without prior written consent.</p>
 
-        <h2>11. Dispute Resolution and Arbitration</h2>
+        <h2>13. Dispute Resolution and Arbitration</h2>
         <p>PLEASE READ THIS SECTION CAREFULLY. IT AFFECTS YOUR LEGAL RIGHTS.</p>
         <p>Any dispute, claim, or controversy arising out of or relating to these Terms or the Software ("Dispute") shall first be resolved by good-faith negotiation. Either party may initiate negotiation by sending written notice to the other describing the Dispute and proposed resolution. If the Dispute is not resolved within thirty (30) days, either party may submit the Dispute to binding arbitration administered by the American Arbitration Association ("AAA") under its Consumer Arbitration Rules, except as modified by these Terms.</p>
         <p>The arbitration shall be conducted in English and, unless the parties agree otherwise, shall be conducted by a single arbitrator selected in accordance with AAA rules. The arbitrator's decision shall be final and binding and may be entered as a judgment in any court of competent jurisdiction.</p>
         <p>CLASS ACTION WAIVER: YOU AND FINALPINGAPP EACH WAIVE THE RIGHT TO BRING OR PARTICIPATE IN ANY CLASS ACTION, CLASS-WIDE ARBITRATION, OR COLLECTIVE ACTION RELATED TO THE SOFTWARE OR THESE TERMS. EACH PARTY MAY BRING CLAIMS AGAINST THE OTHER ONLY IN AN INDIVIDUAL CAPACITY.</p>
         <p>Nothing in this section prevents either party from seeking injunctive or other equitable relief in a court of competent jurisdiction for matters involving intellectual property infringement or breach of confidentiality obligations.</p>
 
-        <h2>12. Force Majeure</h2>
+        <h2>14. Force Majeure</h2>
         <p>FinalPingApp shall not be liable for any delay or failure to perform resulting from causes outside its reasonable control, including but not limited to acts of God, natural disasters, pandemics, war, terrorism, civil unrest, governmental action, internet outages, third-party service failures, power failures, or cyberattacks.</p>
 
-        <h2>13. Privacy</h2>
+        <h2>15. Privacy</h2>
         <p>Your use of FinalPing is also governed by our <a href="/privacy">Privacy Policy</a>, which is incorporated into these Terms by reference. By using the Software, you consent to the collection and use of your information as described in the Privacy Policy.</p>
 
-        <h2>14. Modifications to Service or Terms</h2>
+        <h2>16. Modifications to Service or Terms</h2>
         <p>FinalPingApp reserves the right to modify, suspend, or discontinue the Software or any feature thereof at any time, with or without notice, and without liability to you. FinalPingApp may update these Terms at any time. Material changes will be communicated by updating the "Last Updated" date. Your continued use of the Software after changes become effective constitutes your acceptance of the revised Terms. If you do not agree to the revised Terms, your sole remedy is to stop using the Software.</p>
 
-        <h2>15. Termination</h2>
+        <h2>17. Termination</h2>
         <p>FinalPingApp may suspend or terminate your access to the Software at any time, with or without cause, with or without notice. Upon termination for cause (including violation of these Terms), you are not entitled to a refund. Upon termination, all rights granted to you under these Terms immediately cease, and you must stop using the Software and delete all copies in your possession.</p>
         <p>You may terminate your use of the Software at any time by canceling your subscription and uninstalling the Software. Termination does not entitle you to a refund except as provided in the 30-day money-back guarantee.</p>
 
-        <h2>16. Governing Law and Jurisdiction</h2>
+        <h2>18. Governing Law and Jurisdiction</h2>
         <p>These Terms shall be governed by and construed in accordance with the laws of the State of Texas, United States, without regard to its conflict of law provisions. To the extent that any Dispute proceeds in court (rather than arbitration), you consent to exclusive personal jurisdiction and venue in the state and federal courts located in Denton County, Texas.</p>
 
-        <h2>17. Entire Agreement and Severability</h2>
+        <h2>19. Entire Agreement and Severability</h2>
         <p>These Terms, together with the Privacy Policy, constitute the entire agreement between you and FinalPingApp with respect to the Software and supersede all prior agreements, representations, and understandings. If any provision of these Terms is found to be invalid, illegal, or unenforceable, the remaining provisions shall continue in full force and effect. The failure of FinalPingApp to enforce any right or provision of these Terms shall not be deemed a waiver of such right or provision.</p>
 
-        <h2>18. No Professional Advice</h2>
+        <h2>20. No Professional Advice</h2>
         <p>The Software and any information provided through it are for informational purposes only. FinalPingApp does not provide legal, aviation, safety, or professional advice of any kind. Any decisions you make based on information provided by the Software are entirely your own responsibility.</p>
 
-        <h2>19. Contact</h2>
+        <h2>21. Contact</h2>
         <p>If you have questions about these Terms, please contact us at <a href="mailto:aircraftalerts@finalpingapp.com">aircraftalerts@finalpingapp.com</a> or visit <a href="https://finalpingapp.com/contact">finalpingapp.com/contact</a>.</p>
 
       </div>
