@@ -1,19 +1,47 @@
+"use client";
 // app/groundstationsetup/page.tsx
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+
+function CodeBlock({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <div style={{ position: "relative", margin: "12px 0" }}>
+      <pre style={{
+        background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 10, padding: "16px 56px 16px 20px", overflow: "auto",
+        fontSize: 13, lineHeight: 1.7, color: "#e2e8f0",
+        fontFamily: "'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+        margin: 0,
+      }}>
+        <code>{code}</code>
+      </pre>
+      <button
+        onClick={copy}
+        style={{
+          position: "absolute", top: 10, right: 10,
+          background: copied ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.07)",
+          border: `1px solid ${copied ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.12)"}`,
+          borderRadius: 6, padding: "4px 10px",
+          color: copied ? "#22c55e" : "#9ca3af",
+          fontSize: 11, fontWeight: 600, cursor: "pointer",
+          transition: "all 0.15s",
+        }}
+      >
+        {copied ? "✓ Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
 
 export default function GroundStationSetupPage() {
-  const codeBlock = (code: string) => (
-    <pre style={{
-      background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 10, padding: "16px 20px", overflow: "auto",
-      fontSize: 13, lineHeight: 1.7, color: "#e2e8f0",
-      fontFamily: "'Fira Code', 'Cascadia Code', 'Consolas', monospace",
-      margin: "12px 0",
-    }}>
-      <code>{code}</code>
-    </pre>
-  );
+  const codeBlock = (code: string) => <CodeBlock code={code} />;
 
   const note = (text: string) => (
     <div style={{
