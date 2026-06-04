@@ -149,11 +149,11 @@ export default function GroundStationSetupPage() {
           {stepList([
             "Screw the antenna onto the Pro Stick Plus and plug it into any USB port on the Pi.",
             "Plug the power supply into the Pi and wait about 60 seconds for it to fully boot.",
-            "On your phone, open WiFi settings and connect to FinalPing-Setup. Password: finalping",
+            "On your phone, open WiFi settings and connect to FinalPing-Setup. No password — it's an open network.",
             "A setup page opens automatically on your phone. If it doesn't appear after 10 seconds, open a browser and go to 192.168.4.1",
-            "Enter your home WiFi name and password, then your FinalPing account email and password. Tap Connect Ground Station.",
-            "The Pi reboots, connects to your home WiFi, and starts tracking. Your location and aircraft are pulled from your account automatically.",
-            "Open the FinalPing desktop app. Dashboard → Ground Station: Online within 60 seconds.",
+            "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
+            "The Pi connects to your home WiFi and automatically claims your account credentials from FinalPing. Your location and aircraft are pulled from your account — no manual config needed.",
+            "The Pi reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online within 60 seconds.",
           ], "#0ea5e9")}
           {note("Use your phone — not a laptop or desktop. iPhones and Android phones open the setup page automatically when joining FinalPing-Setup. Laptops typically do not.")}
           {success("That's it. The Pi runs silently in the background on every boot. No further setup needed.")}
@@ -254,10 +254,10 @@ export default function GroundStationSetupPage() {
             After the Pi reboots it broadcasts a setup WiFi network. On your phone:
           </p>
           {stepList([
-            "Open WiFi settings and connect to FinalPing-Setup. Password: finalping",
+            "Open WiFi settings and connect to FinalPing-Setup. No password — it's an open network.",
             "A setup page opens automatically. If it doesn't, open a browser and go to 192.168.4.1",
-            "Enter your home WiFi name and password, then your FinalPing email and password. Tap Connect Ground Station.",
-            "The Pi reboots, connects to your home WiFi, and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online.",
+            "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
+            "The Pi connects to your WiFi and automatically claims your account credentials from FinalPing. It reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online.",
           ], "#22d3a3")}
           {note("Use your phone for this step — not your laptop. Phones auto-open the setup page when joining FinalPing-Setup. Laptops do not.")}
         </div>
@@ -328,8 +328,8 @@ export default function GroundStationSetupPage() {
             { q: "SSH gives \"host key changed\" warning", a: "You previously connected to a different Pi at this IP address. Clear the old key (replace the IP with your Pi's actual IP) and try again:\n\nssh-keygen -R 192.168.1.45" },
             { q: "\"Cannot reach dump1090\" in the logs", a: "dump1090 is not running or the receiver isn't detected. On the Pi: sudo systemctl status finalping-dump1090. Make sure the Pro Stick Plus is plugged in." },
             { q: "\"Ground station not enabled\"", a: "Your account doesn't have the Ground Station add-on. Purchase it at finalpingapp.com/pricing." },
-            { q: "\"Login failed\" in the logs", a: "Your FinalPing email or password is wrong. On Pi: nano /home/pi/finalping-ground/finalping_ground.py and correct FINALPING_EMAIL and FINALPING_PASSWORD, then: sudo systemctl restart finalping-ground" },
-            { q: "Pi won't connect to my WiFi after setup", a: "The SSID or password entered during phone setup may have been wrong. To redo setup, SSH into the Pi while on FinalPing-Setup WiFi (192.168.4.1) and run:\n\nsudo rm /etc/finalping/.setup_done && sudo rm -f /etc/NetworkManager/system-connections/FinalPing-Home.nmconnection && sudo reboot\n\nThen go through the phone setup again." },
+            { q: "\"Ground station not enabled\" or \"Invalid device key\"", a: "Your FinalPing account doesn't have Ground Station enabled, or the wrong email was entered during setup. To redo setup, delete the config and reboot — the Pi will broadcast FinalPing-Setup again:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot" },
+            { q: "Pi won't connect to my WiFi after setup", a: "The SSID or password entered during phone setup may have been wrong. To redo setup, delete the config and reboot:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot\n\nThen connect to FinalPing-Setup again and re-enter your WiFi credentials and email." },
             { q: "No aircraft appearing", a: "Make sure your antenna is connected and pointing skyward. Indoor antennas near windows work but outdoor antennas give much better range. Confirm your aircraft have ICAO24 codes entered in the FinalPing app." },
             { q: "Windows — no signals received", a: "The Zadig driver step is required. Open Zadig (zadig.akeo.ie), go to Options → List All Devices, select RTL2832U, choose WinUSB, click Install Driver. Then restart your PC." },
             { q: "Mac — driver blocked by macOS", a: "Go to System Settings → Privacy & Security → scroll down and click Allow Anyway next to the RTL-SDR driver entry. Then restart." },
