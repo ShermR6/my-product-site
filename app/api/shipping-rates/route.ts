@@ -15,6 +15,9 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
 const ALLOWED_SERVICES = [
   { carrier: "USPS", service: "GroundAdvantage", token: "usps_ground_advantage" },
   { carrier: "USPS", service: "Priority",        token: "usps_priority" },
+  { carrier: "UPS",  service: "Ground",          token: "ups_ground" },
+  { carrier: "UPS",  service: "UPS2DayAir",      token: "ups_2day" },
+  { carrier: "UPS",  service: "NextDayAir",      token: "ups_next_day" },
 ];
 
 export async function POST(req: NextRequest) {
@@ -78,14 +81,25 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json();
 
+    if (process.env.SHIPPING_DEBUG === "true") {
+      console.log("RAW RATES:", JSON.stringify((data.rates as any[]).map(r => `${r.carrier}::${r.service} $${r.rate}`)));
+    }
+
     const rates = ((data.rates as any[]) || [])
       .filter(r => ALLOWED_SERVICES.some(s => s.carrier === r.carrier && s.service === r.service))
       .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
       .map(r => {
         const svc = ALLOWED_SERVICES.find(s => s.carrier === r.carrier && s.service === r.service)!;
+        const serviceLabel: Record<string, string> = {
+          usps_ground_advantage: "USPS Ground Advantage",
+          usps_priority: "USPS Priority Mail",
+          ups_ground: "UPS Ground",
+          ups_2day: "UPS 2nd Day Air",
+          ups_next_day: "UPS Next Day Air",
+        };
         return {
           carrier: r.carrier as string,
-          service: svc.token === "usps_priority" ? "USPS Priority Mail" : "USPS Ground Advantage",
+          service: serviceLabel[svc.token] ?? r.service,
           token: svc.token,
           amount: parseFloat(r.rate) + 2,
           days: (r.estimated_delivery_days as number | null) ?? null,
