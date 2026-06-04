@@ -542,8 +542,6 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
             </div>
           </div>
         </div>
-      </div>
-
         {/* adsb.lol opt-in */}
         <div
           onClick={() => setFeedAdsblol(v => !v)}
@@ -581,6 +579,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
             </div>
           </div>
         </div>
+      </div>
 
       {/* Add to Cart */}
       <div style={{ padding: "0 20px 20px" }}>
