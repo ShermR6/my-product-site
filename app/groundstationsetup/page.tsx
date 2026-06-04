@@ -263,6 +263,13 @@ export default function GroundStationSetupPage() {
             "The Pi connects to your WiFi and automatically claims your account credentials from FinalPing. It reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online.",
           ], "#22d3a3")}
           {note("Use your phone for this step — not your laptop. Phones auto-open the setup page when joining FinalPing-Setup. Laptops do not.")}
+
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Optional — Contribute to the adsb.lol network</h3>
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
+            Your Pi can anonymously feed ADS-B data to <a href="https://adsb.lol" target="_blank" style={{ color: "var(--accent)" }}>adsb.lol</a>, a community-run network that improves coverage for all FinalPing users in your area. It runs alongside FinalPing and won't interfere with anything.
+          </p>
+          {codeBlock(`curl -L -o /tmp/lol-feed.sh https://adsb.lol/feed.sh\nsudo bash /tmp/lol-feed.sh`)}
+          {tip("Use your receiver's physical location coordinates, not necessarily your airport. When done, check adsb.lol to confirm you're showing as a feeder.")}
         </div>
 
         {/* ── Windows ── */}

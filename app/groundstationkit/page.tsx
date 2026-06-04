@@ -83,6 +83,7 @@ function CartSidebar({
   onQty: (tier: string, delta: number) => void;
 }) {
   const [address, setAddress] = useState<Address>({ name: "", line1: "", line2: "", city: "", state: "", zip: "" });
+  const [feedAdsblol, setFeedAdsblol] = useState(true);
   const [rates, setRates] = useState<ShippingRate[]>([]);
   const [ratesLoading, setRatesLoading] = useState(false);
   const [ratesError, setRatesError] = useState<string | null>(null);
@@ -208,6 +209,7 @@ function CartSidebar({
           cartItems: cart.map(i => ({ tier: i.tier, quantity: i.quantity })),
           shippingRate: { label: selectedRate.service, amount: selectedRate.amount, days: selectedRate.days },
           shippingAddress: address,
+          feedAdsblol,
         }),
       });
       const data = await res.json();
@@ -434,6 +436,19 @@ function CartSidebar({
                 {selectedRate ? `$${selectedRate.amount.toFixed(2)}` : "Enter address above"}
               </span>
             </div>
+            {/* adsb.lol opt-in */}
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 14, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={feedAdsblol}
+                onChange={e => setFeedAdsblol(e.target.checked)}
+                style={{ marginTop: 2, accentColor: "#0ea5e9", flexShrink: 0 }}
+              />
+              <span style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.6 }}>
+                Anonymously contribute ADS-B data to <a href="https://adsb.lol" target="_blank" style={{ color: "var(--accent)" }}>adsb.lol</a> to improve coverage for all users in my area. <span style={{ color: "#4b5563" }}>Free — covered by FinalPing ToS.</span>
+              </span>
+            </label>
+
             <button
               onClick={handleCheckout}
               disabled={loading || !selectedRate}
