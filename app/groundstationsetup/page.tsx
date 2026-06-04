@@ -124,6 +124,9 @@ export default function GroundStationSetupPage() {
                 <span style={{ color: "#22d3a3" }}>✓</span> {i}
               </div>
             ))}
+            <div style={{ fontSize: 13, color: "#fcd34d", marginTop: 10, display: "flex", gap: 8 }}>
+              <span>💡</span> Place the antenna near a window for best range — the Pi can sit anywhere nearby.
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 8 }}>What happens automatically</div>
