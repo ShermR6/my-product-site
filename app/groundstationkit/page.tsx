@@ -457,7 +457,7 @@ function CartSidebar({
 
 function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, name: string, price: number, feedAdsblol: boolean) => void }) {
   const [built, setBuilt] = useState(false);
-  const [feedAdsblol, setFeedAdsblol] = useState(true);
+  const [feedAdsblol, setFeedAdsblol] = useState(false);
   const price = built ? kit.builtPrice : kit.basePrice;
 
   return (
@@ -545,28 +545,31 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
       </div>
 
         {/* adsb.lol opt-in */}
-        <label
-          onClick={e => e.stopPropagation()}
-          style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, cursor: "pointer" }}
+        <div
+          onClick={() => setFeedAdsblol(v => !v)}
+          style={{
+            display: "flex", alignItems: "flex-start", gap: 10,
+            padding: "12px", borderRadius: 10, marginBottom: 16, cursor: "pointer",
+            border: feedAdsblol ? "1px solid rgba(34,211,163,0.5)" : "1px solid var(--border)",
+            background: feedAdsblol ? "rgba(34,211,163,0.06)" : "rgba(255,255,255,0.02)",
+            transition: "all 0.15s",
+          }}
         >
-          <div
-            onClick={() => setFeedAdsblol(v => !v)}
-            style={{
-              width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 1,
-              border: feedAdsblol ? "2px solid #0ea5e9" : "2px solid rgba(255,255,255,0.25)",
-              background: feedAdsblol ? "#0ea5e9" : "transparent",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.15s", cursor: "pointer",
-            }}
-          >
+          <div style={{
+            width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 1,
+            border: feedAdsblol ? "2px solid #22d3a3" : "2px solid rgba(255,255,255,0.25)",
+            background: feedAdsblol ? "#22d3a3" : "transparent",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s",
+          }}>
             {feedAdsblol && (
               <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
                 <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
           </div>
-          <div onClick={() => setFeedAdsblol(v => !v)}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
               Contribute to adsb.lol network
               <span style={{
                 marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 999,
@@ -577,7 +580,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
               Anonymously feeds ADS-B data to improve coverage for all users nearby.
             </div>
           </div>
-        </label>
+        </div>
 
       {/* Add to Cart */}
       <div style={{ padding: "0 20px 20px" }}>
