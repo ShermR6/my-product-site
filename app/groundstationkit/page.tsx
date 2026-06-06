@@ -400,10 +400,10 @@ function CartSidebar({
                       >
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
-                            {rate.token === "usps_priority" ? "USPS Priority Mail" : "USPS Ground Advantage"}
+                            {rate.service}
                           </div>
                           <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                            {rate.token === "usps_priority" ? "2–3 Business Days" : "3–5 Business Days"}
+                            {rate.days ? `${rate.days} Business Day${rate.days === 1 ? "" : "s"}` : "Estimated delivery varies"}
                           </div>
                         </div>
                         <div style={{
