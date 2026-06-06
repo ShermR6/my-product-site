@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         shipment: {
-          from_address: { zip: FROM_ZIP, country: "US" },
+          from_address: { street1: "1 Main St", city: "Justin", state: "TX", zip: FROM_ZIP, country: "US" },
           to_address: addressTo,
           parcel: {
             length: maxL,
