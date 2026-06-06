@@ -13,11 +13,9 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
 };
 
 const ALLOWED_SERVICES = [
-  { carrier: "USPS", service: "GroundAdvantage", token: "usps_ground_advantage" },
-  { carrier: "USPS", service: "Priority",        token: "usps_priority" },
-  { carrier: "UPSDAP", service: "Ground",      token: "ups_ground" },
-  { carrier: "UPSDAP", service: "2ndDayAir",   token: "ups_2day" },
-  { carrier: "UPSDAP", service: "NextDayAir",  token: "ups_next_day" },
+  { carrier: "UPSDAP", service: "Ground",     token: "ups_ground" },
+  { carrier: "UPSDAP", service: "2ndDayAir",  token: "ups_2day" },
+  { carrier: "UPSDAP", service: "NextDayAir", token: "ups_next_day" },
 ];
 
 export async function POST(req: NextRequest) {
