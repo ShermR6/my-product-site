@@ -13,9 +13,8 @@ const PARCEL_SPECS: Record<string, { length: number; width: number; height: numb
 };
 
 const ALLOWED_SERVICES = [
-  { carrier: "UPSDAP", service: "Ground",     token: "ups_ground" },
-  { carrier: "UPSDAP", service: "2ndDayAir",  token: "ups_2day" },
-  { carrier: "UPSDAP", service: "NextDayAir", token: "ups_next_day" },
+  { carrier: "UPSDAP", service: "Ground",    token: "ups_ground" },
+  { carrier: "UPSDAP", service: "2ndDayAir", token: "ups_2day" },
 ];
 
 export async function POST(req: NextRequest) {

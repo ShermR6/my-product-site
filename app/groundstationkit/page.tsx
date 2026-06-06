@@ -403,7 +403,7 @@ function CartSidebar({
                             {rate.service}
                           </div>
                           <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                            {rate.days ? `${rate.days} Business Day${rate.days === 1 ? "" : "s"}` : "Estimated delivery varies"}
+                            {rate.token === "ups_2day" ? "2–3 Business Days" : "3–5 Business Days"}
                           </div>
                         </div>
                         <div style={{
