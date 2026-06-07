@@ -552,6 +552,7 @@ export default function AdminPage() {
     const [orders, setOrders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [trackingInputs, setTrackingInputs] = React.useState<Record<string, string>>({});
+    const [carrierInputs, setCarrierInputs] = React.useState<Record<string, string>>({});
     const [actionLoading, setActionLoading] = React.useState<string | null>(null);
     const [messages, setMessages] = React.useState<Record<string, { ok: boolean; msg: string }>>({});
     const [filter, setFilter] = React.useState<"all" | "pending" | "shipped" | "completed">("all");
@@ -567,14 +568,14 @@ export default function AdminPage() {
 
     React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-    const doAction = async (id: string, action: string, trackingNumber?: string) => {
+    const doAction = async (id: string, action: string, trackingNumber?: string, carrier?: string) => {
       setActionLoading(id + action);
       setMessages(m => ({ ...m, [id]: { ok: false, msg: "" } }));
       try {
         const res = await fetch(`/api/admin/orders/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, trackingNumber }),
+          body: JSON.stringify({ action, trackingNumber, carrier }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -667,25 +668,39 @@ export default function AdminPage() {
                   </div>
 
                   {/* Tracking number (if shipped) */}
-                  {order.trackingNumber && (
-                    <div style={{ fontSize: 12, color: "#0ea5e9", marginBottom: 12 }}>
-                      📦 UPS: <a href={`https://www.ups.com/track?tracknum=${order.trackingNumber}`} target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>{order.trackingNumber}</a>
-                      {order.shippedAt && <span style={{ color: "#6b7280", marginLeft: 8 }}>· Shipped {new Date(order.shippedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
-                    </div>
-                  )}
+                  {order.trackingNumber && (() => {
+                    const carrierUrls: Record<string, string> = { UPS: "https://www.ups.com/track?tracknum=", USPS: "https://tools.usps.com/go/TrackConfirmAction?tLabels=", FedEx: "https://www.fedex.com/fedextrack/?trknbr=" };
+                    const carrierLabel = order.carrier || "UPS";
+                    const trackUrl = (carrierUrls[carrierLabel] ?? carrierUrls["UPS"]) + order.trackingNumber;
+                    return (
+                      <div style={{ fontSize: 12, color: "#0ea5e9", marginBottom: 12 }}>
+                        📦 {carrierLabel}: <a href={trackUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>{order.trackingNumber}</a>
+                        {order.shippedAt && <span style={{ color: "#6b7280", marginLeft: 8 }}>· Shipped {new Date(order.shippedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+                      </div>
+                    );
+                  })()}
 
                   {/* Actions */}
                   {order.status === "pending" && (
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      <select
+                        value={carrierInputs[order.id] || "UPS"}
+                        onChange={e => setCarrierInputs(c => ({ ...c, [order.id]: e.target.value }))}
+                        style={{ ...s.select, fontSize: 13 }}
+                      >
+                        <option value="UPS">UPS</option>
+                        <option value="USPS">USPS</option>
+                        <option value="FedEx">FedEx</option>
+                      </select>
                       <input
-                        style={{ ...s.input, maxWidth: 240, flex: 1 }}
+                        style={{ ...s.input, maxWidth: 220, flex: 1 }}
                         type="text"
-                        placeholder="1Z999AA10123456784"
+                        placeholder="Tracking number"
                         value={trackingInputs[order.id] || ""}
                         onChange={e => setTrackingInputs(t => ({ ...t, [order.id]: e.target.value.replace(/\s/g, "") }))}
                       />
                       <button
-                        onClick={() => doAction(order.id, "ship", trackingInputs[order.id])}
+                        onClick={() => doAction(order.id, "ship", trackingInputs[order.id], carrierInputs[order.id] || "UPS")}
                         disabled={isActing || !trackingInputs[order.id]}
                         style={{ ...s.primaryBtn, opacity: isActing || !trackingInputs[order.id] ? 0.5 : 1, whiteSpace: "nowrap" }}
                       >

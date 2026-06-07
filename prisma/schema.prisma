@@ -112,6 +112,7 @@ model Order {
   totalFormatted  String
   status          String    @default("pending")
   trackingNumber  String?
+  carrier         String?   @default("UPS")
   shippedAt       DateTime?
   completedAt     DateTime?
   createdAt       DateTime  @default(now())

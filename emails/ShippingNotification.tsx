@@ -2,26 +2,35 @@ import { Text, Hr } from "@react-email/components";
 import * as React from "react";
 import { EmailLayout, styles } from "./layout";
 
+const TRACKING_URLS: Record<string, string> = {
+  UPS:   "https://www.ups.com/track?tracknum=",
+  USPS:  "https://tools.usps.com/go/TrackConfirmAction?tLabels=",
+  FedEx: "https://www.fedex.com/fedextrack/?trknbr=",
+};
+
 export function ShippingNotification({
   firstName = "there",
   trackingNumber = "",
+  carrier = "UPS",
 }: {
   firstName?: string;
   trackingNumber?: string;
+  carrier?: string;
 }) {
-  const trackingUrl = `https://www.ups.com/track?tracknum=${trackingNumber}`;
+  const baseUrl = TRACKING_URLS[carrier] ?? TRACKING_URLS["UPS"];
+  const trackingUrl = `${baseUrl}${trackingNumber}`;
 
   return (
     <EmailLayout preview={`Your FinalPing order has shipped — tracking: ${trackingNumber}`}>
 
       <Text style={styles.h1}>Your order is on its way 📦</Text>
       <Text style={styles.p}>
-        Hey {firstName}, your ground station hardware has shipped via UPS. Here&apos;s your tracking info.
+        Hey {firstName}, your ground station hardware has shipped via {carrier}. Here&apos;s your tracking info.
       </Text>
 
       {/* Tracking card */}
       <div style={{ ...styles.card, textAlign: "center" as const, padding: "24px 18px" }}>
-        <span style={styles.label}>UPS Tracking Number</span>
+        <span style={styles.label}>{carrier} Tracking Number</span>
         <Text style={{ ...styles.mono, margin: "4px 0 20px", display: "block" }}>{trackingNumber}</Text>
         <a href={trackingUrl} style={styles.btn}>Track Package →</a>
       </div>

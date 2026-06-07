@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const { action, trackingNumber } = await req.json();
+  const { action, trackingNumber, carrier } = await req.json();
   const order = await prisma.order.findUnique({ where: { id } });
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
@@ -26,12 +26,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const firstName = (order.customerName || order.customerEmail).split(" ")[0];
+    const carrierName = carrier || "UPS";
 
     await resend.emails.send({
       from: "FinalPing <noreply@finalpingapp.com>",
       to: order.customerEmail,
       subject: "Your FinalPing order has shipped!",
-      react: React.createElement(ShippingNotification, { firstName, trackingNumber: trackingNumber.trim() }),
+      react: React.createElement(ShippingNotification, { firstName, trackingNumber: trackingNumber.trim(), carrier: carrierName }),
     });
 
     const updated = await prisma.order.update({
@@ -39,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       data: {
         status: "shipped",
         trackingNumber: trackingNumber.trim(),
+        carrier: carrierName,
         shippedAt: new Date(),
       },
     });

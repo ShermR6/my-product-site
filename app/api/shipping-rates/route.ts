@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const FROM_ZIP = "76247";
 
@@ -103,11 +105,12 @@ export async function POST(req: NextRequest) {
         };
       });
 
-    // Dev-only free shipping option — never shown in production
-    if (process.env.FREE_SHIPPING_TEST === "true") {
+    // Admin-only free shipping for test purchases
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email === process.env.ADMIN_EMAIL) {
       rates.unshift({
-        carrier: "USPS",
-        service: "Free Shipping (Dev Only)",
+        carrier: "Test",
+        service: "Free Shipping (Admin Test)",
         token: "free_test",
         amount: 0,
         days: null,
