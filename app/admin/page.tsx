@@ -109,6 +109,7 @@ const NAV_ITEMS = [
   { id: "create", label: "Create License", icon: "➕" },
   { id: "waitlist", label: "Waitlist", icon: "📋" },
   { id: "orders", label: "Orders", icon: "📦" },
+  { id: "ground-stations", label: "Ground Stations", icon: "📡" },
 ];
 
 // ── Overview Tab ─────────────────────────────────────────────────────────────
@@ -854,6 +855,71 @@ export default function AdminPage() {
     );
   }
 
+  // ── Ground Stations Tab ──────────────────────────────────────────────────────
+  function GroundStationsTab() {
+    const [devices, setDevices] = React.useState<any[]>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+      fetch("/api/admin/ground-devices")
+        .then(r => r.json())
+        .then(d => { if (d.devices) setDevices(d.devices); })
+        .finally(() => setLoading(false));
+    }, []);
+
+    const fmtLastSeen = (iso: string | null) => {
+      if (!iso) return "Never";
+      const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    };
+
+    return (
+      <div>
+        <div style={s.tabHeader}>
+          <h2 style={s.tabTitle}>Ground Stations</h2>
+          <p style={s.tabSub}>{devices.length} device{devices.length !== 1 ? "s" : ""} registered</p>
+        </div>
+        {loading ? (
+          <div style={{ color: "#6b7280", fontSize: 13 }}>Loading devices...</div>
+        ) : devices.length === 0 ? (
+          <div style={{ color: "#6b7280", fontSize: 13, padding: "40px 0", textAlign: "center" }}>No ground station devices registered yet.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {devices.map((d, i) => (
+              <div key={i} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#f9fafb", marginBottom: 2 }}>{d.email}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>
+                    Key: {d.gs_device_key ? `${d.gs_device_key.slice(0, 8)}...${d.gs_device_key.slice(-8)}` : "Not assigned"}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ fontSize: 12, color: "#6b7280", textAlign: "right" }}>
+                    <div>Last seen</div>
+                    <div style={{ color: "#d1d5db", fontWeight: 600 }}>{fmtLastSeen(d.last_seen)}</div>
+                  </div>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 6, padding: "5px 12px",
+                    borderRadius: 999, fontSize: 12, fontWeight: 700,
+                    background: d.online ? "rgba(34,211,163,0.1)" : "rgba(107,114,128,0.1)",
+                    border: `1px solid ${d.online ? "rgba(34,211,163,0.3)" : "rgba(107,114,128,0.3)"}`,
+                    color: d.online ? "#22d3a3" : "#6b7280",
+                  }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: d.online ? "#22d3a3" : "#6b7280" }} />
+                    {d.online ? "Online" : "Offline"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!stats) {
     return <div style={{ padding: 40, color: "#6b7280", fontSize: 14 }}>Loading admin panel...</div>;
   }
@@ -892,6 +958,7 @@ export default function AdminPage() {
         {activeTab === "create" && <CreateLicenseTab />}
         {activeTab === "waitlist" && <WaitlistTab />}
         {activeTab === "orders" && <OrdersTab />}
+        {activeTab === "ground-stations" && <GroundStationsTab />}
       </div>
     </div>
   );
