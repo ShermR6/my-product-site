@@ -113,26 +113,64 @@ const NAV_ITEMS = [
 
 // ── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab({ stats }: { stats: Stats }) {
-  const cards = [
+  const [revenue, setRevenue] = React.useState<any>(null);
+  const [revenueLoading, setRevenueLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/admin/revenue")
+      .then(r => r.json())
+      .then(d => setRevenue(d))
+      .finally(() => setRevenueLoading(false));
+  }, []);
+
+  const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const userCards = [
     { label: "Total Users", value: stats.totalUsers },
     { label: "Active Licenses", value: stats.activeLicenses },
     { label: "Signups (7d)", value: stats.recentSignups },
     { label: "New Licenses (7d)", value: stats.recentLicenses },
   ];
+
+  const revenueCards = revenue ? [
+    { label: "MRR", value: fmt(revenue.mrr), sub: "Monthly recurring revenue" },
+    { label: "Revenue (12mo)", value: fmt(revenue.totalRevenue), sub: "All successful charges" },
+    { label: "This Month", value: fmt(revenue.revenueThisMonth), sub: "Charges this calendar month" },
+    { label: "Hardware (12mo)", value: fmt(revenue.hardwareRevenue), sub: "One-time kit sales" },
+    { label: "Active Subscribers", value: revenue.activeSubscribers, sub: "Paying subscriptions" },
+    { label: "New Subs (mo)", value: revenue.newThisMonth, sub: `Churn: ${revenue.churnThisMonth}` },
+  ] : [];
+
   return (
     <div>
       <div style={s.tabHeader}>
         <h2 style={s.tabTitle}>Overview</h2>
         <p style={s.tabSub}>Platform-wide stats</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16 }}>
-        {cards.map((c) => (
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+        {userCards.map((c) => (
           <div key={c.label} style={s.statCard}>
             <div style={s.statValue}>{c.value}</div>
             <div style={s.statLabel}>{c.label}</div>
           </div>
         ))}
       </div>
+
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Revenue</div>
+      {revenueLoading ? (
+        <div style={{ color: "#6b7280", fontSize: 13 }}>Loading revenue data...</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+          {revenueCards.map((c) => (
+            <div key={c.label} style={s.statCard}>
+              <div style={{ ...s.statValue, color: typeof c.value === "string" ? "#f5b400" : "#f9fafb" }}>{c.value}</div>
+              <div style={s.statLabel}>{c.label}</div>
+              {c.sub && <div style={{ fontSize: 11, color: "#4b5563", marginTop: 4 }}>{c.sub}</div>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
