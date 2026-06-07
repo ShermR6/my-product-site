@@ -174,6 +174,19 @@ export async function POST(req: NextRequest) {
             stripeSession: session.id,
           }),
         }),
+        prisma.order.upsert({
+          where: { stripeSessionId: session.id },
+          create: {
+            stripeSessionId: session.id,
+            customerEmail: email,
+            customerName: shippingName,
+            shippingAddress: addressLine,
+            items,
+            totalFormatted,
+            status: "pending",
+          },
+          update: {},
+        }),
       ]);
 
       console.log(`Hardware order received from ${email}`);

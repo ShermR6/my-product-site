@@ -549,70 +549,186 @@ export default function AdminPage() {
 
   // ── Orders Tab ──────────────────────────────────────────────────────────────
   function OrdersTab() {
-    const [email, setEmail] = React.useState("");
-    const [trackingNumber, setTrackingNumber] = React.useState("");
-    const [customerName, setCustomerName] = React.useState("");
-    const [loading, setLoading] = React.useState(false);
-    const [result, setResult] = React.useState<{ ok: boolean; msg: string } | null>(null);
+    const [orders, setOrders] = React.useState<any[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [trackingInputs, setTrackingInputs] = React.useState<Record<string, string>>({});
+    const [actionLoading, setActionLoading] = React.useState<string | null>(null);
+    const [messages, setMessages] = React.useState<Record<string, { ok: boolean; msg: string }>>({});
+    const [filter, setFilter] = React.useState<"all" | "pending" | "shipped" | "completed">("all");
 
-    const handleSend = async () => {
-      if (!email || !trackingNumber) return;
-      setLoading(true);
-      setResult(null);
+    const fetchOrders = React.useCallback(async () => {
+      const res = await fetch("/api/admin/orders");
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data.orders);
+      }
+      setLoading(false);
+    }, []);
+
+    React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+    const doAction = async (id: string, action: string, trackingNumber?: string) => {
+      setActionLoading(id + action);
+      setMessages(m => ({ ...m, [id]: { ok: false, msg: "" } }));
       try {
-        const res = await fetch("/api/admin/ship-order", {
-          method: "POST",
+        const res = await fetch(`/api/admin/orders/${id}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, trackingNumber, customerName }),
+          body: JSON.stringify({ action, trackingNumber }),
         });
+        const data = await res.json();
         if (res.ok) {
-          setResult({ ok: true, msg: `Shipping email sent to ${email}` });
-          setEmail(""); setTrackingNumber(""); setCustomerName("");
+          setOrders(prev => prev.map(o => o.id === id ? data.order : o));
+          if (action === "ship") {
+            setMessages(m => ({ ...m, [id]: { ok: true, msg: "Tracking email sent!" } }));
+            setTrackingInputs(t => ({ ...t, [id]: "" }));
+          }
         } else {
-          setResult({ ok: false, msg: "Failed to send email" });
+          setMessages(m => ({ ...m, [id]: { ok: false, msg: data.error || "Failed" } }));
         }
       } catch {
-        setResult({ ok: false, msg: "Network error" });
+        setMessages(m => ({ ...m, [id]: { ok: false, msg: "Network error" } }));
       } finally {
-        setLoading(false);
+        setActionLoading(null);
       }
     };
+
+    const statusColor: Record<string, string> = {
+      pending: "#f59e0b",
+      shipped: "#0ea5e9",
+      completed: "#22d3a3",
+    };
+
+    const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+    const counts = { all: orders.length, pending: orders.filter(o => o.status === "pending").length, shipped: orders.filter(o => o.status === "shipped").length, completed: orders.filter(o => o.status === "completed").length };
 
     return (
       <div>
         <div style={s.tabHeader}>
           <h2 style={s.tabTitle}>Orders</h2>
-          <p style={s.tabSub}>Send shipping notifications to customers</p>
+          <p style={s.tabSub}>Manage hardware orders and send tracking numbers</p>
         </div>
-        <div style={{ ...s.card, maxWidth: 480 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#f9fafb", marginBottom: 20 }}>Send Tracking Email</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label style={s.label}>Customer Email *</label>
-              <input style={s.input} type="email" placeholder="customer@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <label style={s.label}>Customer Name (optional)</label>
-              <input style={s.input} type="text" placeholder="John Smith" value={customerName} onChange={e => setCustomerName(e.target.value)} />
-            </div>
-            <div>
-              <label style={s.label}>UPS Tracking Number *</label>
-              <input style={s.input} type="text" placeholder="1Z999AA10123456784" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value.replace(/\s/g, ""))} />
-            </div>
-            <button
-              onClick={handleSend}
-              disabled={loading || !email || !trackingNumber}
-              style={{ ...s.primaryBtn, opacity: loading || !email || !trackingNumber ? 0.5 : 1, marginTop: 4 }}
-            >
-              {loading ? "Sending..." : "Send Shipping Email"}
+
+        {/* Filter tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          {(["all", "pending", "shipped", "completed"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{
+              padding: "6px 14px", borderRadius: 8, border: "1px solid",
+              fontSize: 12, fontWeight: 600, cursor: "pointer",
+              background: filter === f ? "#0ea5e920" : "transparent",
+              borderColor: filter === f ? "#0ea5e9" : "#1f2937",
+              color: filter === f ? "#0ea5e9" : "#6b7280",
+            }}>
+              {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
             </button>
-            {result && (
-              <div style={{ fontSize: 12, fontWeight: 600, color: result.ok ? "#22d3a3" : "#f87171" }}>
-                {result.ok ? "✓" : "✕"} {result.msg}
-              </div>
-            )}
-          </div>
+          ))}
         </div>
+
+        {loading ? (
+          <div style={{ color: "#6b7280", fontSize: 13 }}>Loading orders...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ color: "#6b7280", fontSize: 13, padding: "40px 0", textAlign: "center" }}>
+            No {filter === "all" ? "" : filter} orders yet.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {filtered.map(order => {
+              const items: any[] = Array.isArray(order.items) ? order.items : [];
+              const msg = messages[order.id];
+              const isActing = actionLoading?.startsWith(order.id);
+              return (
+                <div key={order.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 12, padding: "20px 24px" }}>
+                  {/* Header row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#f9fafb" }}>{order.customerName || order.customerEmail}</div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{order.customerEmail}</div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{order.shippingAddress}</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: `${statusColor[order.status]}20`, color: statusColor[order.status], border: `1px solid ${statusColor[order.status]}50` }}>
+                        {order.status.toUpperCase()}
+                      </span>
+                      <div style={{ fontSize: 12, color: "#6b7280" }}>{new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 8, padding: "10px 14px", marginBottom: 14 }}>
+                    {items.map((item: any, i: number) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#d1d5db", padding: "3px 0", borderBottom: i < items.length - 1 ? "1px solid #1f293740" : "none" }}>
+                        <span>{item.quantity > 1 ? `${item.quantity}× ` : ""}{item.description}</span>
+                        <span>{item.amount}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, color: "#f9fafb", marginTop: 8, paddingTop: 8, borderTop: "1px solid #1f2937" }}>
+                      <span>Total</span><span>{order.totalFormatted}</span>
+                    </div>
+                  </div>
+
+                  {/* Tracking number (if shipped) */}
+                  {order.trackingNumber && (
+                    <div style={{ fontSize: 12, color: "#0ea5e9", marginBottom: 12 }}>
+                      📦 UPS: <a href={`https://www.ups.com/track?tracknum=${order.trackingNumber}`} target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>{order.trackingNumber}</a>
+                      {order.shippedAt && <span style={{ color: "#6b7280", marginLeft: 8 }}>· Shipped {new Date(order.shippedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {order.status === "pending" && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      <input
+                        style={{ ...s.input, maxWidth: 240, flex: 1 }}
+                        type="text"
+                        placeholder="1Z999AA10123456784"
+                        value={trackingInputs[order.id] || ""}
+                        onChange={e => setTrackingInputs(t => ({ ...t, [order.id]: e.target.value.replace(/\s/g, "") }))}
+                      />
+                      <button
+                        onClick={() => doAction(order.id, "ship", trackingInputs[order.id])}
+                        disabled={isActing || !trackingInputs[order.id]}
+                        style={{ ...s.primaryBtn, opacity: isActing || !trackingInputs[order.id] ? 0.5 : 1, whiteSpace: "nowrap" }}
+                      >
+                        {isActing ? "Sending..." : "Ship & Notify →"}
+                      </button>
+                    </div>
+                  )}
+
+                  {order.status === "shipped" && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <button
+                        onClick={() => doAction(order.id, "complete")}
+                        disabled={!!isActing}
+                        style={{ padding: "7px 16px", borderRadius: 8, background: "#22d3a320", color: "#22d3a3", border: "1px solid #22d3a350", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        ✓ Mark Completed
+                      </button>
+                      <button
+                        onClick={() => doAction(order.id, "pending")}
+                        disabled={!!isActing}
+                        style={{ padding: "7px 16px", borderRadius: 8, background: "transparent", color: "#6b7280", border: "1px solid #1f2937", fontSize: 12, cursor: "pointer" }}
+                      >
+                        ↩ Revert to Pending
+                      </button>
+                    </div>
+                  )}
+
+                  {order.status === "completed" && (
+                    <div style={{ fontSize: 12, color: "#22d3a3" }}>
+                      ✓ Completed {order.completedAt ? new Date(order.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                    </div>
+                  )}
+
+                  {msg?.msg && (
+                    <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: msg.ok ? "#22d3a3" : "#f87171" }}>
+                      {msg.ok ? "✓" : "✕"} {msg.msg}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }

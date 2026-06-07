@@ -102,6 +102,21 @@ model WaitlistEntry {
   createdAt DateTime @default(now())
 }
 
+model Order {
+  id              String    @id @default(cuid())
+  stripeSessionId String    @unique
+  customerEmail   String
+  customerName    String?
+  shippingAddress String
+  items           Json
+  totalFormatted  String
+  status          String    @default("pending")
+  trackingNumber  String?
+  shippedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+}
+
 model License {
   id              String    @id @default(cuid())
   purchaseEmail   String
