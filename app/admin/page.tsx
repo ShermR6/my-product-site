@@ -729,6 +729,75 @@ export default function AdminPage() {
             })}
           </div>
         )}
+
+        {/* Manual send fallback */}
+        <div style={{ marginTop: 32, borderTop: "1px solid #1f2937", paddingTop: 28 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb", marginBottom: 4 }}>Send Tracking Email Manually</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 16 }}>For past orders or any order not listed above.</div>
+          <ManualShipForm />
+        </div>
+      </div>
+    );
+  }
+
+  function ManualShipForm() {
+    const [email, setEmail] = React.useState("");
+    const [trackingNumber, setTrackingNumber] = React.useState("");
+    const [customerName, setCustomerName] = React.useState("");
+    const [loading, setLoading] = React.useState(false);
+    const [result, setResult] = React.useState<{ ok: boolean; msg: string } | null>(null);
+
+    const handleSend = async () => {
+      if (!email || !trackingNumber) return;
+      setLoading(true);
+      setResult(null);
+      try {
+        const res = await fetch("/api/admin/ship-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, trackingNumber, customerName }),
+        });
+        if (res.ok) {
+          setResult({ ok: true, msg: `Shipping email sent to ${email}` });
+          setEmail(""); setTrackingNumber(""); setCustomerName("");
+        } else {
+          setResult({ ok: false, msg: "Failed to send email" });
+        }
+      } catch {
+        setResult({ ok: false, msg: "Network error" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div style={{ ...s.card, maxWidth: 480 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={s.label}>Customer Email *</label>
+            <input style={s.input} type="email" placeholder="customer@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+          </div>
+          <div>
+            <label style={s.label}>Customer Name (optional)</label>
+            <input style={s.input} type="text" placeholder="John Smith" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+          </div>
+          <div>
+            <label style={s.label}>UPS Tracking Number *</label>
+            <input style={s.input} type="text" placeholder="1Z999AA10123456784" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value.replace(/\s/g, ""))} />
+          </div>
+          <button
+            onClick={handleSend}
+            disabled={loading || !email || !trackingNumber}
+            style={{ ...s.primaryBtn, opacity: loading || !email || !trackingNumber ? 0.5 : 1, marginTop: 4 }}
+          >
+            {loading ? "Sending..." : "Send Shipping Email"}
+          </button>
+          {result && (
+            <div style={{ fontSize: 12, fontWeight: 600, color: result.ok ? "#22d3a3" : "#f87171" }}>
+              {result.ok ? "✓" : "✕"} {result.msg}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
