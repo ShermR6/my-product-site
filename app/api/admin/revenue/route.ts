@@ -72,7 +72,7 @@ export async function GET() {
     totalRevenue += amount;
     if (charge.created >= startOfMonthTs) revenueThisMonth += amount;
     // Hardware orders are one-time (no invoice subscription link)
-    if (!charge.invoice) hardwareRevenue += amount;
+    if (!(charge as any).invoice) hardwareRevenue += amount;
   }
 
   return NextResponse.json({
