@@ -9,19 +9,19 @@ export function ShippingNotification({
   firstName?: string;
   trackingNumber?: string;
 }) {
-  const trackingUrl = `https://tools.usps.com/go/TrackConfirmAction?tLabels=${trackingNumber}`;
+  const trackingUrl = `https://www.ups.com/track?tracknum=${trackingNumber}`;
 
   return (
     <EmailLayout preview={`Your FinalPing order has shipped — tracking: ${trackingNumber}`}>
 
       <Text style={styles.h1}>Your order is on its way 📦</Text>
       <Text style={styles.p}>
-        Hey {firstName}, your ground station hardware has shipped via USPS. Here&apos;s your tracking info.
+        Hey {firstName}, your ground station hardware has shipped via UPS. Here&apos;s your tracking info.
       </Text>
 
       {/* Tracking card */}
       <div style={{ ...styles.card, textAlign: "center" as const, padding: "24px 18px" }}>
-        <span style={styles.label}>USPS Tracking Number</span>
+        <span style={styles.label}>UPS Tracking Number</span>
         <Text style={{ ...styles.mono, margin: "4px 0 20px", display: "block" }}>{trackingNumber}</Text>
         <a href={trackingUrl} style={styles.btn}>Track Package →</a>
       </div>

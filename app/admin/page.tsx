@@ -596,8 +596,8 @@ export default function AdminPage() {
               <input style={s.input} type="text" placeholder="John Smith" value={customerName} onChange={e => setCustomerName(e.target.value)} />
             </div>
             <div>
-              <label style={s.label}>USPS Tracking Number *</label>
-              <input style={s.input} type="text" placeholder="9400111899223456789012" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value.replace(/\s/g, ""))} />
+              <label style={s.label}>UPS Tracking Number *</label>
+              <input style={s.input} type="text" placeholder="1Z999AA10123456784" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value.replace(/\s/g, ""))} />
             </div>
             <button
               onClick={handleSend}
