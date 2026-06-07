@@ -455,9 +455,8 @@ function CartSidebar({
   );
 }
 
-function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, name: string, price: number, feedAdsblol: boolean) => void }) {
+function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, name: string, price: number) => void }) {
   const [built, setBuilt] = useState(false);
-  const [feedAdsblol, setFeedAdsblol] = useState(false);
   const price = built ? kit.builtPrice : kit.basePrice;
 
   return (
@@ -542,43 +541,6 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
             </div>
           </div>
         </div>
-        {/* adsb.lol opt-in */}
-        <div
-          onClick={() => setFeedAdsblol(v => !v)}
-          style={{
-            display: "flex", alignItems: "flex-start", gap: 10,
-            padding: "12px", borderRadius: 10, marginBottom: 16, cursor: "pointer",
-            border: feedAdsblol ? "1px solid rgba(34,211,163,0.5)" : "1px solid var(--border)",
-            background: feedAdsblol ? "rgba(34,211,163,0.06)" : "rgba(255,255,255,0.02)",
-            transition: "all 0.15s",
-          }}
-        >
-          <div style={{
-            width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 1,
-            border: feedAdsblol ? "2px solid #22d3a3" : "2px solid rgba(255,255,255,0.25)",
-            background: feedAdsblol ? "#22d3a3" : "transparent",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s",
-          }}>
-            {feedAdsblol && (
-              <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
-              Contribute to adsb.lol network
-              <span style={{
-                marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 999,
-                background: "rgba(34,211,163,0.12)", color: "#22d3a3", border: "1px solid rgba(34,211,163,0.3)",
-              }}>Free</span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.5 }}>
-              Anonymously feeds ADS-B data to improve coverage for all users nearby.
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Add to Cart */}
@@ -591,8 +553,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           onClick={() => onAdd(
             built ? kit.builtTier : kit.tier,
             built ? `${kit.name} (Pre-built)` : kit.name,
-            price,
-            feedAdsblol
+            price
           )}
           style={{
             display: "block", width: "100%", padding: "12px", borderRadius: 10, border: "none",
@@ -657,7 +618,7 @@ export default function GroundStationKitPage() {
   const [cartOpen, setCartOpen] = useState(false);
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
 
-  const addToCart = (tier: string, name: string, price: number, feedAdsblol?: boolean) => {
+  const addToCart = (tier: string, name: string, price: number) => {
     setCart(prev => {
       const existing = prev.find(i => i.tier === tier);
       if (existing) return prev.map(i => i.tier === tier ? { ...i, quantity: i.quantity + 1 } : i);
