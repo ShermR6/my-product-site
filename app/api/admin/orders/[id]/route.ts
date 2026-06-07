@@ -9,14 +9,15 @@ import { ShippingNotification } from "@/emails/ShippingNotification";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (session?.user?.email !== ADMIN_EMAIL) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
   const { action, trackingNumber } = await req.json();
-  const order = await prisma.order.findUnique({ where: { id: params.id } });
+  const order = await prisma.order.findUnique({ where: { id } });
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
   if (action === "ship") {
@@ -34,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
 
     const updated = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: "shipped",
         trackingNumber: trackingNumber.trim(),
@@ -47,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (action === "complete") {
     const updated = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: "completed", completedAt: new Date() },
     });
     return NextResponse.json({ order: updated });
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (action === "pending") {
     const updated = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: "pending", trackingNumber: null, shippedAt: null, completedAt: null },
     });
     return NextResponse.json({ order: updated });
