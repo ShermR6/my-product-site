@@ -15,9 +15,24 @@ type Entry = {
 
 const entries: Entry[] = [
   {
-    version: "1.0.9",
+    version: "1.1.0",
     date: "June 2026",
     tag: "latest",
+    changes: [
+      { type: "new", text: "Setup wizard installer — choose your install directory and opt in to a desktop shortcut" },
+      { type: "new", text: "Ground Station device key system — permanent non-expiring key replaces JWT, claimed automatically on first boot" },
+      { type: "new", text: "Distance alerts now include aircraft speed in knots" },
+      { type: "new", text: "Landing alerts now include runway number derived from touchdown heading" },
+      { type: "fix", text: "Takeoff notifications no longer show ETA — now shows altitude and speed" },
+      { type: "fix", text: "Distance alerts now fire for aircraft that start inside the outer alert boundary" },
+      { type: "fix", text: "Fixed duplicate Start Menu entries (FinalPing and FinalPing.exe)" },
+      { type: "improved", text: "Live map: aircraft labels are now permanent, stale positions are visually indicated" },
+      { type: "improved", text: "SDR coverage polygon tooltip clarified — shows best historical range, not live coverage" },
+    ],
+  },
+  {
+    version: "1.0.9",
+    date: "June 2026",
     changes: [
       { type: "new", text: "Live Map trail now records the full flight path in the background — switch to any tab and come back to see the complete route from takeoff" },
       { type: "new", text: "App now checks for updates hourly in addition to on launch" },
