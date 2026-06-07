@@ -15,8 +15,7 @@ export async function GET() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfMonthTs = Math.floor(startOfMonth.getTime() / 1000);
 
-  // Fetch all active subscriptions for MRR
-  let mrr = 0;
+  // Fetch all active subscriptions
   let activeSubscribers = 0;
   let newThisMonth = 0;
   let hasMore = true;
@@ -26,20 +25,12 @@ export async function GET() {
     const subs = await stripe.subscriptions.list({
       status: "active",
       limit: 100,
-      expand: ["data.items.data.price"],
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     });
 
     for (const sub of subs.data) {
       activeSubscribers++;
       if (sub.created >= startOfMonthTs) newThisMonth++;
-      for (const item of sub.items.data) {
-        const price = item.price;
-        if (!price.unit_amount) continue;
-        const amount = price.unit_amount / 100;
-        if (price.recurring?.interval === "year") mrr += amount / 12;
-        else mrr += amount;
-      }
     }
 
     hasMore = subs.has_more;
@@ -76,7 +67,6 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    mrr: Math.round(mrr * 100) / 100,
     activeSubscribers,
     newThisMonth,
     churnThisMonth,

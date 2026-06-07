@@ -133,7 +133,6 @@ function OverviewTab({ stats }: { stats: Stats }) {
   ];
 
   const revenueCards = revenue ? [
-    { label: "MRR", value: fmt(revenue.mrr), sub: "Monthly recurring revenue" },
     { label: "Revenue (12mo)", value: fmt(revenue.totalRevenue), sub: "All successful charges" },
     { label: "This Month", value: fmt(revenue.revenueThisMonth), sub: "Charges this calendar month" },
     { label: "Hardware (12mo)", value: fmt(revenue.hardwareRevenue), sub: "One-time kit sales" },
