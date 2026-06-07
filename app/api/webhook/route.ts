@@ -13,6 +13,7 @@ import { GroundStationEnabled } from "@/emails/GroundStationEnabled";
 import { SubscriptionRenewed } from "@/emails/SubscriptionRenewed";
 import { SubscriptionCancelled } from "@/emails/SubscriptionCancelled";
 import { TrialEndingSoon } from "@/emails/TrialEndingSoon";
+import { PaymentFailed } from "@/emails/PaymentFailed";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 const prisma = new PrismaClient();
@@ -333,6 +334,36 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       console.error("Error handling trial_will_end:", err);
+    }
+  }
+
+  // ── invoice.payment_failed — notify customer to update card ──────────────
+  if (event.type === "invoice.payment_failed") {
+    try {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerEmail = typeof invoice.customer_email === "string" ? invoice.customer_email : null;
+      if (!customerEmail) return NextResponse.json({ received: true });
+
+      const email = customerEmail.toLowerCase().trim();
+      const attemptCount = invoice.attempt_count ?? 1;
+
+      const license = await prisma.license.findFirst({
+        where: { purchaseEmail: email, status: "active" },
+        orderBy: { activatedAt: "desc" },
+      });
+
+      const tierLabel = license?.tier === "pro" ? "Pro" : license?.tier === "premium" ? "Premium" : "Starter";
+
+      await resend.emails.send({
+        from: "FinalPing <noreply@finalpingapp.com>",
+        to: email,
+        subject: "Action required: your FinalPing payment failed",
+        react: React.createElement(PaymentFailed, { tierLabel, attemptCount }),
+      });
+
+      console.log(`Payment failed email sent to ${email} (attempt ${attemptCount})`);
+    } catch (err) {
+      console.error("Error handling invoice.payment_failed:", err);
     }
   }
 
