@@ -9,6 +9,7 @@ type Step = "credentials" | "method-select" | "enter-code";
 export default function LoginForm() {
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -165,7 +166,7 @@ export default function LoginForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, name: name.trim() || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -279,10 +280,19 @@ export default function LoginForm() {
 
       {step === "credentials" && (
         <form onSubmit={tab === "signin" ? handleSignIn : handleSignUp}>
+          {tab === "signup" && (
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Full Name</label>
+              <input style={inputStyle} type="text" placeholder="Your name" value={name}
+                onChange={e => setName(e.target.value)} autoFocus
+                onFocus={e => e.target.style.borderColor = "#3b82f6"}
+                onBlur={e => e.target.style.borderColor = "#374151"} />
+            </div>
+          )}
           <div style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Email</label>
             <input style={inputStyle} type="email" placeholder="you@example.com" value={email}
-              onChange={e => setEmail(e.target.value)} required autoFocus
+              onChange={e => setEmail(e.target.value)} required autoFocus={tab === "signin"}
               onFocus={e => e.target.style.borderColor = "#3b82f6"}
               onBlur={e => e.target.style.borderColor = "#374151"} />
           </div>

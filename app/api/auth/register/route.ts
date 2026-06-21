@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, name } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       data: {
         email,
         password: hashedPassword,
+        name: name?.trim() || null,
       },
     });
 

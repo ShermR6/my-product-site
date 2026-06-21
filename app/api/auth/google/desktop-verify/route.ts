@@ -34,5 +34,5 @@ export async function POST(req: NextRequest) {
     data: { desktopOAuthToken: null, desktopOAuthExpiry: null },
   });
 
-  return NextResponse.json({ valid: true, email: user.email });
+  return NextResponse.json({ valid: true, email: user.email, name: user.name });
 }
