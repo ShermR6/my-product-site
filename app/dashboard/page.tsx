@@ -184,31 +184,16 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       .catch(() => {});
   }, []);
 
-  const startEditProfile = () => {
-    setProfileName(displayName);
-    setProfileEmail(displayEmail);
-    setProfileMsg(null);
-    setProfileCode("");
-    setProfileMethod(null);
-    setProfileMethods([]);
-    setProfileStep("editing");
-  };
-
-  const resetProfile = () => {
-    setProfileStep("idle");
-    setProfileMsg(null);
-    setProfileCode("");
-    setProfileMethod(null);
-  };
-
-  const submitProfileChanges = async (method?: "email" | "sms" | "totp") => {
+  // Step 1: click Edit Profile → immediately send 2FA code
+  const startEditProfile = async (method?: "email" | "sms" | "totp") => {
     setProfileLoading(true);
     setProfileMsg(null);
+    setProfileCode("");
     try {
       const r = await fetch("/api/auth/change-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: profileName, email: profileEmail, method }),
+        body: JSON.stringify({ method }),
       });
       const d = await r.json();
       if (!r.ok) { setProfileMsg({ text: d.error || "Failed to send code.", type: "error" }); return; }
@@ -229,7 +214,15 @@ function AccountTab({ email, session }: { email: string; session: any }) {
     }
   };
 
-  const confirmProfileChange = async () => {
+  const resetProfile = () => {
+    setProfileStep("idle");
+    setProfileMsg(null);
+    setProfileCode("");
+    setProfileMethod(null);
+  };
+
+  // Step 2: verify the code → unlock edit form
+  const confirmProfileVerify = async () => {
     if (profileCode.length < 6) { setProfileMsg({ text: "Enter the 6-digit code.", type: "error" }); return; }
     setProfileLoading(true);
     setProfileMsg(null);
@@ -241,8 +234,33 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       });
       const d = await r.json();
       if (!r.ok) { setProfileMsg({ text: d.error || "Invalid code.", type: "error" }); return; }
+      // Unlock: show the edit form pre-filled with current values
+      setProfileName(displayName);
+      setProfileEmail(displayEmail);
+      setProfileMsg(null);
+      setProfileStep("editing");
+    } catch {
+      setProfileMsg({ text: "Something went wrong.", type: "error" });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Step 3: save the edited values
+  const saveProfile = async () => {
+    setProfileLoading(true);
+    setProfileMsg(null);
+    try {
+      const r = await fetch("/api/auth/save-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: profileName, email: profileEmail }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setProfileMsg({ text: d.error || "Failed to save.", type: "error" }); return; }
       setDisplayName(d.newName ?? "");
       if (d.emailChanged) {
+        setDisplayEmail(profileEmail.trim().toLowerCase());
         setProfileStep("done");
       } else {
         setProfileStep("idle");
@@ -379,22 +397,76 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       {/* Buttons row */}
       <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" as const }}>
         {profileStep === "idle" && (
-          <button onClick={startEditProfile} style={styles.primaryBtn}
-            onMouseEnter={e => { e.currentTarget.style.background = "#0284c7"; }}
+          <button onClick={() => startEditProfile()} disabled={profileLoading} style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1 }}
+            onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
-            Edit Profile
+            {profileLoading ? "Sending code..." : "Edit Profile"}
           </button>
         )}
         <button onClick={() => signOut({ callbackUrl: "/" })} style={styles.dangerBtn}
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Sign Out</button>
       </div>
+      {profileStep === "idle" && profileMsg && <StatusMsg msg={profileMsg} />}
 
       {/* Edit Profile section */}
       {profileStep !== "idle" && (
         <div style={{ ...styles.card, marginTop: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Edit Profile</div>
 
+          {/* Step 1b: choose 2FA method */}
+          {profileStep === "choose-method" && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Verify your identity</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Choose how to confirm it's you before editing:</div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                {profileMethods.map(m => (
+                  <button key={m.id} onClick={() => startEditProfile(m.id)} disabled={profileLoading}
+                    style={{ ...styles.methodBtn, opacity: profileLoading ? 0.6 : 1 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                    {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={resetProfile} style={{ ...styles.ghostBtn, marginTop: 10 }}>Cancel</button>
+              <StatusMsg msg={profileMsg} />
+            </div>
+          )}
+
+          {/* Step 2: enter verification code */}
+          {(profileStep === "enter-code" || profileStep === "totp-code") && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+                {profileStep === "totp-code" ? "Enter code from your authenticator app" : "Enter verification code"}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>
+                {profileStep === "totp-code"
+                  ? "Open your authenticator app and enter the 6-digit code to unlock editing."
+                  : profileMethod === "email"
+                    ? `Code sent to ${displayEmail} — enter it to unlock editing.`
+                    : "Code sent to your phone — enter it to unlock editing."}
+              </div>
+              <CodeInput value={profileCode} onChange={setProfileCode} onSubmit={confirmProfileVerify} />
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
+                <button onClick={confirmProfileVerify} disabled={profileLoading}
+                  style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                  {profileLoading ? "Verifying..." : "Verify →"}
+                </button>
+                {profileStep !== "totp-code" && (
+                  <button onClick={resendProfileCode} disabled={resendingProfile} style={styles.ghostBtn}>
+                    {resendingProfile ? "Sending..." : "Resend"}
+                  </button>
+                )}
+                <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
+              </div>
+              <StatusMsg msg={profileMsg} />
+            </div>
+          )}
+
+          {/* Step 3: edit form (unlocked after 2FA) */}
           {profileStep === "editing" && (
             <div>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 12, marginBottom: 16 }}>
@@ -413,71 +485,16 @@ function AccountTab({ email, session }: { email: string; session: any }) {
                     onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>
-                {twoFA && activeMethods.length > 0
-                  ? "A verification code will be sent to confirm your changes."
-                  : "A confirmation code will be sent to your current email address."}
-              </div>
               <StatusMsg msg={profileMsg} />
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => submitProfileChanges()} disabled={profileLoading}
+                <button onClick={saveProfile} disabled={profileLoading}
                   style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
                   onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
-                  {profileLoading ? "Please wait..." : "Save Changes →"}
+                  {profileLoading ? "Saving..." : "Save Changes"}
                 </button>
                 <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
               </div>
-            </div>
-          )}
-
-          {profileStep === "choose-method" && (
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Verify your identity</div>
-              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Choose how to confirm your profile change:</div>
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
-                {profileMethods.map(m => (
-                  <button key={m.id} onClick={() => submitProfileChanges(m.id)} disabled={profileLoading}
-                    style={{ ...styles.methodBtn, opacity: profileLoading ? 0.6 : 1 }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
-                    {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
-                  </button>
-                ))}
-              </div>
-              <button onClick={resetProfile} style={{ ...styles.ghostBtn, marginTop: 10 }}>Cancel</button>
-              <StatusMsg msg={profileMsg} />
-            </div>
-          )}
-
-          {(profileStep === "enter-code" || profileStep === "totp-code") && (
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-                {profileStep === "totp-code" ? "Enter code from your authenticator app" : "Enter verification code"}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>
-                {profileStep === "totp-code"
-                  ? "Open your authenticator app and enter the 6-digit code."
-                  : profileMethod === "email"
-                    ? `Code sent to ${displayEmail}`
-                    : "Code sent to your phone"}
-              </div>
-              <CodeInput value={profileCode} onChange={setProfileCode} onSubmit={confirmProfileChange} />
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
-                <button onClick={confirmProfileChange} disabled={profileLoading}
-                  style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
-                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
-                  {profileLoading ? "Verifying..." : "Confirm Changes"}
-                </button>
-                {profileStep !== "totp-code" && (
-                  <button onClick={resendProfileCode} disabled={resendingProfile} style={styles.ghostBtn}>
-                    {resendingProfile ? "Sending..." : "Resend"}
-                  </button>
-                )}
-                <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
-              </div>
-              <StatusMsg msg={profileMsg} />
             </div>
           )}
 

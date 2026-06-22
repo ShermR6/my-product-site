@@ -1,5 +1,6 @@
 // app/api/auth/confirm-profile-change/route.ts
-// Verifies the 2FA code and applies the pending profile change (name and/or email).
+// Step 2: Verifies the 2FA code and sets an unlock token so the edit form can be shown.
+// Does NOT apply any changes — just authorizes the edit session for 10 minutes.
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -20,16 +21,13 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  if (!user.pendingProfileEmail || !user.pendingProfileExpiry) {
-    return NextResponse.json({ error: "No pending profile change. Please start over." }, { status: 400 });
+  if (!user.pendingProfileExpiry) {
+    return NextResponse.json({ error: "No pending verification. Please start over." }, { status: 400 });
   }
   if (new Date() > user.pendingProfileExpiry) {
     await prisma.user.update({
       where: { email: session.user.email },
-      data: {
-        pendingProfileName: null, pendingProfileEmail: null,
-        pendingProfileCode: null, pendingProfileExpiry: null, pendingProfileMethod: null,
-      },
+      data: { pendingProfileCode: null, pendingProfileExpiry: null, pendingProfileMethod: null },
     });
     return NextResponse.json({ error: "Code expired. Please start over." }, { status: 400 });
   }
@@ -57,25 +55,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const emailChanged = user.pendingProfileEmail !== session.user.email;
-
-  // If email is changing, verify it's still not taken (race condition guard)
-  if (emailChanged) {
-    const existing = await prisma.user.findUnique({ where: { email: user.pendingProfileEmail! } });
-    if (existing) {
-      return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
-    }
-  }
-
+  // Mark as unlocked for 10 minutes — client can now show the edit form
   await prisma.user.update({
     where: { email: session.user.email },
     data: {
-      name: user.pendingProfileName,
-      email: user.pendingProfileEmail!,
-      pendingProfileName: null, pendingProfileEmail: null,
-      pendingProfileCode: null, pendingProfileExpiry: null, pendingProfileMethod: null,
+      pendingProfileEmail: "__UNLOCKED__",
+      pendingProfileCode: null,
+      pendingProfileMethod: null,
+      pendingProfileExpiry: new Date(Date.now() + 10 * 60 * 1000),
     },
   });
 
-  return NextResponse.json({ success: true, emailChanged, newName: user.pendingProfileName });
+  return NextResponse.json({ success: true });
 }
