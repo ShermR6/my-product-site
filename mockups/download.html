@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinalPing — Download Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060a14; --surface: #0c1422; --card: #0f1928; --card-lit: #131f30;
+      --border: rgba(255,255,255,0.06); --border-lit: rgba(14,165,233,0.25);
+      --sky: #0ea5e9; --sky-dim: rgba(14,165,233,0.12);
+      --indigo: #6366f1; --indigo-dim: rgba(99,102,241,0.12);
+      --cyan: #22d3ee; --emerald: #10b981; --amber: #f59e0b;
+      --text: #f0f6ff; --muted: #64748b; --sub: #94a3b8;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-height: 100vh; }
+    .mockup-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; gap: 4px; background: rgba(12,20,34,0.92); backdrop-filter: blur(20px); border: 1px solid rgba(14,165,233,0.2); border-radius: 100px; padding: 5px 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.7); }
+    .mockup-nav a { padding: 6px 14px; border-radius: 100px; font-size: 11.5px; font-weight: 600; color: var(--muted); transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+    .mockup-nav a:hover { color: var(--text); background: var(--sky-dim); }
+    .mockup-nav a.active { color: var(--sky); background: var(--sky-dim); }
+    .nav { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; width: calc(100% - 40px); max-width: 1120px; background: rgba(9,14,24,0.75); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 100px; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; flex-direction: column; }
+    .brand-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .brand-name { font-size: 17px; font-weight: 800; background: linear-gradient(90deg, var(--sky), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { padding: 7px 15px; border-radius: 100px; font-size: 13.5px; font-weight: 500; color: var(--sub); cursor: pointer; }
+    .nav-link.active-link { color: var(--text); }
+    .nav-link.outline { border: 1px solid var(--border-lit); color: var(--sky); }
+    .nav-link.cta { background: var(--sky); color: #fff; font-weight: 700; padding: 7px 18px; }
+    /* PAGE */
+    .page { padding: 120px 40px 160px; }
+    .inner { max-width: 960px; margin: 0 auto; }
+    .page-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sky); margin-bottom: 12px; text-align: center; }
+    h1 { font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-bottom: 12px; }
+    .page-sub { font-size: 16px; color: var(--sub); text-align: center; margin-bottom: 50px; line-height: 1.7; }
+    /* APP ICON */
+    .app-icon-wrap { display: flex; justify-content: center; margin-bottom: 32px; }
+    .app-icon { width: 100px; height: 100px; border-radius: 28px; background: linear-gradient(145deg, #0c1e38, #071020); border: 1px solid rgba(14,165,233,0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 60px rgba(14,165,233,0.12), 0 20px 40px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    /* PLATFORM TABS */
+    .platform-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 40px; }
+    .platform-tab { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 600; color: var(--sub); min-width: 180px; justify-content: center; }
+    .platform-tab:hover { border-color: rgba(14,165,233,0.2); color: var(--text); }
+    .platform-tab.active { border-color: var(--border-lit); background: linear-gradient(135deg, rgba(14,165,233,0.08), var(--card)); color: var(--text); }
+    .platform-tab svg { flex-shrink: 0; }
+    /* DOWNLOAD CARD */
+    .dl-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 36px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; position: relative; overflow: hidden; }
+    .dl-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(14,165,233,0.4), transparent); }
+    .dl-card-main h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .dl-version { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 100px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); font-size: 12px; font-weight: 700; color: var(--emerald); margin-bottom: 16px; }
+    .dl-version-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pdot 2s infinite; }
+    @keyframes pdot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .dl-specs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .spec-chip { padding: 5px 12px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); font-size: 12px; color: var(--sub); font-weight: 500; }
+    .dl-btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-dl { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 13px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+    .btn-dl-primary { background: linear-gradient(135deg, var(--sky), #0284c7); color: #fff; box-shadow: 0 4px 20px rgba(14,165,233,0.3); }
+    .btn-dl-primary:hover { box-shadow: 0 6px 28px rgba(14,165,233,0.45); transform: translateY(-1px); }
+    .btn-dl-ghost { background: transparent; border: 1px solid var(--border); color: var(--sub); }
+    .btn-dl-ghost:hover { border-color: rgba(14,165,233,0.25); color: var(--text); }
+    /* DOWNLOAD PROGRESS BAR (decoration) */
+    .dl-right { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 160px; }
+    .dl-size { font-size: 13px; color: var(--muted); text-align: center; }
+    .dl-size-num { font-size: 28px; font-weight: 800; color: var(--text); display: block; }
+    /* INSTALLATION STEPS */
+    .steps-wrap { margin-top: 40px; margin-bottom: 40px; }
+    .steps-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step { display: flex; gap: 20px; align-items: flex-start; }
+    .step-line { display: flex; flex-direction: column; align-items: center; }
+    .step-num { width: 34px; height: 34px; border-radius: 50%; background: var(--sky-dim); border: 1px solid rgba(14,165,233,0.3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--sky); flex-shrink: 0; }
+    .step-connector { width: 1px; flex: 1; min-height: 24px; background: linear-gradient(to bottom, rgba(14,165,233,0.3), transparent); margin: 4px 0; }
+    .step-body { padding-bottom: 28px; padding-top: 6px; }
+    .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .step-desc { font-size: 13px; color: var(--sub); line-height: 1.6; }
+    /* CHECKSUMS */
+    .checksums { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; }
+    .checksums-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+    .checksum-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .checksum-row:last-child { margin-bottom: 0; }
+    .checksum-label { font-size: 12px; font-weight: 700; color: var(--sky); width: 60px; flex-shrink: 0; }
+    .checksum-val { font-size: 11px; color: var(--muted); font-family: 'Courier New', monospace; overflow: hidden; text-overflow: ellipsis; }
+    /* GS SECTION */
+    .gs-section { margin-top: 48px; }
+    .gs-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .gs-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.2); display: flex; align-items: center; justify-content: center; }
+    .gs-title { font-size: 20px; font-weight: 800; }
+    .gs-sub { font-size: 13px; color: var(--sub); }
+    .gs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .gs-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; transition: border-color 0.2s; }
+    .gs-card:hover { border-color: rgba(34,211,238,0.2); }
+    .gs-card-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: rgba(34,211,238,0.08); }
+    .gs-card-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .gs-card-desc { font-size: 12.5px; color: var(--sub); line-height: 1.6; }
+    @media (prefers-reduced-motion: reduce) { .app-icon { animation: none; } }
+  </style>
+</head>
+<body>
+
+<nav class="mockup-nav">
+  <a href="homepage.html">Home</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="download.html" class="active">Download</a>
+  <a href="contact.html">Contact</a>
+  <a href="login.html">Login</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="groundstation-kit.html">GS Kit</a>
+</nav>
+
+<header class="nav">
+  <div class="brand">
+    <span class="brand-label">Aircraft Alerts</span>
+    <span class="brand-name">FinalPing</span>
+  </div>
+  <nav class="nav-links">
+    <span class="nav-link">Product</span>
+    <span class="nav-link">Purchase</span>
+    <span class="nav-link active-link">Download</span>
+    <span class="nav-link">Contact</span>
+    <span class="nav-link outline">Log in</span>
+    <span class="nav-link cta">Get Started</span>
+  </nav>
+</header>
+
+<main class="page">
+  <div class="inner">
+    <p class="page-label">Download</p>
+    <h1>FinalPing Desktop</h1>
+    <p class="page-sub">Free to download. Activate with a license key to unlock tracking.<br>Available for Windows and macOS.</p>
+
+    <!-- APP ICON -->
+    <div class="app-icon-wrap">
+      <div class="app-icon">
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+          <!-- Runway -->
+          <rect x="27" y="10" width="6" height="40" rx="3" fill="rgba(14,165,233,0.3)"/>
+          <rect x="28.5" y="14" width="3" height="4" rx="1" fill="#0ea5e9"/>
+          <rect x="28.5" y="22" width="3" height="4" rx="1" fill="#0ea5e9"/>
+          <rect x="28.5" y="30" width="3" height="4" rx="1" fill="#0ea5e9"/>
+          <rect x="28.5" y="38" width="3" height="4" rx="1" fill="#0ea5e9"/>
+          <!-- Radar ring -->
+          <circle cx="30" cy="30" r="22" stroke="rgba(14,165,233,0.3)" stroke-width="1.5" fill="none"/>
+          <circle cx="30" cy="30" r="14" stroke="rgba(14,165,233,0.2)" stroke-width="1" fill="none"/>
+          <!-- Aircraft -->
+          <path d="M30 8 L26 18 L28 18 L28 36 L24 38 L26 40 L30 39 L34 40 L36 38 L32 36 L32 18 L34 18 Z" fill="#0ea5e9"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- PLATFORM TABS -->
+    <div class="platform-tabs">
+      <div class="platform-tab active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+        Windows
+        <span style="font-size:11px;color:var(--muted);font-weight:500;">.exe installer</span>
+      </div>
+      <div class="platform-tab">
+        <svg width="18" height="20" viewBox="0 0 24 24" fill="var(--sub)"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+        macOS
+        <span style="font-size:11px;color:var(--muted);font-weight:500;">.dmg universal</span>
+      </div>
+    </div>
+
+    <!-- DOWNLOAD CARD (Windows) -->
+    <div class="dl-card">
+      <div class="dl-card-main">
+        <div class="dl-version">
+          <span class="dl-version-dot"></span>
+          v1.0.9 — Latest
+        </div>
+        <h2>FinalPing for Windows</h2>
+        <div class="dl-specs">
+          <span class="spec-chip">Windows 10 / 11</span>
+          <span class="spec-chip">x64</span>
+          <span class="spec-chip">~85 MB</span>
+          <span class="spec-chip">Auto-updater included</span>
+        </div>
+        <div class="dl-btn-group">
+          <button class="btn-dl btn-dl-primary">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download FinalPingSetup.exe
+          </button>
+          <button class="btn-dl btn-dl-ghost">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Release Notes
+          </button>
+        </div>
+      </div>
+      <div class="dl-right">
+        <!-- Windows logo in circle -->
+        <div style="width:80px;height:80px;border-radius:50%;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.15);display:flex;align-items:center;justify-content:center;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+        </div>
+        <span class="dl-size"><span class="dl-size-num">85</span>MB installer</span>
+      </div>
+    </div>
+
+    <!-- INSTALLATION STEPS -->
+    <div class="steps-wrap">
+      <p class="steps-title">Installation</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-line">
+            <div class="step-num">1</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Download the installer</div>
+            <div class="step-desc">Run <code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;font-size:12px;">FinalPingSetup.exe</code>. Windows may show a SmartScreen prompt — click "More info" then "Run anyway." The app is unsigned for now.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line">
+            <div class="step-num">2</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Launch &amp; activate</div>
+            <div class="step-desc">Open FinalPing and enter your license key. Keys are delivered by email after purchasing a plan. Free trial starts immediately without a key.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line">
+            <div class="step-num">3</div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Configure &amp; go</div>
+            <div class="step-desc">Set your home airport ICAO, add tail numbers, connect your notification channels. Alerts start within seconds of your first aircraft ping.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECKSUMS -->
+    <div class="checksums" style="margin-bottom:48px;">
+      <p class="checksums-title">File Verification</p>
+      <div class="checksum-row">
+        <span class="checksum-label">SHA-256</span>
+        <span class="checksum-val">a3f8c2d1e9b04756c8a1d3f2e8b7c9d4a1e2f3b8c7d6a5f4e3b2c1d0a9f8e7d6</span>
+      </div>
+      <div class="checksum-row">
+        <span class="checksum-label">MD5</span>
+        <span class="checksum-val">8f3a2c1d4e5b6f7a8c9d0e1f2a3b4c5d</span>
+      </div>
+    </div>
+
+    <!-- GROUND STATION SECTION -->
+    <div class="gs-section">
+      <div class="gs-header">
+        <div class="gs-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+        </div>
+        <div>
+          <div class="gs-title">Ground Station Software</div>
+          <div class="gs-sub">For RTL-SDR + Raspberry Pi setups — sub-5-second local alerts</div>
+        </div>
+      </div>
+      <div class="gs-grid">
+        <div class="gs-card">
+          <div class="gs-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></div>
+          <div class="gs-card-name">finalping_ground.py v2.9</div>
+          <div class="gs-card-desc">Python script for Raspberry Pi. Connects to dump1090 SBS stream and pushes alerts directly to FinalPing. Auto-updates hourly.</div>
+        </div>
+        <div class="gs-card">
+          <div class="gs-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+          <div class="gs-card-name">Setup Guide</div>
+          <div class="gs-card-desc">Step-by-step Raspberry Pi setup with dump1090, Pro Stick Plus, and antenna. Get under 5-second alerts at your airport.</div>
+        </div>
+        <div class="gs-card">
+          <div class="gs-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="gs-card-name">Hardware Kit</div>
+          <div class="gs-card-desc">Don't have hardware yet? Get a pre-configured Ground Station Kit with everything included — plug in and go.</div>
+        </div>
+        <div class="gs-card">
+          <div class="gs-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <div class="gs-card-name">Configuration Reference</div>
+          <div class="gs-card-desc">All config options for the ground station script including home airport, elevation, alert thresholds, and API key setup.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

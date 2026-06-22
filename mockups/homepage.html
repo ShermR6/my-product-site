@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinalPing — Homepage Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060a14; --surface: #0c1422; --card: #0f1928; --card-lit: #131f30;
+      --border: rgba(255,255,255,0.06); --border-lit: rgba(14,165,233,0.25);
+      --sky: #0ea5e9; --sky-dim: rgba(14,165,233,0.12); --sky-glow: rgba(14,165,233,0.4);
+      --indigo: #6366f1; --indigo-dim: rgba(99,102,241,0.12);
+      --cyan: #22d3ee; --emerald: #10b981; --amber: #f59e0b; --rose: #f43f5e;
+      --text: #f0f6ff; --muted: #64748b; --sub: #94a3b8;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    .mockup-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; gap: 4px; background: rgba(12,20,34,0.92); backdrop-filter: blur(20px); border: 1px solid rgba(14,165,233,0.2); border-radius: 100px; padding: 5px 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.7); }
+    .mockup-nav a { padding: 6px 14px; border-radius: 100px; font-size: 11.5px; font-weight: 600; color: var(--muted); transition: all 0.2s ease; white-space: nowrap; }
+    .mockup-nav a:hover { color: var(--text); background: var(--sky-dim); }
+    .mockup-nav a.active { color: var(--sky); background: var(--sky-dim); }
+    .nav { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; width: calc(100% - 40px); max-width: 1120px; background: rgba(9,14,24,0.75); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 100px; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; flex-direction: column; }
+    .brand-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .brand-name { font-size: 17px; font-weight: 800; background: linear-gradient(90deg, var(--sky), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { padding: 7px 15px; border-radius: 100px; font-size: 13.5px; font-weight: 500; color: var(--sub); transition: all 0.2s; cursor: pointer; }
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .nav-link.active-link { color: var(--text); }
+    .nav-link.cta { background: var(--sky); color: #fff; font-weight: 700; padding: 7px 18px; }
+    .nav-link.cta:hover { background: #38bdf8; }
+    .nav-link.outline { border: 1px solid var(--border-lit); color: var(--sky); }
+    .nav-link.outline:hover { background: var(--sky-dim); }
+    .hero { min-height: 100vh; display: flex; align-items: center; padding: 120px 40px 80px; position: relative; overflow: hidden; }
+    .hero-content { max-width: 1120px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 2; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 100px; border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); font-size: 12px; font-weight: 600; color: var(--emerald); margin-bottom: 22px; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pdot 2s ease-in-out infinite; }
+    @keyframes pdot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+    h1 { font-size: clamp(36px, 4.5vw, 56px); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 20px; }
+    h1 span.grad { background: linear-gradient(135deg, var(--sky), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: 17px; color: var(--sub); line-height: 1.75; margin-bottom: 36px; max-width: 440px; }
+    .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { padding: 12px 22px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s ease; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(135deg, var(--sky), #0284c7); color: #fff; box-shadow: 0 4px 24px rgba(14,165,233,0.35); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 32px rgba(14,165,233,0.5); }
+    .btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--sub); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .radar-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px; position: relative; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.04); }
+    .radar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .radar-title { font-size: 12px; font-weight: 700; color: var(--sky); text-transform: uppercase; letter-spacing: 0.1em; }
+    .radar-live { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--emerald); }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); animation: pdot 1.5s ease-in-out infinite; }
+    .notif-pop { position: absolute; top: 18px; right: -10px; animation: notif-in 12s ease-in-out infinite; pointer-events: none; }
+    @keyframes notif-in { 0%,18%{opacity:0;transform:translateX(30px)} 28%,72%{opacity:1;transform:translateX(0)} 82%,100%{opacity:0;transform:translateX(30px)} }
+    .notif { background: rgba(15,25,40,0.95); border: 1px solid rgba(14,165,233,0.25); border-radius: 12px; padding: 11px 14px; min-width: 210px; display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+    .notif-icon { width: 30px; height: 30px; border-radius: 8px; background: rgba(16,185,129,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .notif-body .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .notif-body .msg { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 1px; }
+    .notif-body .time { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .aircraft-row { display: flex; align-items: center; justify-content: space-between; border-radius: 10px; padding: 9px 13px; margin-top: 8px; }
+    .a-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .hero-bg-glow { position: absolute; top: -200px; right: -100px; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(14,165,233,0.07) 0%, transparent 70%); pointer-events: none; }
+    .hero-bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse 80% 80% at 60% 50%, rgba(0,0,0,0.5), transparent); pointer-events: none; }
+    .proof-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 22px 40px; }
+    .proof-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-around; gap: 20px; }
+    .sp { text-align: center; }
+    .sp-n { font-size: 26px; font-weight: 800; }
+    .sp-l { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+    .sp-div { width: 1px; height: 40px; background: var(--border); }
+    .section { padding: 80px 40px; }
+    .sec-inner { max-width: 1120px; margin: 0 auto; }
+    .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sky); margin-bottom: 10px; }
+    h2 { font-size: clamp(26px, 3.2vw, 40px); font-weight: 800; letter-spacing: -0.025em; margin-bottom: 12px; line-height: 1.18; }
+    .sec-sub { font-size: 15.5px; color: var(--sub); max-width: 480px; line-height: 1.72; margin-bottom: 44px; }
+    .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .bc { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 26px; position: relative; overflow: hidden; transition: border-color 0.25s, transform 0.2s; cursor: default; }
+    .bc:hover { border-color: rgba(14,165,233,0.2); transform: translateY(-2px); }
+    .bc::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(14,165,233,0.4),transparent); opacity:0; transition:opacity 0.3s; }
+    .bc:hover::after { opacity:1; }
+    .bc.span2 { grid-column: span 2; }
+    .bc-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .bc-name { font-size: 15.5px; font-weight: 700; margin-bottom: 7px; }
+    .bc-desc { font-size: 13px; color: var(--sub); line-height: 1.62; }
+    .hiw { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .hiw-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 30px 26px; }
+    .hiw-n { font-size: 52px; font-weight: 900; color: rgba(14,165,233,0.09); line-height: 1; margin-bottom: 18px; }
+    .hiw-t { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .hiw-d { font-size: 13px; color: var(--sub); line-height: 1.65; }
+    .cta-banner { background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(99,102,241,0.12)); border: 1px solid rgba(99,102,241,0.18); border-radius: 22px; padding: 56px 44px; text-align: center; position: relative; overflow: hidden; }
+    .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(14,165,233,0.1) 0%, transparent 60%); }
+    .cta-banner h2 { position: relative; font-size: clamp(22px, 2.8vw, 34px); margin-bottom: 12px; }
+    .cta-banner p { color: var(--sub); font-size: 15px; margin-bottom: 26px; position: relative; }
+    .cta-row { display: flex; gap: 12px; justify-content: center; position: relative; }
+    .footer { border-top: 1px solid var(--border); padding: 36px 40px 120px; }
+    .footer-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { font-size: 17px; font-weight: 800; background: linear-gradient(90deg, var(--sky), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .footer-links { display: flex; gap: 22px; flex-wrap: wrap; }
+    .footer-link { font-size: 13px; color: var(--muted); transition: color 0.2s; cursor: pointer; }
+    .footer-link:hover { color: var(--text); }
+    .footer-copy { font-size: 12px; color: var(--muted); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+
+<nav class="mockup-nav">
+  <a href="homepage.html" class="active">Home</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="download.html">Download</a>
+  <a href="contact.html">Contact</a>
+  <a href="login.html">Login</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="groundstation-kit.html">GS Kit</a>
+</nav>
+
+<header class="nav">
+  <div class="brand">
+    <span class="brand-label">Aircraft Alerts</span>
+    <span class="brand-name">FinalPing</span>
+  </div>
+  <nav class="nav-links">
+    <span class="nav-link active-link">Product</span>
+    <span class="nav-link">Purchase</span>
+    <span class="nav-link">Download</span>
+    <span class="nav-link">Contact</span>
+    <span class="nav-link outline">Log in</span>
+    <span class="nav-link cta">Get Started</span>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-bg-glow"></div>
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge"><span class="badge-dot"></span>Live — 2,400+ aircraft monitored today</div>
+      <h1>Never miss<br>a <span class="grad">landing</span><br>again.</h1>
+      <p class="hero-sub">Real-time ADS-B alerts the moment your aircraft crosses 10nm, 5nm, 2nm — or touches down. Delivered straight to Discord, Slack, or email.</p>
+      <div class="btns">
+        <button class="btn btn-primary">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download Free
+        </button>
+        <button class="btn btn-ghost">View Pricing →</button>
+      </div>
+    </div>
+    <div>
+      <div class="radar-card">
+        <div class="radar-header">
+          <span class="radar-title">Live Radar</span>
+          <span class="radar-live"><span class="live-dot"></span>2 tracking</span>
+        </div>
+        <svg width="100%" viewBox="0 0 320 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="160" cy="150" r="140" stroke="rgba(14,165,233,0.09)" stroke-width="1"/>
+          <circle cx="160" cy="150" r="105" stroke="rgba(14,165,233,0.09)" stroke-width="1"/>
+          <circle cx="160" cy="150" r="70" stroke="rgba(14,165,233,0.1)" stroke-width="1"/>
+          <circle cx="160" cy="150" r="35" stroke="rgba(14,165,233,0.13)" stroke-width="1"/>
+          <line x1="160" y1="10" x2="160" y2="290" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+          <line x1="20" y1="150" x2="300" y2="150" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+          <text x="162" y="48" fill="rgba(100,116,139,0.6)" font-size="8" font-family="Plus Jakarta Sans, sans-serif">10nm</text>
+          <text x="162" y="83" fill="rgba(100,116,139,0.6)" font-size="8" font-family="Plus Jakarta Sans, sans-serif">5nm</text>
+          <rect x="151" y="141" width="18" height="18" rx="4" fill="rgba(14,165,233,0.14)" stroke="rgba(14,165,233,0.45)" stroke-width="1"/>
+          <text x="157" y="153" fill="#0ea5e9" font-size="8" font-family="Plus Jakarta Sans, sans-serif" font-weight="700">H</text>
+          <!-- Aircraft 1 NE approach -->
+          <line x1="230" y1="78" x2="200" y2="108" stroke="rgba(14,165,233,0.3)" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="200" cy="108" r="5" fill="#0ea5e9" opacity="0.9">
+            <animate attributeName="r" values="5;10;5" dur="2.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9;0;0.9" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="200" cy="108" r="4" fill="#0ea5e9"/>
+          <!-- Aircraft 2 departing W -->
+          <line x1="100" y1="164" x2="132" y2="156" stroke="rgba(34,211,238,0.3)" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="100" cy="164" r="5" fill="#22d3ee" opacity="0.9">
+            <animate attributeName="r" values="5;9;5" dur="2.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9;0;0.9" dur="2.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="100" cy="164" r="4" fill="#22d3ee"/>
+          <!-- Sweep -->
+          <g transform="translate(160,150)">
+            <line x1="0" y1="0" x2="0" y2="-140" stroke="rgba(14,165,233,0.55)" stroke-width="1.5">
+              <animateTransform attributeName="transform" type="rotate" values="0;360" dur="4s" repeatCount="indefinite"/>
+            </line>
+            <path d="M0 0 L0 -140 A140 140 0 0 1 -27 -138" fill="rgba(14,165,233,0.07)">
+              <animateTransform attributeName="transform" type="rotate" values="0;360" dur="4s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          <circle cx="160" cy="150" r="4" fill="#0ea5e9"/>
+          <circle cx="160" cy="150" r="9" fill="none" stroke="rgba(14,165,233,0.3)" stroke-width="1"/>
+        </svg>
+        <div class="aircraft-row" style="background:rgba(14,165,233,0.07);border:1px solid rgba(14,165,233,0.13);">
+          <div style="display:flex;align-items:center;gap:9px;"><div class="a-dot" style="background:#0ea5e9;"></div><span style="font-size:13px;font-weight:700;">N824KS</span><span style="font-size:11px;color:var(--muted);">Cirrus SR22</span></div>
+          <span style="font-size:12px;font-weight:700;color:#f59e0b;">7.2 nm</span>
+        </div>
+        <div class="aircraft-row" style="background:rgba(34,211,238,0.07);border:1px solid rgba(34,211,238,0.13);margin-top:6px;">
+          <div style="display:flex;align-items:center;gap:9px;"><div class="a-dot" style="background:#22d3ee;"></div><span style="font-size:13px;font-weight:700;">N3847M</span><span style="font-size:11px;color:var(--muted);">Cessna 172</span></div>
+          <span style="font-size:12px;font-weight:700;color:var(--emerald);">Departed</span>
+        </div>
+        <!-- Notification popup -->
+        <div class="notif-pop">
+          <div class="notif">
+            <div class="notif-icon">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="label">Landing Alert</div>
+              <div class="msg">N824KS has landed</div>
+              <div class="time">KPAO · just now</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="proof-bar">
+  <div class="proof-inner">
+    <div class="sp"><div class="sp-n">2,400+</div><div class="sp-l">Aircraft Monitored</div></div>
+    <div class="sp-div"></div>
+    <div class="sp"><div class="sp-n">99.8%</div><div class="sp-l">Alert Delivery Rate</div></div>
+    <div class="sp-div"></div>
+    <div class="sp"><div class="sp-n">&lt;30s</div><div class="sp-l">Alert Latency</div></div>
+    <div class="sp-div"></div>
+    <div class="sp"><div class="sp-n">500+</div><div class="sp-l">FBO & Pilot Users</div></div>
+    <div class="sp-div"></div>
+    <div class="sp"><div class="sp-n">6</div><div class="sp-l">Notification Channels</div></div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="sec-inner">
+    <p class="sec-label">Features</p>
+    <h2>Everything you need to<br>stay ahead of arrivals</h2>
+    <p class="sec-sub">From first ping to wheels-down — full situational awareness for pilots, owners, and FBO operators.</p>
+    <div class="bento">
+      <div class="bc">
+        <div class="bc-icon" style="background:var(--sky-dim);"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#0ea5e9" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div>
+        <div class="bc-name">Instant Alerts</div>
+        <div class="bc-desc">Approach zone notifications under 30s. Discord, Slack, Teams, email, SMS — your choice.</div>
+      </div>
+      <div class="bc span2" style="background:linear-gradient(135deg,rgba(99,102,241,0.07),var(--card));">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;">
+          <div>
+            <div class="bc-icon" style="background:var(--indigo-dim);"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <div class="bc-name">Approach Zones</div>
+            <div class="bc-desc">Sequential 10nm → 5nm → 2nm alerts. Know when your crew needs to be ready.</div>
+          </div>
+          <svg width="120" height="110" viewBox="0 0 120 110" fill="none">
+            <circle cx="60" cy="55" r="50" stroke="rgba(99,102,241,0.15)" stroke-width="1.5"/>
+            <circle cx="60" cy="55" r="34" stroke="rgba(14,165,233,0.2)" stroke-width="1.5"/>
+            <circle cx="60" cy="55" r="17" stroke="rgba(34,211,238,0.25)" stroke-width="1.5"/>
+            <text x="92" y="12" fill="rgba(99,102,241,0.6)" font-size="8" font-family="Plus Jakarta Sans">10nm</text>
+            <text x="88" y="26" fill="rgba(14,165,233,0.6)" font-size="8" font-family="Plus Jakarta Sans">5nm</text>
+            <text x="74" y="40" fill="rgba(34,211,238,0.6)" font-size="8" font-family="Plus Jakarta Sans">2nm</text>
+            <rect x="52" y="47" width="16" height="16" rx="3" fill="rgba(14,165,233,0.14)" stroke="rgba(14,165,233,0.4)" stroke-width="1"/>
+            <text x="57" y="58" fill="#0ea5e9" font-size="8" font-family="Plus Jakarta Sans" font-weight="700">H</text>
+            <circle cx="22" cy="20" r="4" fill="#6366f1">
+              <animate attributeName="cx" values="22;38;50" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="cy" values="20;34;46" dur="4s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+      </div>
+      <div class="bc" style="background:linear-gradient(135deg,rgba(34,211,238,0.05),var(--card));">
+        <div class="bc-icon" style="background:rgba(34,211,238,0.1);"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg></div>
+        <div class="bc-name">Ground Station</div>
+        <div class="bc-desc">Local RTL-SDR receiver for &lt;5s latency. Your airport, your hardware, no cloud lag.</div>
+      </div>
+      <div class="bc">
+        <div class="bc-icon" style="background:rgba(16,185,129,0.1);"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
+        <div class="bc-name">Live Map + Trail</div>
+        <div class="bc-desc">Full flight path from takeoff to landing. Background tracking keeps history even when you switch tabs.</div>
+      </div>
+      <div class="bc">
+        <div class="bc-icon" style="background:rgba(245,158,11,0.1);"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+        <div class="bc-name">Multi-Location</div>
+        <div class="bc-desc">Monitor multiple airports simultaneously. Perfect for fleet operators and multi-base FBOs.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="sec-inner">
+    <p class="sec-label">How It Works</p>
+    <h2 style="margin-bottom:36px;">Up and running in minutes</h2>
+    <div class="hiw">
+      <div class="hiw-card">
+        <div class="hiw-n">01</div>
+        <div class="hiw-t">Download & Activate</div>
+        <div class="hiw-d">Install on Windows or macOS. Enter your license key — no account creation, no configuration wizard.</div>
+      </div>
+      <div class="hiw-card">
+        <div class="hiw-n" style="color:rgba(99,102,241,0.1);">02</div>
+        <div class="hiw-t">Set Your Airport</div>
+        <div class="hiw-d">Enter your home ICAO, add your tail numbers, configure approach zones and quiet hours.</div>
+      </div>
+      <div class="hiw-card">
+        <div class="hiw-n" style="color:rgba(34,211,238,0.1);">03</div>
+        <div class="hiw-t">Get Notified</div>
+        <div class="hiw-d">Connect Discord, Slack, email or SMS. Alerts start immediately — no polling, no missed arrivals.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="sec-inner">
+    <div class="cta-banner">
+      <h2>Ready to stop missing arrivals?</h2>
+      <p>Join 500+ pilots and FBO operators. Free to download — no credit card required.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" style="font-size:15px;padding:13px 26px;">Download for Free</button>
+        <button class="btn btn-ghost" style="font-size:15px;padding:13px 26px;">View Pricing</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="footer-brand">FinalPing</span>
+    <div class="footer-links">
+      <span class="footer-link">Product</span>
+      <span class="footer-link">Pricing</span>
+      <span class="footer-link">Changelog</span>
+      <span class="footer-link">Docs</span>
+      <span class="footer-link">Privacy</span>
+      <span class="footer-link">Terms</span>
+    </div>
+    <span class="footer-copy">© 2026 FinalPing</span>
+  </div>
+</footer>
+
+</body>
+</html>

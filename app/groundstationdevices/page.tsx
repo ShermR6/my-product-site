@@ -3,31 +3,31 @@ import Link from "next/link";
 
 const devices = [
   {
-    tier: "Budget",
-    price: "~$40",
-    badge: "Best for beginners",
-    badgeColor: "#22d3a3",
-    name: "RTL-SDR Blog V4 + Antenna Kit",
-    description:
-      "The most popular entry-level ADS-B receiver. Comes with everything you need to get started — dongle, antenna, and cables. Works on Windows, Mac, Linux, and Raspberry Pi.",
-    specs: ["Tunes 500kHz – 1.7GHz", "1PPM TCXO for accuracy", "USB-C connector", "Includes dipole antenna kit", "Works with dump1090 out of the box"],
-    amazon: "https://www.amazon.com/RTL-SDR-Blog-RTL2832U-Software-Defined/dp/B0CD7558GT",
-    image: "https://m.media-amazon.com/images/I/61zMEzSt4jL._AC_SL1500_.jpg",
-    note: "Requires driver update on first install — instructions included.",
-  },
-  {
-    tier: "Mid-range",
+    tier: "Recommended",
     price: "~$45",
     badge: "Most recommended",
     badgeColor: "#0ea5e9",
     popular: true,
     name: "FlightAware Pro Stick Plus",
     description:
-      "Purpose-built for ADS-B tracking with a built-in 1090MHz bandpass filter and low-noise amplifier. Significantly better range than generic dongles, especially in urban areas with RF interference.",
-    specs: ["Built-in 1090MHz bandpass filter", "19dB integrated amplifier", "20–100% more range vs generic dongles", "Plug and play with PiAware", "No driver setup needed"],
+      "Purpose-built for ADS-B tracking with a built-in 1090MHz bandpass filter and low-noise amplifier. Significantly better range than generic dongles, especially in urban areas with RF interference. This is what FinalPing Ground Station is designed around.",
+    specs: ["Built-in 1090MHz bandpass filter", "19dB integrated amplifier", "20–100% more range vs generic dongles", "Plug and play with dump1090", "No extra driver setup needed"],
     amazon: "https://www.amazon.com/FlightAware-FA-PROSTICKPLUS-1-Receiver-Built-Filter/dp/B01M7REJJW",
     image: "https://m.media-amazon.com/images/I/71it4FmVFbL._AC_SL1500_.jpg",
     note: "Best choice for most users. Works immediately with FinalPing Ground Station.",
+  },
+  {
+    tier: "Budget",
+    price: "~$40",
+    badge: "Budget option",
+    badgeColor: "#22d3a3",
+    name: "RTL-SDR Blog V4 + Antenna Kit",
+    description:
+      "A solid entry-level ADS-B receiver. Comes with everything you need to get started — dongle, antenna, and cables. Works on Windows, Mac, Linux, and Raspberry Pi.",
+    specs: ["Tunes 500kHz – 1.7GHz", "1PPM TCXO for accuracy", "USB-C connector", "Includes dipole antenna kit", "Works with dump1090 out of the box"],
+    amazon: "https://www.amazon.com/RTL-SDR-Blog-RTL2832U-Software-Defined/dp/B0CD7558GT",
+    image: "https://m.media-amazon.com/images/I/61zMEzSt4jL._AC_SL1500_.jpg",
+    note: "Requires driver update on first install — instructions included.",
   },
   {
     tier: "Best performance",
@@ -108,9 +108,9 @@ export default function GroundStationDevicesPage() {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>Minimum setup</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>Recommended setup</div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              Any Windows, Mac, or Linux computer + RTL-SDR Blog V4 with antenna. Total cost around $40.
+              Any Windows, Mac, or Linux computer + FlightAware Pro Stick Plus. Total cost around $45.
               A Raspberry Pi makes a better dedicated setup that runs 24/7.
             </div>
           </div>

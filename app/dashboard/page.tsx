@@ -141,13 +141,24 @@ function CodeInput({ value, onChange, onSubmit }: { value: string; onChange: (v:
 
 type DeleteStep = "idle" | "confirm" | "choose-method" | "enter-code" | "totp-code";
 
+type ProfileStep = "idle" | "editing" | "choose-method" | "enter-code" | "totp-code" | "done";
+
 function AccountTab({ email, session }: { email: string; session: any }) {
   const [memberSince, setMemberSince] = useState<string>("—");
   const [displayName, setDisplayName] = useState<string>("");
-  const [nameInput, setNameInput] = useState<string>("");
-  const [nameEditing, setNameEditing] = useState(false);
-  const [nameSaving, setNameSaving] = useState(false);
-  const [nameMsg, setNameMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [displayEmail, setDisplayEmail] = useState<string>(email);
+
+  // Profile edit state
+  const [profileStep, setProfileStep] = useState<ProfileStep>("idle");
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profileMethods, setProfileMethods] = useState<{ id: "email" | "sms" | "totp"; label: string }[]>([]);
+  const [profileMethod, setProfileMethod] = useState<"email" | "sms" | "totp" | null>(null);
+  const [profileCode, setProfileCode] = useState("");
+  const [profileMsg, setProfileMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [resendingProfile, setResendingProfile] = useState(false);
+
   const [deleteStep, setDeleteStep] = useState<DeleteStep>("idle");
   const [deleting, setDeleting] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState<string>("");
@@ -165,7 +176,6 @@ function AccountTab({ email, session }: { email: string; session: any }) {
           setMemberSince(new Date(data.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
         }
         setDisplayName(data?.name ?? "");
-        setNameInput(data?.name ?? "");
       })
       .catch(() => {});
     fetch("/api/auth/2fa/status")
@@ -174,24 +184,91 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       .catch(() => {});
   }, []);
 
-  const saveName = async () => {
-    setNameSaving(true);
-    setNameMsg(null);
+  const startEditProfile = () => {
+    setProfileName(displayName);
+    setProfileEmail(displayEmail);
+    setProfileMsg(null);
+    setProfileCode("");
+    setProfileMethod(null);
+    setProfileMethods([]);
+    setProfileStep("editing");
+  };
+
+  const resetProfile = () => {
+    setProfileStep("idle");
+    setProfileMsg(null);
+    setProfileCode("");
+    setProfileMethod(null);
+  };
+
+  const submitProfileChanges = async (method?: "email" | "sms" | "totp") => {
+    setProfileLoading(true);
+    setProfileMsg(null);
     try {
-      const r = await fetch("/api/auth/update-name", {
+      const r = await fetch("/api/auth/change-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nameInput }),
+        body: JSON.stringify({ name: profileName, email: profileEmail, method }),
       });
       const d = await r.json();
-      if (!r.ok) { setNameMsg({ text: d.error || "Failed to save.", type: "error" }); return; }
-      setDisplayName(nameInput.trim());
-      setNameEditing(false);
-      setNameMsg({ text: "Name updated.", type: "success" });
+      if (!r.ok) { setProfileMsg({ text: d.error || "Failed to send code.", type: "error" }); return; }
+      if (d.step === "choose-method") {
+        setProfileMethods(d.methods);
+        setProfileStep("choose-method");
+      } else if (d.step === "totp-code") {
+        setProfileMethod("totp");
+        setProfileStep("totp-code");
+      } else {
+        setProfileMethod(d.method);
+        setProfileStep("enter-code");
+      }
     } catch {
-      setNameMsg({ text: "Something went wrong.", type: "error" });
+      setProfileMsg({ text: "Something went wrong.", type: "error" });
     } finally {
-      setNameSaving(false);
+      setProfileLoading(false);
+    }
+  };
+
+  const confirmProfileChange = async () => {
+    if (profileCode.length < 6) { setProfileMsg({ text: "Enter the 6-digit code.", type: "error" }); return; }
+    setProfileLoading(true);
+    setProfileMsg(null);
+    try {
+      const r = await fetch("/api/auth/confirm-profile-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: profileCode }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setProfileMsg({ text: d.error || "Invalid code.", type: "error" }); return; }
+      setDisplayName(d.newName ?? "");
+      if (d.emailChanged) {
+        setProfileStep("done");
+      } else {
+        setProfileStep("idle");
+        setProfileMsg({ text: "Profile updated successfully.", type: "success" });
+      }
+    } catch {
+      setProfileMsg({ text: "Something went wrong.", type: "error" });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const resendProfileCode = async () => {
+    if (!profileMethod || profileMethod === "totp") return;
+    setResendingProfile(true);
+    try {
+      await fetch("/api/auth/2fa/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method: profileMethod, context: "profile-change" }),
+      });
+      setProfileMsg({ text: "New code sent.", type: "success" });
+    } catch {
+      setProfileMsg({ text: "Failed to resend code.", type: "error" });
+    } finally {
+      setResendingProfile(false);
     }
   };
 
@@ -284,62 +361,143 @@ function AccountTab({ email, session }: { email: string; session: any }) {
   return (
     <div>
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Account Information</h2><p style={styles.tabSub}>Your profile and account details</p></div>
+
+      {/* Read-only info card */}
       <div style={styles.card}>
-        <div style={styles.infoRow}><span style={styles.infoLabel}>Email Address</span><span style={styles.infoValue}>{email}</span></div>
-        <div style={styles.infoRow}>
-          <span style={styles.infoLabel}>Display Name</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, justifyContent: "flex-end" }}>
-            {nameEditing ? (
-              <>
-                <input
-                  type="text"
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setNameEditing(false); setNameInput(displayName); setNameMsg(null); } }}
-                  placeholder="Your display name"
-                  autoFocus
-                  style={{ ...styles.input, maxWidth: 220, padding: "6px 10px", fontSize: 13 }}
-                  onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }}
-                />
-                <button onClick={saveName} disabled={nameSaving}
-                  style={{ ...styles.primaryBtn, padding: "6px 14px", fontSize: 12, opacity: nameSaving ? 0.6 : 1 }}>
-                  {nameSaving ? "Saving..." : "Save"}
-                </button>
-                <button onClick={() => { setNameEditing(false); setNameInput(displayName); setNameMsg(null); }}
-                  style={{ ...styles.ghostBtn, padding: "6px 12px", fontSize: 12 }}>
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <>
-                <span style={{ ...styles.infoValue, color: displayName ? "var(--text)" : "var(--muted)", fontStyle: displayName ? "normal" : "italic" }}>
-                  {displayName || "Not set"}
-                </span>
-                <button onClick={() => { setNameEditing(true); setNameMsg(null); }}
-                  style={{ padding: "4px 12px", borderRadius: 6, background: "transparent", border: "1px solid var(--border)", color: "var(--muted)", fontSize: 12, cursor: "pointer" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.color = "#0ea5e9"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>
-                  Edit
-                </button>
-              </>
-            )}
-          </div>
+        <div style={styles.infoRow}><span style={styles.infoLabel}>Email Address</span><span style={styles.infoValue}>{displayEmail}</span></div>
+        <div style={styles.infoRow}><span style={styles.infoLabel}>Display Name</span>
+          <span style={{ ...styles.infoValue, color: displayName ? "var(--text)" : "var(--muted)", fontStyle: displayName ? "normal" : "italic" }}>
+            {displayName || "Not set"}
+          </span>
         </div>
-        {nameMsg && (
-          <div style={{ padding: "8px 0 4px", fontSize: 12, color: nameMsg.type === "success" ? "#23c76b" : "#ef4444" }}>
-            {nameMsg.text}
-          </div>
-        )}
-        <div style={styles.infoRowLast}><span style={styles.infoLabel}>Member Since</span>
-          <span style={styles.infoValue}>{memberSince}</span>
-        </div>
+        <div style={styles.infoRowLast}><span style={styles.infoLabel}>Member Since</span><span style={styles.infoValue}>{memberSince}</span></div>
       </div>
-      <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+
+      {/* Profile message (shown when idle after a change) */}
+      {profileStep === "idle" && profileMsg && <StatusMsg msg={profileMsg} />}
+
+      {/* Buttons row */}
+      <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" as const }}>
+        {profileStep === "idle" && (
+          <button onClick={startEditProfile} style={styles.primaryBtn}
+            onMouseEnter={e => { e.currentTarget.style.background = "#0284c7"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+            Edit Profile
+          </button>
+        )}
         <button onClick={() => signOut({ callbackUrl: "/" })} style={styles.dangerBtn}
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Sign Out</button>
       </div>
+
+      {/* Edit Profile section */}
+      {profileStep !== "idle" && (
+        <div style={{ ...styles.card, marginTop: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Edit Profile</div>
+
+          {profileStep === "editing" && (
+            <div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 12, marginBottom: 16 }}>
+                <div>
+                  <label style={styles.inputLabel}>Display Name</label>
+                  <input type="text" value={profileName} onChange={e => setProfileName(e.target.value)}
+                    placeholder="Your display name" style={styles.input}
+                    onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
+                </div>
+                <div>
+                  <label style={styles.inputLabel}>Email Address</label>
+                  <input type="email" value={profileEmail} onChange={e => setProfileEmail(e.target.value)}
+                    placeholder="your@email.com" style={styles.input}
+                    onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>
+                {twoFA && activeMethods.length > 0
+                  ? "A verification code will be sent to confirm your changes."
+                  : "A confirmation code will be sent to your current email address."}
+              </div>
+              <StatusMsg msg={profileMsg} />
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <button onClick={() => submitProfileChanges()} disabled={profileLoading}
+                  style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                  {profileLoading ? "Please wait..." : "Save Changes →"}
+                </button>
+                <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {profileStep === "choose-method" && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Verify your identity</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Choose how to confirm your profile change:</div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                {profileMethods.map(m => (
+                  <button key={m.id} onClick={() => submitProfileChanges(m.id)} disabled={profileLoading}
+                    style={{ ...styles.methodBtn, opacity: profileLoading ? 0.6 : 1 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                    {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={resetProfile} style={{ ...styles.ghostBtn, marginTop: 10 }}>Cancel</button>
+              <StatusMsg msg={profileMsg} />
+            </div>
+          )}
+
+          {(profileStep === "enter-code" || profileStep === "totp-code") && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+                {profileStep === "totp-code" ? "Enter code from your authenticator app" : "Enter verification code"}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>
+                {profileStep === "totp-code"
+                  ? "Open your authenticator app and enter the 6-digit code."
+                  : profileMethod === "email"
+                    ? `Code sent to ${displayEmail}`
+                    : "Code sent to your phone"}
+              </div>
+              <CodeInput value={profileCode} onChange={setProfileCode} onSubmit={confirmProfileChange} />
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
+                <button onClick={confirmProfileChange} disabled={profileLoading}
+                  style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                  {profileLoading ? "Verifying..." : "Confirm Changes"}
+                </button>
+                {profileStep !== "totp-code" && (
+                  <button onClick={resendProfileCode} disabled={resendingProfile} style={styles.ghostBtn}>
+                    {resendingProfile ? "Sending..." : "Resend"}
+                  </button>
+                )}
+                <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
+              </div>
+              <StatusMsg msg={profileMsg} />
+            </div>
+          )}
+
+          {profileStep === "done" && (
+            <div style={{ textAlign: "center" as const, padding: "20px 0" }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Profile updated</div>
+              <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>
+                Your email address was changed. Please sign in again with your new email.
+              </div>
+              <button onClick={() => signOut({ callbackUrl: "/" })} style={styles.primaryBtn}
+                onMouseEnter={e => { e.currentTarget.style.background = "#0284c7"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                Sign Out & Sign In Again
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{ marginTop: 32, padding: "20px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, background: "rgba(239,68,68,0.04)" }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, color: "#ef4444", margin: "0 0 6px" }}>Delete Account</h3>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>Permanently delete your account and cancel any active subscriptions. This cannot be undone.</p>

@@ -59,6 +59,15 @@ export async function POST(req: NextRequest) {
         pendingTwoFactorExpiry: expiry,
       },
     });
+  } else if (context === "profile-change") {
+    await prisma.user.update({
+      where: { email: session.user.email },
+      data: {
+        pendingProfileCode: hashedCode,
+        pendingProfileExpiry: expiry,
+        pendingProfileMethod: method,
+      },
+    });
   } else {
     // covers "password-change" and "account-deletion"
     await prisma.user.update({
@@ -75,17 +84,26 @@ export async function POST(req: NextRequest) {
     ? "FinalPing: Verify 2FA Setup"
     : context === "account-deletion"
       ? "FinalPing: Confirm Account Deletion"
-      : "FinalPing: Confirm Password Change";
+      : context === "profile-change"
+        ? "FinalPing: Confirm Profile Change"
+        : "FinalPing: Confirm Password Change";
 
   const bodyText = context === "setup"
     ? `Your FinalPing 2FA setup code is: ${code}. Expires in 10 minutes.`
     : context === "account-deletion"
       ? `Your FinalPing account deletion code is: ${code}. Expires in 10 minutes.`
-      : `Your FinalPing password change code is: ${code}. Expires in 10 minutes.`;
+      : context === "profile-change"
+        ? `Your FinalPing profile change code is: ${code}. Expires in 10 minutes.`
+        : `Your FinalPing password change code is: ${code}. Expires in 10 minutes.`;
+
+  const headingText = context === "account-deletion" ? "Confirm Account Deletion"
+    : context === "setup" ? "Verify 2FA Setup"
+    : context === "profile-change" ? "Confirm Profile Change"
+    : "Confirm Password Change";
 
   const htmlBody = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #ef4444;">${context === "account-deletion" ? "Confirm Account Deletion" : context === "setup" ? "Verify 2FA Setup" : "Confirm Password Change"}</h2>
+      <h2 style="color: #0ea5e9;">${headingText}</h2>
       <p>${context === "account-deletion" ? "Someone requested to permanently delete your FinalPing account. Enter this code to confirm:" : "Your verification code is:"}</p>
       <div style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #0ea5e9; padding: 16px 0;">
         ${code}

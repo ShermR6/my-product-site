@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinalPing — Pricing Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060a14; --surface: #0c1422; --card: #0f1928; --card-lit: #131f30;
+      --border: rgba(255,255,255,0.06); --border-lit: rgba(14,165,233,0.25);
+      --sky: #0ea5e9; --sky-dim: rgba(14,165,233,0.12);
+      --indigo: #6366f1; --indigo-dim: rgba(99,102,241,0.12);
+      --cyan: #22d3ee; --emerald: #10b981; --amber: #f59e0b;
+      --text: #f0f6ff; --muted: #64748b; --sub: #94a3b8;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; overflow-x: hidden; min-height: 100vh; }
+    .mockup-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; gap: 4px; background: rgba(12,20,34,0.92); backdrop-filter: blur(20px); border: 1px solid rgba(14,165,233,0.2); border-radius: 100px; padding: 5px 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.7); }
+    .mockup-nav a { padding: 6px 14px; border-radius: 100px; font-size: 11.5px; font-weight: 600; color: var(--muted); transition: all 0.2s ease; text-decoration: none; white-space: nowrap; }
+    .mockup-nav a:hover { color: var(--text); background: var(--sky-dim); }
+    .mockup-nav a.active { color: var(--sky); background: var(--sky-dim); }
+    .nav { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; width: calc(100% - 40px); max-width: 1120px; background: rgba(9,14,24,0.75); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 100px; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; flex-direction: column; }
+    .brand-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .brand-name { font-size: 17px; font-weight: 800; background: linear-gradient(90deg, var(--sky), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { padding: 7px 15px; border-radius: 100px; font-size: 13.5px; font-weight: 500; color: var(--sub); cursor: pointer; }
+    .nav-link.active-link { color: var(--text); }
+    .nav-link.outline { border: 1px solid var(--border-lit); color: var(--sky); }
+    .nav-link.cta { background: var(--sky); color: #fff; font-weight: 700; padding: 7px 18px; }
+    /* PAGE */
+    .page { padding: 120px 40px 160px; }
+    .inner { max-width: 1020px; margin: 0 auto; }
+    .page-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sky); margin-bottom: 14px; text-align: center; }
+    h1 { font-size: clamp(32px, 4vw, 50px); font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-bottom: 14px; line-height: 1.1; }
+    .page-sub { font-size: 16px; color: var(--sub); text-align: center; margin-bottom: 40px; line-height: 1.7; }
+    /* BILLING TOGGLE */
+    .toggle-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 56px; }
+    .toggle-label { font-size: 14px; font-weight: 600; color: var(--sub); }
+    .toggle-label.active { color: var(--text); }
+    .toggle-pill { width: 52px; height: 28px; border-radius: 100px; background: var(--sky); position: relative; cursor: pointer; transition: background 0.2s; }
+    .toggle-knob { width: 22px; height: 22px; border-radius: 50%; background: #fff; position: absolute; top: 3px; right: 3px; transition: transform 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .savings-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); font-size: 11px; font-weight: 700; color: var(--emerald); }
+    /* PRICING CARDS */
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: end; margin-bottom: 60px; }
+    .plan-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 32px 28px; position: relative; overflow: hidden; transition: transform 0.25s; }
+    .plan-card:hover { transform: translateY(-3px); }
+    .plan-card.popular { background: linear-gradient(160deg, rgba(14,165,233,0.08), var(--card) 60%); border-color: rgba(14,165,233,0.3); transform: translateY(-8px); }
+    .plan-card.popular:hover { transform: translateY(-12px); }
+    .plan-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+    .plan-card.starter::before { background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent); }
+    .plan-card.popular::before { background: linear-gradient(90deg, transparent, #0ea5e9, transparent); opacity: 0.9; }
+    .plan-card.pro::before { background: linear-gradient(90deg, transparent, rgba(34,211,238,0.6), transparent); }
+    /* Glow */
+    .plan-card.starter { box-shadow: 0 0 60px rgba(99,102,241,0.04); }
+    .plan-card.popular { box-shadow: 0 0 80px rgba(14,165,233,0.12), 0 20px 60px rgba(0,0,0,0.4); }
+    .plan-card.pro { box-shadow: 0 0 60px rgba(34,211,238,0.04); }
+    .popular-badge { position: absolute; top: 18px; right: 18px; padding: 4px 12px; border-radius: 100px; background: var(--sky-dim); border: 1px solid rgba(14,165,233,0.3); font-size: 11px; font-weight: 700; color: var(--sky); text-transform: uppercase; letter-spacing: 0.06em; }
+    .plan-name { font-size: 15px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .plan-name.s { color: rgba(99,102,241,0.8); }
+    .plan-name.p { color: var(--sky); }
+    .plan-name.pr { color: var(--cyan); }
+    .plan-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+    .price-num { font-size: 48px; font-weight: 800; letter-spacing: -0.04em; }
+    .price-per { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .plan-desc { font-size: 13px; color: var(--sub); line-height: 1.6; margin-bottom: 24px; min-height: 52px; }
+    .plan-divider { height: 1px; background: var(--border); margin-bottom: 22px; }
+    .features-list { display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
+    .feat { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; }
+    .feat-check { width: 18px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .feat-check.blue { background: var(--sky-dim); }
+    .feat-check.indigo { background: var(--indigo-dim); }
+    .feat-check.cyan { background: rgba(34,211,238,0.1); }
+    .feat-text { color: var(--sub); line-height: 1.4; }
+    .feat-text strong { color: var(--text); }
+    .plan-btn { width: 100%; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+    .plan-btn.outline-btn { background: transparent; border: 1px solid var(--border-lit); color: var(--text); }
+    .plan-btn.outline-btn:hover { border-color: rgba(14,165,233,0.4); background: var(--sky-dim); }
+    .plan-btn.primary-btn { background: linear-gradient(135deg, var(--sky), #0284c7); color: #fff; box-shadow: 0 4px 20px rgba(14,165,233,0.3); }
+    .plan-btn.primary-btn:hover { box-shadow: 0 6px 28px rgba(14,165,233,0.45); }
+    .plan-btn.cyan-btn { background: transparent; border: 1px solid rgba(34,211,238,0.3); color: var(--cyan); }
+    .plan-btn.cyan-btn:hover { background: rgba(34,211,238,0.08); }
+    /* COMPARISON TABLE */
+    .compare-wrap { margin-bottom: 60px; }
+    .compare-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 24px; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .compare-table th { padding: 14px 16px; text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+    .compare-table th:not(:first-child) { text-align: center; }
+    .compare-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .compare-table td:not(:first-child) { text-align: center; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .th-starter { color: rgba(99,102,241,0.7); }
+    .th-premium { color: var(--sky); }
+    .th-pro { color: var(--cyan); }
+    .check-yes { color: var(--emerald); font-size: 16px; }
+    .check-no { color: rgba(255,255,255,0.15); font-size: 16px; }
+    .val-highlight { color: var(--text); font-weight: 600; }
+    .section-row td { background: rgba(255,255,255,0.02); font-weight: 700; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 16px; }
+    /* FAQ */
+    .faq-wrap { max-width: 680px; margin: 0 auto; }
+    .faq-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 28px; }
+    .faq-item { border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .faq-item:hover { border-color: rgba(14,165,233,0.2); background: rgba(14,165,233,0.03); }
+    .faq-q { font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+    .faq-arrow { color: var(--muted); transition: transform 0.2s; }
+    .faq-a { font-size: 13.5px; color: var(--sub); line-height: 1.68; margin-top: 12px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+
+<nav class="mockup-nav">
+  <a href="homepage.html">Home</a>
+  <a href="pricing.html" class="active">Pricing</a>
+  <a href="download.html">Download</a>
+  <a href="contact.html">Contact</a>
+  <a href="login.html">Login</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="groundstation-kit.html">GS Kit</a>
+</nav>
+
+<header class="nav">
+  <div class="brand">
+    <span class="brand-label">Aircraft Alerts</span>
+    <span class="brand-name">FinalPing</span>
+  </div>
+  <nav class="nav-links">
+    <span class="nav-link">Product</span>
+    <span class="nav-link active-link">Purchase</span>
+    <span class="nav-link">Download</span>
+    <span class="nav-link">Contact</span>
+    <span class="nav-link outline">Log in</span>
+    <span class="nav-link cta">Get Started</span>
+  </nav>
+</header>
+
+<main class="page">
+  <div class="inner">
+    <p class="page-label">Pricing</p>
+    <h1>Simple, transparent pricing</h1>
+    <p class="page-sub">One app. No hidden fees. Cancel anytime.<br>Buy a license key — activate instantly, no account needed.</p>
+
+    <!-- BILLING TOGGLE -->
+    <div class="toggle-wrap">
+      <span class="toggle-label">Monthly</span>
+      <div class="toggle-pill" title="Annual billing toggle">
+        <div class="toggle-knob"></div>
+      </div>
+      <span class="toggle-label active">Annual</span>
+      <span class="savings-badge">Save 17%</span>
+    </div>
+
+    <!-- PRICING CARDS -->
+    <div class="pricing-grid">
+      <!-- STARTER -->
+      <div class="plan-card starter">
+        <div class="plan-name s">Starter</div>
+        <div class="plan-price">
+          <span class="price-num">$79</span>
+          <span class="price-per">/ year</span>
+        </div>
+        <div class="plan-desc">Everything you need to track a single aircraft at your home airport.</div>
+        <div class="plan-divider"></div>
+        <div class="features-list">
+          <div class="feat"><div class="feat-check indigo"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#6366f1" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>1 aircraft</strong> tail number</span></div>
+          <div class="feat"><div class="feat-check indigo"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#6366f1" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>1 location</strong> (home airport)</span></div>
+          <div class="feat"><div class="feat-check indigo"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#6366f1" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Approach zone alerts <strong>(10/5/2nm)</strong></span></div>
+          <div class="feat"><div class="feat-check indigo"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#6366f1" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Discord &amp; email notifications</span></div>
+          <div class="feat"><div class="feat-check indigo"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#6366f1" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Landing &amp; takeoff detection</span></div>
+        </div>
+        <button class="plan-btn outline-btn">Get Starter</button>
+      </div>
+
+      <!-- PREMIUM (POPULAR) -->
+      <div class="plan-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="plan-name p">Premium</div>
+        <div class="plan-price">
+          <span class="price-num" style="background:linear-gradient(135deg,var(--sky),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$149</span>
+          <span class="price-per">/ year</span>
+        </div>
+        <div class="plan-desc">Track your fleet and monitor from multiple locations. Includes Ground Station support.</div>
+        <div class="plan-divider"></div>
+        <div class="features-list">
+          <div class="feat"><div class="feat-check blue"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#0ea5e9" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>5 aircraft</strong> tail numbers</span></div>
+          <div class="feat"><div class="feat-check blue"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#0ea5e9" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>3 locations</strong></span></div>
+          <div class="feat"><div class="feat-check blue"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#0ea5e9" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">All notification channels</span></div>
+          <div class="feat"><div class="feat-check blue"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#0ea5e9" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>Ground Station</strong> support (RTL-SDR)</span></div>
+          <div class="feat"><div class="feat-check blue"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#0ea5e9" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Alert log &amp; history export</span></div>
+          <div class="feat"><div class="feat-check blue"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#0ea5e9" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Custom alert message templates</span></div>
+        </div>
+        <button class="plan-btn primary-btn">Get Premium</button>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan-card pro">
+        <div class="plan-name pr">Pro</div>
+        <div class="plan-price">
+          <span class="price-num" style="background:linear-gradient(135deg,var(--cyan),#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$299</span>
+          <span class="price-per">/ year</span>
+        </div>
+        <div class="plan-desc">Unlimited aircraft and locations. Built for flight schools, maintenance shops, and busy FBOs.</div>
+        <div class="plan-divider"></div>
+        <div class="features-list">
+          <div class="feat"><div class="feat-check cyan"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#22d3ee" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>Unlimited</strong> aircraft</span></div>
+          <div class="feat"><div class="feat-check cyan"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#22d3ee" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text"><strong>Unlimited</strong> locations</span></div>
+          <div class="feat"><div class="feat-check cyan"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#22d3ee" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">All Premium features</span></div>
+          <div class="feat"><div class="feat-check cyan"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#22d3ee" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Priority alert processing</span></div>
+          <div class="feat"><div class="feat-check cyan"><svg width="10" height="10" fill="none" viewBox="0 0 12 12" stroke="#22d3ee" stroke-width="2.5"><polyline points="1,6 4,9 11,2"/></svg></div><span class="feat-text">Dedicated email support</span></div>
+        </div>
+        <button class="plan-btn cyan-btn">Get Pro</button>
+      </div>
+    </div>
+
+    <!-- FEATURE COMPARISON TABLE -->
+    <div class="compare-wrap">
+      <p class="compare-title">Full feature comparison</p>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:40%;">Feature</th>
+            <th class="th-starter">Starter</th>
+            <th class="th-premium">Premium</th>
+            <th class="th-pro">Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" class="section-row">Aircraft Tracking</td></tr>
+          <tr><td>Aircraft tail numbers</td><td>1</td><td>5</td><td class="val-highlight">Unlimited</td></tr>
+          <tr><td>Monitoring locations</td><td>1</td><td>3</td><td class="val-highlight">Unlimited</td></tr>
+          <tr><td>Alert latency</td><td>~30s</td><td>~30s</td><td class="val-highlight">&lt;10s (GS)</td></tr>
+          <tr><td colspan="4" class="section-row">Alerts &amp; Notifications</td></tr>
+          <tr><td>Approach zones (10/5/2nm)</td><td class="check-yes">✓</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Landing &amp; takeoff alerts</td><td class="check-yes">✓</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Discord &amp; email</td><td class="check-yes">✓</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Slack, Teams, SMS</td><td class="check-no">—</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Custom message templates</td><td class="check-no">—</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Quiet hours</td><td class="check-yes">✓</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td colspan="4" class="section-row">Ground Station</td></tr>
+          <tr><td>RTL-SDR / dump1090 support</td><td class="check-no">—</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Local alert pipeline (&lt;5s)</td><td class="check-no">—</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td colspan="4" class="section-row">History &amp; Reporting</td></tr>
+          <tr><td>Alert log</td><td class="check-yes">✓</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Export history (CSV)</td><td class="check-no">—</td><td class="check-yes">✓</td><td class="check-yes">✓</td></tr>
+          <tr><td>Priority support</td><td class="check-no">—</td><td class="check-no">—</td><td class="check-yes">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-wrap">
+      <p class="faq-title">Questions &amp; answers</p>
+      <div class="faq-item">
+        <div class="faq-q">What is a license key? <span class="faq-arrow">↓</span></div>
+        <div class="faq-a">FinalPing uses a one-time license key — no login required to use the app. Purchase a key, paste it into the desktop app, and alerts start immediately. Keys are emailed to you after purchase.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I track aircraft I don't own? <span class="faq-arrow">↓</span></div>
+        <div class="faq-a">Yes. You can track any aircraft by its ICAO hex or tail number, whether it's yours or not. FBO operators commonly use FinalPing to monitor all inbound traffic.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What is a Ground Station? <span class="faq-arrow">↓</span></div>
+        <div class="faq-a">A local ADS-B receiver (RTL-SDR dongle + Raspberry Pi + dump1090) that FinalPing can connect to directly. You get sub-5-second local alerts that don't depend on the cloud data pipeline.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Do I need to keep the app open? <span class="faq-arrow">↓</span></div>
+        <div class="faq-a">Yes, the desktop app needs to be running. It minimizes to your system tray and uses minimal resources. The auto-launch on login option keeps it running in the background automatically.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

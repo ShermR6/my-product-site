@@ -169,7 +169,7 @@ export default function HomePage() {
             boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
             marginBottom: 40,
           }}>
-            <VideoPlayer src="/videos/FinalPingSAAS.mp4" />
+            <VideoPlayer src="/videos/hero.mp4" />
           </div>
 
           {/* Steps below */}

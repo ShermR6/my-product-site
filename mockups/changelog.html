@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinalPing — Changelog Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060a14; --surface: #0c1422; --card: #0f1928; --card-lit: #131f30;
+      --border: rgba(255,255,255,0.06); --border-lit: rgba(14,165,233,0.25);
+      --sky: #0ea5e9; --sky-dim: rgba(14,165,233,0.12);
+      --indigo: #6366f1; --indigo-dim: rgba(99,102,241,0.12);
+      --cyan: #22d3ee; --emerald: #10b981; --amber: #f59e0b; --rose: #f43f5e;
+      --text: #f0f6ff; --muted: #64748b; --sub: #94a3b8;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-height: 100vh; }
+    .mockup-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; gap: 4px; background: rgba(12,20,34,0.92); backdrop-filter: blur(20px); border: 1px solid rgba(14,165,233,0.2); border-radius: 100px; padding: 5px 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.7); }
+    .mockup-nav a { padding: 6px 14px; border-radius: 100px; font-size: 11.5px; font-weight: 600; color: var(--muted); transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+    .mockup-nav a:hover { color: var(--text); background: var(--sky-dim); }
+    .mockup-nav a.active { color: var(--sky); background: var(--sky-dim); }
+    .nav { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; width: calc(100% - 40px); max-width: 1120px; background: rgba(9,14,24,0.75); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 100px; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; flex-direction: column; }
+    .brand-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .brand-name { font-size: 17px; font-weight: 800; background: linear-gradient(90deg, var(--sky), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { padding: 7px 15px; border-radius: 100px; font-size: 13.5px; font-weight: 500; color: var(--sub); cursor: pointer; }
+    .nav-link.outline { border: 1px solid var(--border-lit); color: var(--sky); }
+    .nav-link.cta { background: var(--sky); color: #fff; font-weight: 700; padding: 7px 18px; }
+    /* PAGE */
+    .page { padding: 120px 40px 160px; }
+    .inner { max-width: 900px; margin: 0 auto; }
+    .page-header { margin-bottom: 56px; }
+    .page-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sky); margin-bottom: 12px; }
+    h1 { font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
+    .page-sub { font-size: 15.5px; color: var(--sub); line-height: 1.7; max-width: 500px; }
+    /* CHANGELOG ENTRIES */
+    .cl-entries { display: flex; flex-direction: column; gap: 0; }
+    .cl-entry { display: grid; grid-template-columns: 140px 1fr; gap: 0; position: relative; }
+    /* VERSION SIDEBAR */
+    .cl-side { padding: 0 32px 0 0; padding-top: 4px; position: relative; }
+    .cl-side::after { content: ''; position: absolute; top: 18px; right: 0; bottom: -60px; width: 1px; background: linear-gradient(to bottom, rgba(14,165,233,0.25), rgba(14,165,233,0.06)); }
+    .cl-entry:last-child .cl-side::after { display: none; }
+    .cl-dot { position: absolute; right: -5px; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--sky); z-index: 2; }
+    .cl-dot.latest { background: var(--sky); box-shadow: 0 0 12px rgba(14,165,233,0.5); }
+    .cl-version { font-size: 15px; font-weight: 800; color: var(--text); }
+    .cl-date { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .cl-badge { display: inline-flex; margin-top: 6px; padding: 2px 8px; border-radius: 100px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.2); font-size: 10px; font-weight: 700; color: #22c55e; text-transform: uppercase; letter-spacing: 0.06em; }
+    /* ENTRY CONTENT */
+    .cl-content { padding-bottom: 48px; padding-left: 32px; padding-top: 0; }
+    .cl-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; transition: border-color 0.2s; }
+    .cl-entry.is-latest .cl-card { border-color: rgba(14,165,233,0.2); background: linear-gradient(135deg, rgba(14,165,233,0.05), var(--card)); }
+    .cl-card::before { content: ''; display: block; height: 1px; background: linear-gradient(90deg, transparent, rgba(14,165,233,0.3), transparent); margin: -24px -24px 20px; opacity: 0; transition: opacity 0.2s; }
+    .cl-entry.is-latest .cl-card::before { opacity: 1; }
+    .changes { display: flex; flex-direction: column; gap: 10px; }
+    .change-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; }
+    .ch-tag { flex-shrink: 0; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 4px; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .ch-tag.new { background: rgba(14,165,233,0.12); color: #38bdf8; }
+    .ch-tag.fix { background: rgba(248,113,113,0.12); color: #f87171; }
+    .ch-tag.improved { background: rgba(168,85,247,0.12); color: #a855f7; }
+    .ch-text { color: var(--sub); line-height: 1.55; }
+    /* VERSION JUMP */
+    .version-jump { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px; }
+    .vj-btn { padding: 5px 12px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .vj-btn:hover { border-color: rgba(14,165,233,0.25); color: var(--sky); background: var(--sky-dim); }
+    .vj-btn.current { border-color: rgba(14,165,233,0.3); color: var(--sky); background: var(--sky-dim); }
+  </style>
+</head>
+<body>
+
+<nav class="mockup-nav">
+  <a href="homepage.html">Home</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="download.html">Download</a>
+  <a href="contact.html">Contact</a>
+  <a href="login.html">Login</a>
+  <a href="changelog.html" class="active">Changelog</a>
+  <a href="groundstation-kit.html">GS Kit</a>
+</nav>
+
+<header class="nav">
+  <div class="brand">
+    <span class="brand-label">Aircraft Alerts</span>
+    <span class="brand-name">FinalPing</span>
+  </div>
+  <nav class="nav-links">
+    <span class="nav-link">Product</span>
+    <span class="nav-link">Purchase</span>
+    <span class="nav-link">Download</span>
+    <span class="nav-link">Contact</span>
+    <span class="nav-link outline">Log in</span>
+    <span class="nav-link cta">Get Started</span>
+  </nav>
+</header>
+
+<main class="page">
+  <div class="inner">
+    <div class="page-header">
+      <p class="page-label">Changelog</p>
+      <h1>What's new in FinalPing</h1>
+      <p class="page-sub">Release history and the story behind each update — from bug fixes to major features.</p>
+    </div>
+
+    <!-- VERSION JUMP LINKS -->
+    <div class="version-jump">
+      <span class="vj-btn current">v1.0.9 — Latest</span>
+      <span class="vj-btn">v1.0.8</span>
+      <span class="vj-btn">v1.0.7</span>
+      <span class="vj-btn">v1.0.6</span>
+      <span class="vj-btn">v1.0.5</span>
+      <span class="vj-btn">Earlier →</span>
+    </div>
+
+    <div class="cl-entries">
+      <!-- 1.0.9 -->
+      <div class="cl-entry is-latest">
+        <div class="cl-side">
+          <div class="cl-dot latest"></div>
+          <div class="cl-version">v1.0.9</div>
+          <div class="cl-date">June 2026</div>
+          <div class="cl-badge">Latest</div>
+        </div>
+        <div class="cl-content">
+          <div class="cl-card">
+            <div class="changes">
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Live Map trail now records the full flight path in the background — switch to any tab and come back to see the complete route from takeoff</span></div>
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">App now checks for updates hourly in addition to on launch</span></div>
+              <div class="change-item"><span class="ch-tag fix">Fix</span><span class="ch-text">Landing alerts now fire reliably — cloud tracker detects on-ground transitions directly instead of waiting for signal loss</span></div>
+              <div class="change-item"><span class="ch-tag fix">Fix</span><span class="ch-text">Takeoff alerts added to cloud tracker — fires when aircraft transitions from on-ground to airborne</span></div>
+              <div class="change-item"><span class="ch-tag fix">Fix</span><span class="ch-text">Dashboard Recent Alerts timestamps now display correctly instead of showing "Just now"</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 1.0.8 -->
+      <div class="cl-entry">
+        <div class="cl-side">
+          <div class="cl-dot"></div>
+          <div class="cl-version">v1.0.8</div>
+          <div class="cl-date">May 2026</div>
+        </div>
+        <div class="cl-content">
+          <div class="cl-card">
+            <div class="changes">
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">New app icon with runway and radar design</span></div>
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Formatting syntax guide in alert message editor — bold, italic, underline, and strikethrough reference chips</span></div>
+              <div class="change-item"><span class="ch-tag improved">Improved</span><span class="ch-text">Help Center button added to the dashboard toolbar</span></div>
+              <div class="change-item"><span class="ch-tag improved">Improved</span><span class="ch-text">macOS installer now available for download</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 1.0.7 -->
+      <div class="cl-entry">
+        <div class="cl-side">
+          <div class="cl-dot"></div>
+          <div class="cl-version">v1.0.7</div>
+          <div class="cl-date">May 2026</div>
+        </div>
+        <div class="cl-content">
+          <div class="cl-card">
+            <div class="changes">
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Auto-updater: app now checks for new versions on launch and prompts to install</span></div>
+              <div class="change-item"><span class="ch-tag improved">Improved</span><span class="ch-text">Download page updated with direct installer links for Windows and macOS</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 1.0.6 -->
+      <div class="cl-entry">
+        <div class="cl-side">
+          <div class="cl-dot"></div>
+          <div class="cl-version">v1.0.6</div>
+          <div class="cl-date">May 2026</div>
+        </div>
+        <div class="cl-content">
+          <div class="cl-card">
+            <div class="changes">
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Plan upgrades available directly from the Billing tab, no need to contact support</span></div>
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Quiet hours enable/disable toggle — can now fully turn quiet hours off after setting them</span></div>
+              <div class="change-item"><span class="ch-tag fix">Fix</span><span class="ch-text">Quiet hours were stored but never enforced; notifications now correctly suppressed during the set window</span></div>
+              <div class="change-item"><span class="ch-tag improved">Improved</span><span class="ch-text">ETA on approach alerts now uses actual aircraft groundspeed from ADS-B data instead of a fixed 90-knot estimate</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 1.0.5 -->
+      <div class="cl-entry">
+        <div class="cl-side">
+          <div class="cl-dot"></div>
+          <div class="cl-version">v1.0.5</div>
+          <div class="cl-date">April 2026</div>
+        </div>
+        <div class="cl-content">
+          <div class="cl-card">
+            <div class="changes">
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Ground Station support: connect a local RTL-SDR/dump1090 receiver for lower-latency landing and takeoff detection</span></div>
+              <div class="change-item"><span class="ch-tag new">New</span><span class="ch-text">Takeoff detection added alongside existing landing alerts</span></div>
+              <div class="change-item"><span class="ch-tag improved">Improved</span><span class="ch-text">Approach alert pipeline now enforces sequential zone crossing (10nm → 5nm → 2nm) to reduce false positives</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Earlier versions collapsed -->
+      <div class="cl-entry">
+        <div class="cl-side" style="padding-bottom:0;">
+          <div class="cl-dot" style="border-color:rgba(100,116,139,0.4);"></div>
+          <div class="cl-version" style="color:var(--muted);">Earlier</div>
+          <div class="cl-date">v1.0.0 – v1.0.4</div>
+        </div>
+        <div class="cl-content" style="padding-bottom:0;">
+          <div class="cl-card" style="cursor:pointer;opacity:0.6;transition:opacity 0.2s;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.6'">
+            <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--sub);">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
+              Show 5 older releases (v1.0.0 through v1.0.4)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

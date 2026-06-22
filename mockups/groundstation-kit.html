@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinalPing — Ground Station Kit Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060a14; --surface: #0c1422; --card: #0f1928; --card-lit: #131f30;
+      --border: rgba(255,255,255,0.06); --border-lit: rgba(34,211,238,0.25);
+      --sky: #0ea5e9; --sky-dim: rgba(14,165,233,0.12);
+      --indigo: #6366f1; --indigo-dim: rgba(99,102,241,0.12);
+      --cyan: #22d3ee; --cyan-dim: rgba(34,211,238,0.1);
+      --emerald: #10b981; --amber: #f59e0b; --rose: #f43f5e;
+      --text: #f0f6ff; --muted: #64748b; --sub: #94a3b8;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-height: 100vh; }
+    .mockup-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; gap: 4px; background: rgba(12,20,34,0.92); backdrop-filter: blur(20px); border: 1px solid rgba(14,165,233,0.2); border-radius: 100px; padding: 5px 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.7); }
+    .mockup-nav a { padding: 6px 14px; border-radius: 100px; font-size: 11.5px; font-weight: 600; color: var(--muted); transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+    .mockup-nav a:hover { color: var(--text); background: var(--sky-dim); }
+    .mockup-nav a.active { color: var(--cyan); background: var(--cyan-dim); border: 1px solid rgba(34,211,238,0.2); }
+    .nav { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; width: calc(100% - 40px); max-width: 1120px; background: rgba(9,14,24,0.75); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 100px; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; flex-direction: column; }
+    .brand-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .brand-name { font-size: 17px; font-weight: 800; background: linear-gradient(90deg, var(--sky), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { padding: 7px 15px; border-radius: 100px; font-size: 13.5px; font-weight: 500; color: var(--sub); cursor: pointer; }
+    .nav-link.outline { border: 1px solid var(--border-lit); color: var(--sky); }
+    .nav-link.cta { background: var(--sky); color: #fff; font-weight: 700; padding: 7px 18px; }
+    /* PAGE */
+    .page { padding: 120px 40px 160px; }
+    .inner { max-width: 1100px; margin: 0 auto; }
+    .page-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+    /* HERO PRODUCT LAYOUT */
+    .product-hero { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; margin-bottom: 72px; }
+    /* PRODUCT ILLUSTRATION */
+    .product-visual { background: var(--card); border: 1px solid var(--border-lit); border-radius: 24px; padding: 40px; display: flex; align-items: center; justify-content: center; min-height: 380px; position: relative; overflow: hidden; }
+    .product-visual::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 80%, rgba(34,211,238,0.08), transparent 70%); pointer-events: none; }
+    /* SDR ILLUSTRATION */
+    .sdr-scene { display: flex; flex-direction: column; align-items: center; gap: 24px; position: relative; z-index: 1; }
+    /* PRODUCT INFO */
+    .product-info { }
+    h1 { font-size: clamp(28px, 3.5vw, 44px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 14px; }
+    h1 span { background: linear-gradient(135deg, var(--cyan), #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .product-desc { font-size: 15.5px; color: var(--sub); line-height: 1.72; margin-bottom: 28px; max-width: 480px; }
+    .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+    .product-badge { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .pb-cyan { background: var(--cyan-dim); border: 1px solid rgba(34,211,238,0.2); color: var(--cyan); }
+    .pb-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: var(--emerald); }
+    .pb-blue { background: var(--sky-dim); border: 1px solid rgba(14,165,233,0.2); color: var(--sky); }
+    /* BUNDLE OPTIONS */
+    .bundles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .bundle { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 14px; }
+    .bundle:hover { border-color: rgba(34,211,238,0.2); }
+    .bundle.selected { border-color: rgba(34,211,238,0.35); background: linear-gradient(135deg, rgba(34,211,238,0.06), var(--card)); }
+    .bundle-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
+    .bundle.selected .bundle-radio { border-color: var(--cyan); }
+    .bundle.selected .bundle-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); }
+    .bundle-info { flex: 1; }
+    .bundle-name { font-size: 14px; font-weight: 700; }
+    .bundle-desc { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .bundle-price { font-size: 18px; font-weight: 800; color: var(--text); }
+    .bundle-orig { font-size: 12px; color: var(--muted); text-decoration: line-through; }
+    /* BUY BUTTON */
+    .buy-btn { width: 100%; padding: 15px; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; border: none; font-family: inherit; background: linear-gradient(135deg, var(--cyan), #06b6d4); color: #040810; box-shadow: 0 4px 24px rgba(34,211,238,0.3); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; }
+    .buy-btn:hover { box-shadow: 0 6px 32px rgba(34,211,238,0.45); transform: translateY(-1px); }
+    .secondary-btn { width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid var(--border-lit); background: transparent; color: var(--cyan); font-family: inherit; transition: all 0.2s; }
+    .secondary-btn:hover { background: var(--cyan-dim); }
+    /* WHAT'S INCLUDED */
+    .section { margin-bottom: 64px; }
+    .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+    h2 { font-size: clamp(22px, 2.8vw, 32px); font-weight: 800; letter-spacing: -0.025em; margin-bottom: 32px; }
+    .included-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .inc-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; transition: border-color 0.2s; }
+    .inc-card:hover { border-color: rgba(34,211,238,0.15); }
+    .inc-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: var(--cyan-dim); }
+    .inc-name { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .inc-sub { font-size: 12.5px; color: var(--sub); line-height: 1.6; }
+    /* SPECS TABLE */
+    .specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    .spec-cell { background: var(--card); padding: 16px 20px; }
+    .spec-key { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+    .spec-val { font-size: 14px; font-weight: 600; color: var(--text); }
+    /* SETUP STEPS */
+    .setup-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .setup-step { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; }
+    .setup-num { font-size: 28px; font-weight: 900; color: rgba(34,211,238,0.15); line-height: 1; margin-bottom: 10px; }
+    .setup-title { font-size: 13.5px; font-weight: 700; margin-bottom: 6px; }
+    .setup-desc { font-size: 12px; color: var(--sub); line-height: 1.6; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+
+<nav class="mockup-nav">
+  <a href="homepage.html">Home</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="download.html">Download</a>
+  <a href="contact.html">Contact</a>
+  <a href="login.html">Login</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="groundstation-kit.html" class="active">GS Kit</a>
+</nav>
+
+<header class="nav">
+  <div class="brand">
+    <span class="brand-label">Aircraft Alerts</span>
+    <span class="brand-name">FinalPing</span>
+  </div>
+  <nav class="nav-links">
+    <span class="nav-link">Product</span>
+    <span class="nav-link">Purchase</span>
+    <span class="nav-link">Download</span>
+    <span class="nav-link">Contact</span>
+    <span class="nav-link outline">Log in</span>
+    <span class="nav-link cta">Get Started</span>
+  </nav>
+</header>
+
+<main class="page">
+  <div class="inner">
+
+    <!-- PRODUCT HERO -->
+    <div class="product-hero">
+      <!-- PRODUCT ILLUSTRATION -->
+      <div class="product-visual">
+        <div class="sdr-scene">
+          <!-- Antenna SVG -->
+          <svg width="200" height="260" viewBox="0 0 200 260" fill="none">
+            <!-- Antenna mast -->
+            <rect x="96" y="20" width="8" height="140" rx="4" fill="rgba(34,211,238,0.4)"/>
+            <!-- Antenna top elements -->
+            <rect x="60" y="20" width="80" height="4" rx="2" fill="rgba(34,211,238,0.6)"/>
+            <rect x="70" y="32" width="60" height="3" rx="1.5" fill="rgba(34,211,238,0.5)"/>
+            <rect x="80" y="42" width="40" height="3" rx="1.5" fill="rgba(34,211,238,0.4)"/>
+            <rect x="88" y="52" width="24" height="3" rx="1.5" fill="rgba(34,211,238,0.35)"/>
+            <!-- Signal waves from antenna -->
+            <path d="M100 18 Q100 18 86 8" stroke="rgba(34,211,238,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round">
+              <animate attributeName="opacity" values="0.8;0.1;0.8" dur="1.8s" repeatCount="indefinite"/>
+            </path>
+            <path d="M100 18 Q100 18 114 8" stroke="rgba(34,211,238,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round">
+              <animate attributeName="opacity" values="0.8;0.1;0.8" dur="1.8s" repeatCount="indefinite" begin="0.3s"/>
+            </path>
+            <path d="M100 18 Q78 4 66 2" stroke="rgba(34,211,238,0.3)" stroke-width="1.5" fill="none" stroke-linecap="round">
+              <animate attributeName="opacity" values="0.5;0;0.5" dur="2.2s" repeatCount="indefinite" begin="0.6s"/>
+            </path>
+            <path d="M100 18 Q122 4 134 2" stroke="rgba(34,211,238,0.3)" stroke-width="1.5" fill="none" stroke-linecap="round">
+              <animate attributeName="opacity" values="0.5;0;0.5" dur="2.2s" repeatCount="indefinite" begin="0.9s"/>
+            </path>
+            <!-- Base / enclosure -->
+            <rect x="72" y="158" width="56" height="40" rx="8" fill="rgba(15,25,40,0.9)" stroke="rgba(34,211,238,0.3)" stroke-width="1.5"/>
+            <rect x="80" y="165" width="40" height="6" rx="3" fill="rgba(34,211,238,0.2)"/>
+            <rect x="80" y="174" width="28" height="4" rx="2" fill="rgba(34,211,238,0.15)"/>
+            <!-- LED indicator on enclosure -->
+            <circle cx="116" cy="168" r="3" fill="#22d3ee">
+              <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <!-- USB dongle (RTL-SDR) -->
+            <rect x="88" y="198" width="24" height="36" rx="6" fill="rgba(14,165,233,0.2)" stroke="rgba(14,165,233,0.4)" stroke-width="1.5"/>
+            <rect x="93" y="218" width="14" height="8" rx="2" fill="rgba(0,0,0,0.5)" stroke="rgba(14,165,233,0.3)" stroke-width="1"/>
+            <rect x="96" y="220" width="8" height="4" rx="1" fill="#0ea5e9" opacity="0.7"/>
+            <!-- Pi -->
+            <rect x="30" y="195" width="60" height="45" rx="8" fill="rgba(12,20,34,0.9)" stroke="rgba(99,102,241,0.4)" stroke-width="1.5"/>
+            <rect x="36" y="202" width="32" height="22" rx="3" fill="rgba(99,102,241,0.12)" stroke="rgba(99,102,241,0.2)" stroke-width="1"/>
+            <text x="49" y="217" fill="rgba(99,102,241,0.7)" font-size="7" font-family="Plus Jakarta Sans, sans-serif" font-weight="700">Pi</text>
+            <!-- LED on Pi -->
+            <circle cx="80" cy="205" r="2.5" fill="#10b981">
+              <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <!-- Cable from Pi to USB dongle -->
+            <path d="M90 218 Q88 215 90 210 Q92 206 90 202" stroke="rgba(14,165,233,0.3)" stroke-width="1.5" fill="none" stroke-dasharray="2,2"/>
+            <!-- Ground / base plate -->
+            <ellipse cx="100" cy="248" rx="70" ry="8" fill="rgba(34,211,238,0.06)" stroke="rgba(34,211,238,0.12)" stroke-width="1"/>
+          </svg>
+          <!-- Caption -->
+          <div style="text-align:center;">
+            <div style="font-size:13px;font-weight:700;color:var(--cyan);">Pro Stick Plus + Stubby Antenna</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px;">+ Raspberry Pi 4 (4GB)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUCT INFO -->
+      <div class="product-info">
+        <p class="page-label">Hardware</p>
+        <h1>Ground Station<br><span>Complete Kit</span></h1>
+        <p class="product-desc">Everything you need for local ADS-B reception at your airport. Sub-5-second alert latency, no cloud dependency for your home base. Pre-configured and plug-and-play.</p>
+
+        <div class="badge-row">
+          <span class="product-badge pb-cyan">&lt;5s latency</span>
+          <span class="product-badge pb-green">Ships in 3–5 days</span>
+          <span class="product-badge pb-blue">1090 MHz ADS-B</span>
+        </div>
+
+        <!-- BUNDLE OPTIONS -->
+        <div class="bundles">
+          <div class="bundle selected">
+            <div class="bundle-radio"></div>
+            <div class="bundle-info">
+              <div class="bundle-name">Components Only</div>
+              <div class="bundle-desc">Pro Stick Plus + Stubby Antenna. You supply the Pi.</div>
+            </div>
+            <div>
+              <div class="bundle-price">$89</div>
+              <div class="bundle-orig">$109</div>
+            </div>
+          </div>
+          <div class="bundle">
+            <div class="bundle-radio"></div>
+            <div class="bundle-info">
+              <div class="bundle-name">Complete Kit (Pre-Built)</div>
+              <div class="bundle-desc">Pi 4 + Pro Stick Plus + Antenna + Power. Ready to run.</div>
+            </div>
+            <div>
+              <div class="bundle-price">$199</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="buy-btn">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8l-1.5 6m12-6l1.5 6M9 19a1 1 0 100 2 1 1 0 000-2zm8 0a1 1 0 100 2 1 1 0 000-2z"/></svg>
+          Add to Cart — $89
+        </button>
+        <button class="secondary-btn">View Setup Guide →</button>
+      </div>
+    </div>
+
+    <!-- WHAT'S INCLUDED -->
+    <div class="section">
+      <p class="sec-label">Components</p>
+      <h2>What's in the kit</h2>
+      <div class="included-grid">
+        <div class="inc-card">
+          <div class="inc-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+          </div>
+          <div class="inc-name">FlightAware Pro Stick Plus</div>
+          <div class="inc-sub">High-performance RTL-SDR with built-in 1090MHz filter and LNA. Best in class for ADS-B.</div>
+        </div>
+        <div class="inc-card">
+          <div class="inc-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><line x1="12" y1="22" x2="12" y2="2"/><path d="M17 7l-5-5-5 5"/><path d="M17 12l-5-5-5 5" opacity="0.5"/></svg>
+          </div>
+          <div class="inc-name">1090MHz Stubby Antenna</div>
+          <div class="inc-sub">Tuned omnidirectional antenna for ADS-B. 5–15 mile range in most environments.</div>
+        </div>
+        <div class="inc-card">
+          <div class="inc-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="inc-name">Raspberry Pi 4 (4GB)</div>
+          <div class="inc-sub">Complete kit only. Runs dump1090 + finalping_ground.py. Configured and ready to go.</div>
+        </div>
+        <div class="inc-card">
+          <div class="inc-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div class="inc-name">Pre-installed Software</div>
+          <div class="inc-sub">Complete kit: Raspberry Pi OS, dump1090-fa, and finalping_ground.py v2.9 pre-installed.</div>
+        </div>
+        <div class="inc-card">
+          <div class="inc-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          </div>
+          <div class="inc-name">Setup Guide PDF</div>
+          <div class="inc-sub">Step-by-step instructions for siting your antenna, configuring the Pi, and connecting to FinalPing.</div>
+        </div>
+        <div class="inc-card">
+          <div class="inc-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" stroke-width="2"><path d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </div>
+          <div class="inc-name">30-Day Support</div>
+          <div class="inc-sub">Priority email support for first 30 days. We'll help you get your station dialed in.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPECS -->
+    <div class="section">
+      <p class="sec-label">Technical Specs</p>
+      <h2 style="margin-bottom:24px;">Hardware specifications</h2>
+      <div class="specs-grid">
+        <div class="spec-cell"><div class="spec-key">Frequency</div><div class="spec-val">1090 MHz (ADS-B Mode S)</div></div>
+        <div class="spec-cell"><div class="spec-key">Sensitivity</div><div class="spec-val">−10 dBFS (with LNA)</div></div>
+        <div class="spec-cell"><div class="spec-key">Alert Latency</div><div class="spec-val">&lt;5 seconds local</div></div>
+        <div class="spec-cell"><div class="spec-key">Range (typical)</div><div class="spec-val">50–150 nm from antenna</div></div>
+        <div class="spec-cell"><div class="spec-key">Connection</div><div class="spec-val">USB 2.0 / 3.0 host</div></div>
+        <div class="spec-cell"><div class="spec-key">OS Requirement</div><div class="spec-val">Raspberry Pi OS / Linux</div></div>
+        <div class="spec-cell"><div class="spec-key">Power</div><div class="spec-val">5V USB-C (Pi), USB-A (dongle)</div></div>
+        <div class="spec-cell"><div class="spec-key">Auto-Update</div><div class="spec-val">Hourly via finalping_ground.py</div></div>
+      </div>
+    </div>
+
+    <!-- SETUP STEPS -->
+    <div class="section">
+      <p class="sec-label">Setup</p>
+      <h2 style="margin-bottom:24px;">Four steps to &lt;5s alerts</h2>
+      <div class="setup-steps">
+        <div class="setup-step">
+          <div class="setup-num">01</div>
+          <div class="setup-title">Position Antenna</div>
+          <div class="setup-desc">Mount the stubby antenna at height — roof or window with clear sky view. Higher = more range.</div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num" style="color:rgba(34,211,238,0.2);">02</div>
+          <div class="setup-title">Connect Hardware</div>
+          <div class="setup-desc">Plug the Pro Stick Plus into your Pi's USB port. Connect power and ethernet or WiFi.</div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num" style="color:rgba(99,102,241,0.15);">03</div>
+          <div class="setup-title">Run the Script</div>
+          <div class="setup-desc">Start finalping_ground.py with your API key and airport ICAO. dump1090 starts automatically.</div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num" style="color:rgba(16,185,129,0.15);">04</div>
+          <div class="setup-title">Enable in App</div>
+          <div class="setup-desc">Toggle "Ground Station" on in the FinalPing desktop app. First local ping appears within seconds.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>
