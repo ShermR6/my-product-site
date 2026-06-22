@@ -18,12 +18,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${base}/auth/desktop-complete?error=missing_params`);
   }
 
-  // Verify state
+  // Verify state (state may be "{random}:{scheme}" — look up the full string)
   const storedState = await prisma.oAuthState.findUnique({ where: { state } });
   if (!storedState || storedState.expiresAt < new Date()) {
     return NextResponse.redirect(`${base}/auth/desktop-complete?error=invalid_state`);
   }
   await prisma.oAuthState.delete({ where: { state } });
+
+  // Parse scheme encoded in state
+  const colonIdx = state.indexOf(":");
+  const scheme = colonIdx !== -1 ? state.slice(colonIdx + 1) : "finalpingapp";
 
   // Exchange code for tokens
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -74,7 +78,8 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  const schemeParam = scheme !== "finalpingapp" ? `&scheme=${encodeURIComponent(scheme)}` : "";
   return NextResponse.redirect(
-    `${base}/auth/desktop-complete?token=${desktopToken}&email=${encodeURIComponent(email)}`
+    `${base}/auth/desktop-complete?token=${desktopToken}&email=${encodeURIComponent(email)}${schemeParam}`
   );
 }

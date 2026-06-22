@@ -17,9 +17,10 @@ function DesktopCompleteContent() {
       setStatus("error");
       return;
     }
-    const deepLink = `finalpingapp://auth?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+    const scheme = searchParams.get("scheme") || "finalpingapp";
+    const deepLink = `${scheme}://auth?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
     window.location.href = deepLink;
-  }, [token, email, error]);
+  }, [token, email, error, searchParams]);
 
   return (
     <div style={{
