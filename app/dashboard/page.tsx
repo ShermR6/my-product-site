@@ -143,6 +143,11 @@ type DeleteStep = "idle" | "confirm" | "choose-method" | "enter-code" | "totp-co
 
 function AccountTab({ email, session }: { email: string; session: any }) {
   const [memberSince, setMemberSince] = useState<string>("—");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [nameInput, setNameInput] = useState<string>("");
+  const [nameEditing, setNameEditing] = useState(false);
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameMsg, setNameMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [deleteStep, setDeleteStep] = useState<DeleteStep>("idle");
   const [deleting, setDeleting] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState<string>("");
@@ -159,6 +164,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
         if (data?.createdAt) {
           setMemberSince(new Date(data.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
         }
+        setDisplayName(data?.name ?? "");
+        setNameInput(data?.name ?? "");
       })
       .catch(() => {});
     fetch("/api/auth/2fa/status")
@@ -166,6 +173,27 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       .then(d => setTwoFA(d))
       .catch(() => {});
   }, []);
+
+  const saveName = async () => {
+    setNameSaving(true);
+    setNameMsg(null);
+    try {
+      const r = await fetch("/api/auth/update-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nameInput }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setNameMsg({ text: d.error || "Failed to save.", type: "error" }); return; }
+      setDisplayName(nameInput.trim());
+      setNameEditing(false);
+      setNameMsg({ text: "Name updated.", type: "success" });
+    } catch {
+      setNameMsg({ text: "Something went wrong.", type: "error" });
+    } finally {
+      setNameSaving(false);
+    }
+  };
 
   const has2FA = twoFA && (twoFA.email || twoFA.sms || twoFA.totp);
   const activeMethods = twoFA ? [
@@ -258,6 +286,51 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Account Information</h2><p style={styles.tabSub}>Your profile and account details</p></div>
       <div style={styles.card}>
         <div style={styles.infoRow}><span style={styles.infoLabel}>Email Address</span><span style={styles.infoValue}>{email}</span></div>
+        <div style={styles.infoRow}>
+          <span style={styles.infoLabel}>Display Name</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, justifyContent: "flex-end" }}>
+            {nameEditing ? (
+              <>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setNameEditing(false); setNameInput(displayName); setNameMsg(null); } }}
+                  placeholder="Your display name"
+                  autoFocus
+                  style={{ ...styles.input, maxWidth: 220, padding: "6px 10px", fontSize: 13 }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }}
+                />
+                <button onClick={saveName} disabled={nameSaving}
+                  style={{ ...styles.primaryBtn, padding: "6px 14px", fontSize: 12, opacity: nameSaving ? 0.6 : 1 }}>
+                  {nameSaving ? "Saving..." : "Save"}
+                </button>
+                <button onClick={() => { setNameEditing(false); setNameInput(displayName); setNameMsg(null); }}
+                  style={{ ...styles.ghostBtn, padding: "6px 12px", fontSize: 12 }}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <span style={{ ...styles.infoValue, color: displayName ? "var(--text)" : "var(--muted)", fontStyle: displayName ? "normal" : "italic" }}>
+                  {displayName || "Not set"}
+                </span>
+                <button onClick={() => { setNameEditing(true); setNameMsg(null); }}
+                  style={{ padding: "4px 12px", borderRadius: 6, background: "transparent", border: "1px solid var(--border)", color: "var(--muted)", fontSize: 12, cursor: "pointer" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.color = "#0ea5e9"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>
+                  Edit
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        {nameMsg && (
+          <div style={{ padding: "8px 0 4px", fontSize: 12, color: nameMsg.type === "success" ? "#23c76b" : "#ef4444" }}>
+            {nameMsg.text}
+          </div>
+        )}
         <div style={styles.infoRowLast}><span style={styles.infoLabel}>Member Since</span>
           <span style={styles.infoValue}>{memberSince}</span>
         </div>
