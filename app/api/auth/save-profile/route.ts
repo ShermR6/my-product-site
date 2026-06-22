@@ -53,5 +53,16 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Push display_name update to both backends (fire-and-forget)
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  if (internalSecret) {
+    const pushPayload = JSON.stringify({ email: emailChanged ? trimmedEmail : session.user.email, display_name: trimmedName });
+    const pushHeaders = { "Content-Type": "application/json", "X-Internal-Secret": internalSecret };
+    Promise.all([
+      fetch("https://aircraft-tracker-backend-teams-production.up.railway.app/api/internal/push-display-name", { method: "POST", headers: pushHeaders, body: pushPayload }),
+      fetch("https://aircraft-tracker-backend-production.up.railway.app/api/internal/push-display-name", { method: "POST", headers: pushHeaders, body: pushPayload }),
+    ]).catch(() => {});
+  }
+
   return NextResponse.json({ success: true, emailChanged, newName: trimmedName });
 }
