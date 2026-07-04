@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import twilio from "twilio";
 import * as OTPAuth from "otpauth";
+import QRCode from "qrcode";
 const bcrypt = require("bcryptjs");
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -62,6 +63,10 @@ export async function POST(req: NextRequest) {
     const otpauthUrl = totp.toString();
     const secretBase32 = secret.base32;
 
+    // Render the QR locally so the shared secret never leaves our origin
+    // (previously the otpauth:// URI was sent to a third-party QR service).
+    const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 180 });
+
     // Store secret temporarily until verified
     await prisma.user.update({
       where: { email: session.user.email },
@@ -76,6 +81,7 @@ export async function POST(req: NextRequest) {
       success: true,
       method: "totp",
       otpauthUrl,
+      qrDataUrl,
       secret: secretBase32,
     });
   }

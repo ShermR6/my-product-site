@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { validInternalSecret } from "@/lib/internalSecret";
 
 export async function POST(req: NextRequest) {
-  const internalSecret = process.env.WEBHOOK_INTERNAL_SECRET || "";
-  const reqSecret = req.headers.get("x-internal-secret") || "";
-  if (internalSecret && reqSecret !== internalSecret) {
+  // Fail closed: reject when the secret is missing or mismatched (previously the
+  // check was skipped entirely if the env var was empty).
+  if (!validInternalSecret(req.headers.get("x-internal-secret"))) {
     return NextResponse.json({ valid: false }, { status: 401 });
   }
 

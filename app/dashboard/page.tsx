@@ -970,7 +970,7 @@ function SecurityTab({ email }: { email: string }) {
   const [setupPhone, setSetupPhone] = useState(""); const [setupCode, setSetupCode] = useState("");
   const [setupMsg, setSetupMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [setupLoading, setSetupLoading] = useState(false);
-  const [totpUri, setTotpUri] = useState(""); const [totpSecret, setTotpSecret] = useState("");
+  const [totpUri, setTotpUri] = useState(""); const [totpSecret, setTotpSecret] = useState(""); const [totpQr, setTotpQr] = useState("");
   const [pwStep, setPwStep] = useState<PwStep>("form");
   const [newPassword, setNewPassword] = useState(""); const [confirmPassword, setConfirmPassword] = useState("");
   const [pwMethod, setPwMethod] = useState<"email" | "sms" | "totp" | null>(null);
@@ -998,7 +998,7 @@ function SecurityTab({ email }: { email: string }) {
       const r = await fetch("/api/auth/2fa/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ method }) });
       const d = await r.json();
       if (!r.ok) { setSetupMsg({ text: d.error, type: "error" }); return; }
-      if (method === "totp") { setTotpUri(d.otpauthUrl); setTotpSecret(d.secret); setSetupStep("totp-scan"); }
+      if (method === "totp") { setTotpUri(d.otpauthUrl); setTotpSecret(d.secret); setTotpQr(d.qrDataUrl || ""); setSetupStep("totp-scan"); }
       else setSetupStep("enter-code");
     } catch { setSetupMsg({ text: "Something went wrong.", type: "error" }); }
     finally { setSetupLoading(false); }
@@ -1031,7 +1031,8 @@ function SecurityTab({ email }: { email: string }) {
 
   const disable2FA = async (method: "email" | "sms" | "totp") => {
     if (!confirm(`Disable ${method === "totp" ? "authenticator" : method} 2FA?`)) return;
-    await fetch("/api/auth/2fa/disable", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ method }) });
+    const r = await fetch("/api/auth/2fa/disable", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ method }) });
+    if (!r.ok) { alert("Could not disable 2FA. Please try again."); return; }
     await load2FA();
   };
 
@@ -1135,7 +1136,7 @@ function SecurityTab({ email }: { email: string }) {
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Scan with your authenticator app</div>
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Open Google Authenticator or Microsoft Authenticator and scan this QR code, or enter the key manually.</div>
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(totpUri)}`} alt="TOTP QR Code" style={{ borderRadius: 8, marginBottom: 12, display: "block", background: "#fff", padding: 8 }} />
+              {totpQr && <img src={totpQr} alt="TOTP QR Code" style={{ borderRadius: 8, marginBottom: 12, display: "block", background: "#fff", padding: 8 }} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>Manual entry key:</div>
               <div style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.15em", background: "rgba(255,255,255,0.06)", padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", display: "inline-block", marginBottom: 16 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</div>
               <div style={{ display: "flex", gap: 8 }}>

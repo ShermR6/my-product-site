@@ -206,7 +206,7 @@ function CartSidebar({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cartItems: cart.map(i => ({ tier: i.tier, quantity: i.quantity })),
-          shippingRate: { label: selectedRate.service, amount: selectedRate.amount, days: selectedRate.days },
+          shippingRate: { token: selectedRate.token, label: selectedRate.service, days: selectedRate.days },
           shippingAddress: address,
         }),
       });

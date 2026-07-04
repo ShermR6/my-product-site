@@ -16,6 +16,8 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [rememberFocus, setRememberFocus] = useState(false);
+  const [termsFocus, setTermsFocus] = useState(false);
   const router = useRouter();
 
   // 2FA state
@@ -334,40 +336,58 @@ export default function LoginForm() {
           </div>
 
           {tab === "signin" && (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-              <div onClick={() => setRememberMe(r => !r)} style={{
+            <label htmlFor="rememberMe" style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", cursor: "pointer" }}>
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                onFocus={() => setRememberFocus(true)}
+                onBlur={() => setRememberFocus(false)}
+                style={{ position: "absolute", opacity: 0, width: "18px", height: "18px", margin: 0, cursor: "pointer" }}
+              />
+              <span aria-hidden="true" style={{
                 width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0,
                 border: `2px solid ${rememberMe ? "#0ea5e9" : "#374151"}`,
                 background: rememberMe ? "#0ea5e9" : "transparent",
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.15s",
+                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
+                boxShadow: rememberFocus ? "0 0 0 3px rgba(14,165,233,0.5)" : "none",
               }}>
                 {rememberMe && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>✓</span>}
-              </div>
-              <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: "13px", color: "#9ca3af", cursor: "pointer", userSelect: "none" as const }}>
+              </span>
+              <span style={{ fontSize: "13px", color: "#9ca3af", userSelect: "none" as const }}>
                 Remember me for 30 days
               </span>
-            </div>
+            </label>
           )}
 
           {tab === "signup" && (
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "16px" }}>
-              <div onClick={() => setAgreedToTerms(v => !v)} style={{
+            <label htmlFor="agreeTerms" style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "16px", cursor: "pointer" }}>
+              <input
+                id="agreeTerms"
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={e => setAgreedToTerms(e.target.checked)}
+                onFocus={() => setTermsFocus(true)}
+                onBlur={() => setTermsFocus(false)}
+                style={{ position: "absolute", opacity: 0, width: "18px", height: "18px", margin: 0, cursor: "pointer" }}
+              />
+              <span aria-hidden="true" style={{
                 width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0, marginTop: "1px",
                 border: `2px solid ${agreedToTerms ? "#0ea5e9" : "#374151"}`,
                 background: agreedToTerms ? "#0ea5e9" : "transparent",
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.15s",
+                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
+                boxShadow: termsFocus ? "0 0 0 3px rgba(14,165,233,0.5)" : "none",
               }}>
                 {agreedToTerms && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>✓</span>}
-              </div>
-              <span onClick={() => setAgreedToTerms(v => !v)} style={{ fontSize: "13px", color: "#9ca3af", cursor: "pointer", userSelect: "none" as const, lineHeight: "1.5" }}>
+              </span>
+              <span style={{ fontSize: "13px", color: "#9ca3af", userSelect: "none" as const, lineHeight: "1.5" }}>
                 I agree to the{" "}
                 <a href="/terms" onClick={e => e.stopPropagation()} style={{ color: "#60a5fa", textDecoration: "underline" }}>Terms of Service</a>
                 {" "}and{" "}
                 <a href="/privacy" onClick={e => e.stopPropagation()} style={{ color: "#60a5fa", textDecoration: "underline" }}>Privacy Policy</a>
               </span>
-            </div>
+            </label>
           )}
 
           <button type="submit" disabled={loading || (tab === "signup" && !agreedToTerms)} style={{

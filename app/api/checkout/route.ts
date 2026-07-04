@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
+import { computeShippingRates, type ShippingAddress } from "@/lib/shipping";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
@@ -47,31 +48,55 @@ const HARDWARE_TIERS = new Set([
   "pro-stick-plus", "stand-antenna", "stubby-antenna-solo",
 ]);
 
-type ShippingRateInput = { label: string; amount: number; days?: number | null };
+type ShippingRateInput = { token?: string; label?: string; days?: number | null };
 
-async function buildShippingParams(rate: ShippingRateInput | null | undefined) {
+async function buildShippingParams(
+  rate: ShippingRateInput | null | undefined,
+  address: ShippingAddress | null | undefined,
+  items: { tier: string; quantity: number }[],
+  isAdmin: boolean,
+): Promise<Partial<Stripe.Checkout.SessionCreateParams>> {
   const base: Partial<Stripe.Checkout.SessionCreateParams> = {};
 
-  if (rate?.amount != null) {
-    const sr = await stripe.shippingRates.create({
-      display_name: rate.label,
-      type: "fixed_amount",
-      fixed_amount: { amount: Math.round(rate.amount * 100), currency: "usd" },
-      ...(rate.days != null ? {
-        delivery_estimate: {
-          minimum: { unit: "business_day" as const, value: rate.days },
-          maximum: { unit: "business_day" as const, value: rate.days + 2 },
-        },
-      } : {}),
-    });
-    base.shipping_options = [{ shipping_rate: sr.id }];
-  } else {
+  // No selection → the fixed default options.
+  if (!rate?.token) {
     base.shipping_options = [
       { shipping_rate: process.env.STRIPE_SHIPPING_STANDARD! },
       { shipping_rate: process.env.STRIPE_SHIPPING_EXPEDITED! },
     ];
+    return base;
   }
 
+  // Admin-only free shipping for test purchases — verified server-side.
+  if (rate.token === "free_test") {
+    if (!isAdmin) throw new Error("SHIPPING_FORBIDDEN");
+    const sr = await stripe.shippingRates.create({
+      display_name: "Free Shipping",
+      type: "fixed_amount",
+      fixed_amount: { amount: 0, currency: "usd" },
+    });
+    base.shipping_options = [{ shipping_rate: sr.id }];
+    return base;
+  }
+
+  // Re-derive the price server-side from the carrier — never trust a
+  // client-supplied amount (which could be tampered to $0).
+  const rates = await computeShippingRates(address, address?.zip, items);
+  const match = rates.find(r => r.token === rate.token);
+  if (!match) throw new Error("SHIPPING_RATE_UNAVAILABLE");
+
+  const sr = await stripe.shippingRates.create({
+    display_name: match.service,
+    type: "fixed_amount",
+    fixed_amount: { amount: Math.round(match.amount * 100), currency: "usd" },
+    ...(match.days != null ? {
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: match.days },
+        maximum: { unit: "business_day" as const, value: match.days + 2 },
+      },
+    } : {}),
+  });
+  base.shipping_options = [{ shipping_rate: sr.id }];
   return base;
 }
 
@@ -84,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     const { tier, addons = [], cartItems, shippingRate, shippingAddress } = await req.json();
     const addrMeta = shippingAddress ? JSON.stringify(shippingAddress) : undefined;
+    const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
 
     // Cart checkout — multiple items
     if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
@@ -93,7 +119,12 @@ export async function POST(req: NextRequest) {
       if (lineItems.length === 0) {
         return NextResponse.json({ error: "No valid items" }, { status: 400 });
       }
-      const shippingParams = await buildShippingParams(shippingRate);
+      const shippingParams = await buildShippingParams(
+        shippingRate,
+        shippingAddress,
+        cartItems as { tier: string; quantity: number }[],
+        isAdmin,
+      );
       const checkoutSession = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
@@ -137,7 +168,7 @@ export async function POST(req: NextRequest) {
       customer_email: session.user.email,
       metadata: { tier, email: session.user.email },
       allow_promotion_codes: true,
-      ...(isHardware ? await buildShippingParams(shippingRate) : {}),
+      ...(isHardware ? await buildShippingParams(shippingRate, shippingAddress, [{ tier, quantity: 1 }], isAdmin) : {}),
       ...(isOneTime ? {} : {
         subscription_data: { metadata: { tier, email: session.user.email } },
       }),

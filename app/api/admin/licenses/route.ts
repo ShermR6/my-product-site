@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_SECRET } from "@/lib/internalSecret";
 import crypto from "crypto";
 
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
@@ -21,7 +22,7 @@ async function provisionInBackend(licenseKey: string, tier: string, email: strin
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "finalping-internal-secret",
+        "X-Webhook-Secret": INTERNAL_SECRET,
       },
       body: JSON.stringify({ license_key: licenseKey, tier, email }),
     });

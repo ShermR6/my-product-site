@@ -7,11 +7,15 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, name } = await req.json();
+    const { email: rawEmail, password, name } = await req.json();
 
-    if (!email || !password) {
+    if (!rawEmail || !password) {
       return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
     }
+
+    // Normalise so the account can be found at login (which lowercases) and to
+    // avoid case-variant duplicate accounts.
+    const email = String(rawEmail).trim().toLowerCase();
 
     if (password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });

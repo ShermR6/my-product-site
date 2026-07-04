@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_SECRET } from "@/lib/internalSecret";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://aircraft-tracker-backend-production.up.railway.app";
-const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "finalping-internal-secret";
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);

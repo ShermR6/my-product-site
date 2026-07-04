@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { INTERNAL_SECRET } from "@/lib/internalSecret";
 
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
-const INTERNAL_SECRET = process.env.WEBHOOK_INTERNAL_SECRET ?? "finalping-internal-secret";
 
 export async function GET() {
   const session = await getServerSession(authOptions);

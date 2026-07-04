@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { INTERNAL_SECRET } from "@/lib/internalSecret";
 import { Resend } from "resend";
 import crypto from "crypto";
 import * as React from "react";
@@ -16,7 +17,6 @@ import { TrialEndingSoon } from "@/emails/TrialEndingSoon";
 import { PaymentFailed } from "@/emails/PaymentFailed";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
-const prisma = new PrismaClient();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
@@ -42,7 +42,7 @@ async function createLicenseInBackend(licenseKey: string, tier: string, email: s
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "finalping-internal-secret",
+        "X-Webhook-Secret": INTERNAL_SECRET,
       },
       body: JSON.stringify({ license_key: licenseKey, tier, email }),
     });
@@ -68,6 +68,36 @@ export async function POST(req: NextRequest) {
   // ── checkout.session.completed ─────────────────────────────────────────────
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // ── Plan upgrade (one-time difference charge) ───────────────────────────
+    // Must run before the license branch below, otherwise the paid upgrade
+    // falls through and mints a bogus empty-tier "Starter" license.
+    if (session.metadata?.type === "upgrade") {
+      const { licenseKey, newTier, subscriptionId, newPriceId } =
+        (session.metadata ?? {}) as Record<string, string>;
+      try {
+        if (subscriptionId && newPriceId) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          await stripe.subscriptions.update(subscriptionId, {
+            items: [{ id: sub.items.data[0].id, price: newPriceId }],
+            proration_behavior: "none",
+          });
+        }
+        if (licenseKey && newTier) {
+          await prisma.license.updateMany({ where: { licenseKey }, data: { tier: newTier } });
+          await fetch(`${BACKEND_URL}/api/licenses/${licenseKey}/tier`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "x-internal-secret": INTERNAL_SECRET },
+            body: JSON.stringify({ tier: newTier }),
+          });
+        }
+        console.log(`Plan upgraded to ${newTier} for license ${licenseKey}`);
+      } catch (err) {
+        console.error("Upgrade fulfillment failed:", err);
+      }
+      return NextResponse.json({ received: true });
+    }
+
     const tier = session.metadata?.tier ?? "";
     const customerEmail = session.customer_details?.email ?? session.metadata?.email;
 
@@ -90,7 +120,7 @@ export async function POST(req: NextRequest) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-internal-secret": process.env.WEBHOOK_INTERNAL_SECRET || "",
+            "x-internal-secret": INTERNAL_SECRET,
           },
           body: JSON.stringify({ email, enabled: true }),
         });
@@ -195,6 +225,16 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Regular license purchase ─────────────────────────────────────────────
+    // Idempotency: Stripe delivers at-least-once, so bail if this checkout
+    // session already produced a license (avoids duplicate keys + emails).
+    const alreadyProvisioned = await prisma.license.findFirst({
+      where: { stripeSessionId: session.id },
+    });
+    if (alreadyProvisioned) {
+      console.log(`License already provisioned for session ${session.id}, skipping`);
+      return NextResponse.json({ received: true });
+    }
+
     const licenseKey = generateLicenseKey(tier);
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -252,7 +292,7 @@ export async function POST(req: NextRequest) {
       try {
         await fetch(`${BACKEND_URL}/api/licenses/renew`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-Webhook-Secret": process.env.WEBHOOK_INTERNAL_SECRET || "" },
+          headers: { "Content-Type": "application/json", "X-Webhook-Secret": INTERNAL_SECRET },
           body: JSON.stringify({ license_key: license.licenseKey, expires_at: newExpiry.toISOString() }),
         });
       } catch (err) {
@@ -277,8 +317,11 @@ export async function POST(req: NextRequest) {
   if (event.type === "customer.subscription.deleted") {
     try {
       const subscription = event.data.object as Stripe.Subscription;
-      const customerEmail = typeof (subscription as any).customer_email === "string"
-        ? (subscription as any).customer_email : null;
+      // Stripe Subscription objects have no customer_email — resolve it from the
+      // customer, matching the trial_will_end branch below. Without this the
+      // handler always early-returned and licenses were never expired.
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const customerEmail = (customer as Stripe.Customer).email;
 
       if (!customerEmail) return NextResponse.json({ received: true });
 
