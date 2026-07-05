@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
+    // Throttle by IP — this is unauthenticated and sends email.
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rl = rateLimit(`waitlist:${ip}`, 5, 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+    }
+
     const { email, source } = await req.json();
 
     if (!email || typeof email !== "string") {
@@ -17,11 +25,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 
-    const { created } = await prisma.waitlistEntry.upsert({
-      where: { email: normalized },
-      update: {},
-      create: { email: normalized, source: source ?? "teams-waitlist" },
-    }).then(entry => ({ entry, created: true })).catch(() => ({ entry: null, created: false }));
+    // Detect genuine first signup — upsert always "succeeds", so it can't tell
+    // a new entry from a repeat, which previously re-sent the email every time.
+    let created = false;
+    const existing = await prisma.waitlistEntry.findUnique({ where: { email: normalized } });
+    if (!existing) {
+      try {
+        await prisma.waitlistEntry.create({ data: { email: normalized, source: source ?? "teams-waitlist" } });
+        created = true;
+      } catch {
+        created = false; // unique-constraint race — treat as already-signed-up
+      }
+    }
 
     // Only send emails on first signup, not duplicate submissions
     if (created) {

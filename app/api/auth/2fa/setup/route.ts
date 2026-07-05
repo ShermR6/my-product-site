@@ -21,7 +21,7 @@ const twilioClient = twilio(
 );
 
 function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return require("crypto").randomInt(100000, 1000000).toString();
 }
 
 export async function POST(req: NextRequest) {

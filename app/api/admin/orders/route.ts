@@ -7,7 +7,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (session?.user?.email !== ADMIN_EMAIL) {
+  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

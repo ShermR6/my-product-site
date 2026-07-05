@@ -246,6 +246,8 @@ export async function POST(req: NextRequest) {
         tier,
         status: "inactive",
         stripeSessionId: session.id,
+        // Mark the trial as used so it can't be started again (M4).
+        hadTrial: session.metadata?.is_trial === "true",
       },
     });
 

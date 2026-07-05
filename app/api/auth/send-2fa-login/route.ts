@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
 
 function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return require("crypto").randomInt(100000, 1000000).toString();
 }
 
 export async function POST(req: NextRequest) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 import * as OTPAuth from "otpauth";
 import crypto from "crypto";
 const bcrypt = require("bcryptjs");
@@ -11,7 +12,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+    // Lock out brute-force of the 6-digit code: at most 5 verify attempts per
+    // account per 10 minutes (a valid password is not enough on its own).
+    const normEmail = email.toLowerCase().trim();
+    const rl = rateLimit(`2fa-verify:${normEmail}`, 5, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many attempts. Try again in ${rl.retryAfter}s.` },
+        { status: 429 },
+      );
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: normEmail } });
     if (!user || !user.password) {
       return NextResponse.json({ error: "Invalid request." }, { status: 401 });
     }
