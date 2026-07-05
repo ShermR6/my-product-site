@@ -243,7 +243,7 @@ export default function LoginForm() {
       )}
 
       {error && (
-        <div style={{
+        <div role="alert" aria-live="assertive" style={{
           padding: "10px 14px", background: "#ef444420", border: "1px solid #ef444440",
           borderRadius: "8px", color: "#fca5a5", fontSize: "13px", marginBottom: "16px",
         }}>
