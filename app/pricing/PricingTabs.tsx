@@ -365,7 +365,8 @@ export default function PricingTabs() {
             fontSize: 13, color: "var(--muted)",
           }}>
             <span style={{ color: "var(--accent)", fontWeight: 700 }}>FinalPing Teams</span>
-            — multi-seat aircraft tracking for FBOs, fuel services & flight schools
+            — multi-seat aircraft tracking for FBOs, fuel services & flight schools ·{" "}
+            <span style={{ color: "var(--accent)", fontWeight: 700 }}>Coming soon</span>
           </div>
         )}
       </div>
@@ -455,14 +456,25 @@ export default function PricingTabs() {
                 ))}
               </div>
 
-              <button
-                className="pt-cta"
-                style={{ maxWidth: "100%", width: "100%", fontSize: 14, padding: "12px 14px" }}
-                onClick={() => handleBuy(p.tier)}
-                disabled={loadingTier === p.tier}
-              >
-                {loadingTier === p.tier ? "Loading..." : p.cta}
-              </button>
+              {p.tier.startsWith("team-") ? (
+                <button
+                  className="pt-cta"
+                  style={{ maxWidth: "100%", width: "100%", fontSize: 14, padding: "12px 14px", cursor: "default", opacity: 0.65 }}
+                  disabled
+                  title="FinalPing for Teams isn't available to download yet"
+                >
+                  Coming soon
+                </button>
+              ) : (
+                <button
+                  className="pt-cta"
+                  style={{ maxWidth: "100%", width: "100%", fontSize: 14, padding: "12px 14px" }}
+                  onClick={() => handleBuy(p.tier)}
+                  disabled={loadingTier === p.tier}
+                >
+                  {loadingTier === p.tier ? "Loading..." : p.cta}
+                </button>
+              )}
 
               {p.tier === "starter" && billing === "monthly" && mode === "personal" && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>

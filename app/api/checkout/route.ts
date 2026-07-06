@@ -111,6 +111,18 @@ export async function POST(req: NextRequest) {
     const addrMeta = shippingAddress ? JSON.stringify(shippingAddress) : undefined;
     const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
 
+    // FinalPing for Teams isn't downloadable yet — don't sell it (guards direct
+    // API calls; the pricing UI already shows "Coming soon"). Covers single-tier,
+    // add-ons, and any cart line item.
+    const isTeamTier = (t?: string) => typeof t === "string" && t.startsWith("team-");
+    if (
+      isTeamTier(tier) ||
+      (Array.isArray(addons) && (addons as string[]).some(isTeamTier)) ||
+      (Array.isArray(cartItems) && (cartItems as { tier: string }[]).some(i => isTeamTier(i?.tier)))
+    ) {
+      return NextResponse.json({ error: "FinalPing for Teams isn't available yet." }, { status: 400 });
+    }
+
     // Cart checkout — multiple items
     if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
       const lineItems = (cartItems as { tier: string; quantity: number }[])
