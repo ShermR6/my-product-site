@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { rateLimit } from "@/lib/rateLimit";
 import { computeShippingRates, type ShippingRate } from "@/lib/shipping";
 
 export async function POST(req: NextRequest) {
@@ -9,6 +10,12 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Please log in first" }, { status: 401 });
+    }
+
+    // Throttle the billable EasyPost lookups per account.
+    const rl = rateLimit(`shipping-rates:${session.user.email}`, 20, 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
     }
 
     const { zip, address, items } = await req.json();
