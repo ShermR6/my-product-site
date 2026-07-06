@@ -458,8 +458,12 @@ export default function PricingTabs() {
 
               {p.tier.startsWith("team-") ? (
                 <button
-                  className="pt-cta"
-                  style={{ maxWidth: "100%", width: "100%", fontSize: 14, padding: "12px 14px", cursor: "default", opacity: 0.65 }}
+                  style={{
+                    maxWidth: "100%", width: "100%", fontSize: 14, padding: "12px 14px",
+                    borderRadius: 999, fontWeight: 700, cursor: "not-allowed",
+                    background: "rgba(255,255,255,0.05)", color: "var(--muted)",
+                    border: "1px solid var(--border)", boxShadow: "none",
+                  }}
                   disabled
                   title="FinalPing for Teams isn't available to download yet"
                 >
