@@ -397,8 +397,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" as const }}>
         {profileStep === "idle" && (
           <button onClick={() => startEditProfile()} disabled={profileLoading} style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1 }}
-            onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+            onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#EA6A0F"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
             {profileLoading ? "Sending code..." : "Edit Profile"}
           </button>
         )}
@@ -450,8 +450,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
                 <button onClick={confirmProfileVerify} disabled={profileLoading}
                   style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
-                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#EA6A0F"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
                   {profileLoading ? "Verifying..." : "Verify →"}
                 </button>
                 {profileStep !== "totp-code" && (
@@ -488,8 +488,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={saveProfile} disabled={profileLoading}
                   style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
-                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#0284c7"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#EA6A0F"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
                   {profileLoading ? "Saving..." : "Save Changes"}
                 </button>
                 <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
@@ -505,8 +505,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
                 Your email address was changed. Please sign in again with your new email.
               </div>
               <button onClick={() => signOut({ callbackUrl: "/" })} style={styles.primaryBtn}
-                onMouseEnter={e => { e.currentTarget.style.background = "#0284c7"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                onMouseEnter={e => { e.currentTarget.style.background = "#EA6A0F"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
                 Sign Out & Sign In Again
               </button>
             </div>
@@ -867,7 +867,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
       <div style={styles.card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 16 }}>
           <div><div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Stripe Billing Portal</div><div style={{ fontSize: 13, color: "var(--muted)" }}>Update payment methods, download invoices, or cancel your subscription.</div></div>
-          <button onClick={onManageBilling} disabled={portalLoading} style={{ ...styles.primaryBtn, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer" }} onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.background = "#0284c7"; }} onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>{portalLoading ? "Opening..." : "Manage Subscription →"}</button>
+          <button onClick={onManageBilling} disabled={portalLoading} style={{ ...styles.primaryBtn, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer" }} onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.background = "#EA6A0F"; }} onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>{portalLoading ? "Opening..." : "Manage Subscription →"}</button>
         </div>
         {portalError && <p style={{ fontSize: 13, color: "#DC2626", margin: "12px 0 0" }}>{portalError}</p>}
       </div>
@@ -926,8 +926,8 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
               <StatusMsg msg={upgradeMsg} />
               <button onClick={handleUpgrade} disabled={!selectedTier || upgrading}
                 style={{ ...styles.primaryBtn, marginTop: 4, opacity: !selectedTier || upgrading ? 0.6 : 1, cursor: !selectedTier || upgrading ? "not-allowed" : "pointer" }}
-                onMouseEnter={e => { if (selectedTier && !upgrading) e.currentTarget.style.background = "#0284c7"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>
+                onMouseEnter={e => { if (selectedTier && !upgrading) e.currentTarget.style.background = "#EA6A0F"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
                 {upgrading ? "Processing..." : "Confirm Upgrade →"}
               </button>
             </>
@@ -1169,7 +1169,7 @@ function SecurityTab({ email }: { email: string }) {
               <div><label style={styles.inputLabel}>Confirm New Password</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
             </div>
             <StatusMsg msg={pwMsg} />
-            <button onClick={initiatePasswordChange} disabled={pwLoading} style={{ ...styles.primaryBtn, marginTop: 16, opacity: pwLoading ? 0.6 : 1 }} onMouseEnter={e => { if (!pwLoading) e.currentTarget.style.background = "#0284c7"; }} onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>{pwLoading ? "Please wait..." : "Continue →"}</button>
+            <button onClick={initiatePasswordChange} disabled={pwLoading} style={{ ...styles.primaryBtn, marginTop: 16, opacity: pwLoading ? 0.6 : 1 }} onMouseEnter={e => { if (!pwLoading) e.currentTarget.style.background = "#EA6A0F"; }} onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>{pwLoading ? "Please wait..." : "Continue →"}</button>
           </div>
         )}
         {pwStep === "choose-method" && (
@@ -1237,7 +1237,7 @@ const styles = {
   statValue: { fontSize: 28, fontWeight: 800 } as React.CSSProperties,
   tableHeader: { display: "grid", gridTemplateColumns: "90px 1fr 120px 100px 80px 160px", gap: 12, padding: "12px 20px", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" } as React.CSSProperties,
   tableRow: { display: "grid", gridTemplateColumns: "90px 1fr 120px 100px 80px 160px", gap: 12, padding: "13px 20px", fontSize: 13, alignItems: "center" } as React.CSSProperties,
-  primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "#0ea5e9", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", transition: "background 0.15s", display: "inline-block" } as React.CSSProperties,
+  primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "#F97316", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", transition: "background 0.15s", display: "inline-block", boxShadow: "0 3px 12px rgba(249,115,22,0.25)" } as React.CSSProperties,
   outlineBtn: { padding: "9px 18px", borderRadius: 8, background: "transparent", color: "var(--text)", fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", cursor: "pointer", textDecoration: "none", display: "inline-block" } as React.CSSProperties,
   ghostBtn: { padding: "9px 14px", borderRadius: 8, background: "transparent", color: "var(--muted)", fontSize: 13, fontWeight: 500, border: "1px solid var(--border)", cursor: "pointer" } as React.CSSProperties,
   dangerBtn: { padding: "9px 18px", borderRadius: 8, background: "var(--bad-bg)", color: "var(--bad)", fontSize: 13, fontWeight: 600, border: "1px solid var(--bad-border)", cursor: "pointer", transition: "background 0.15s" } as React.CSSProperties,
