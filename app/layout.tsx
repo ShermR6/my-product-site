@@ -16,11 +16,11 @@ export const metadata: Metadata = {
   authors: [{ name: "FinalPing" }],
   icons: {
     icon: [
-      { url: "/favicon.svg?v=3", type: "image/svg+xml" },
-      { url: "/favicon.ico?v=3" },
-      { url: "/favicon-96x96.png?v=3", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg?v=4", type: "image/svg+xml" },
+      { url: "/favicon.ico?v=4" },
+      { url: "/favicon-96x96.png?v=4", sizes: "96x96", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png?v=3" }],
+    apple: [{ url: "/apple-touch-icon.png?v=4" }],
   },
   manifest: "/site.webmanifest",
   openGraph: {
