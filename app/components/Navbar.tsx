@@ -2,13 +2,22 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 24);
+    fn();
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
 
   return (
-    <header className="nav">
+    <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <div className="container">
         <div className="nav-inner">
           <Link className="brand" href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
@@ -23,19 +32,24 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <nav className="nav-links">
+          <nav style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <Link className="nav-link" href="/">Product</Link>
-            <Link className="nav-link" href="/pricing">Purchase</Link>
+            <Link className="nav-link" href="/pricing">Pricing</Link>
             <Link className="nav-link" href="/download">Download</Link>
             <Link className="nav-link" href="/contact">Contact Us</Link>
-            {session ? (
-              <>
-                <Link className="nav-link btn btn-outline" href="/dashboard">Dashboard</Link>
-              </>
-            ) : (
-              <Link className="nav-link btn btn-outline" href="/login">Log in</Link>
-            )}
           </nav>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/download" className="nav-dl-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Free
+            </Link>
+            {session ? (
+              <Link href="/dashboard" className="nav-signin-btn">Dashboard</Link>
+            ) : (
+              <Link href="/login" className="nav-signin-btn">Sign In</Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

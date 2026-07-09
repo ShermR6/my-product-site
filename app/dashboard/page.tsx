@@ -21,19 +21,18 @@ const tierLabels: Record<string, string> = {
   starter: "Starter", premium: "Premium", pro: "Pro",
   "team-starter": "Team Starter", "team-premium": "Team Premium", "team-pro": "Team Pro",
 };
-const CHANNEL_ICONS: Record<string, string> = { discord: "💬", slack: "📱", teams: "👥", email: "✉️", sms: "📲", whatsapp: "🟢" };
 const CHANNEL_COLORS: Record<string, string> = { discord: "#5865f2", slack: "#4a154b", teams: "#6264a7", email: "#0ea5e9", sms: "#10b981", whatsapp: "#25d366" };
 
 function getExpiryLabel(expiresAt: string | null, status: string, activatedAt: string | null): { label: string; color: string } {
-  if (status === "expired") return { label: "Expired", color: "#ef4444" };
+  if (status === "expired") return { label: "Expired", color: "#DC2626" };
   if (status === "inactive" || !activatedAt) return { label: "Not Activated", color: "#f59e0b" };
-  if (!expiresAt) return { label: "Active", color: "#23c76b" };
+  if (!expiresAt) return { label: "Active", color: "#15803D" };
 
   const now = new Date();
   const expires = new Date(expiresAt);
   const msLeft = expires.getTime() - now.getTime();
 
-  if (msLeft <= 0) return { label: "Expired", color: "#ef4444" };
+  if (msLeft <= 0) return { label: "Expired", color: "#DC2626" };
 
   const totalMinutes = Math.floor(msLeft / (1000 * 60));
   const totalHours = Math.floor(msLeft / (1000 * 60 * 60));
@@ -42,7 +41,7 @@ function getExpiryLabel(expiresAt: string | null, status: string, activatedAt: s
   // Last 60 minutes — count down by minute
   if (totalMinutes < 60) {
     const mins = totalMinutes;
-    return { label: `Expires in ${mins} minute${mins !== 1 ? "s" : ""}`, color: "#ef4444" };
+    return { label: `Expires in ${mins} minute${mins !== 1 ? "s" : ""}`, color: "#DC2626" };
   }
 
   // Last 24 hours — show hours
@@ -52,7 +51,7 @@ function getExpiryLabel(expiresAt: string | null, status: string, activatedAt: s
 
   // More than 24 hours — show days
   if (totalDays <= 7) return { label: `Expiring in ${totalDays} day${totalDays !== 1 ? "s" : ""}`, color: "#f59e0b" };
-  return { label: `Active — ${totalDays} days left`, color: "#23c76b" };
+  return { label: `Active — ${totalDays} days left`, color: "#15803D" };
 }
 
 function useLicenseCountdown(expiresAt: string | null, status: string, activatedAt: string | null) {
@@ -120,7 +119,7 @@ function StatusMsg({ msg }: { msg: { text: string; type: "success" | "error" } |
   return (
     <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, fontSize: 13,
       background: msg.type === "success" ? "rgba(35,199,107,0.1)" : "rgba(239,68,68,0.1)",
-      color: msg.type === "success" ? "#23c76b" : "#ef4444",
+      color: msg.type === "success" ? "#15803D" : "#DC2626",
       border: `1px solid ${msg.type === "success" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>
       {msg.text}
     </div>
@@ -424,7 +423,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
                   <button key={m.id} onClick={() => startEditProfile(m.id)} disabled={profileLoading}
                     style={{ ...styles.methodBtn, opacity: profileLoading ? 0.6 : 1 }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
                     {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
                   </button>
                 ))}
@@ -516,7 +515,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       )}
 
       <div style={{ marginTop: 32, padding: "20px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, background: "rgba(239,68,68,0.04)" }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#ef4444", margin: "0 0 6px" }}>Delete Account</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#DC2626", margin: "0 0 6px" }}>Delete Account</h3>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>Permanently delete your account and cancel any active subscriptions. This cannot be undone.</p>
 
         {deleteStep === "idle" && (
@@ -527,16 +526,16 @@ function AccountTab({ email, session }: { email: string; session: any }) {
 
         {deleteStep === "confirm" && (
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" as const }}>
-            <span style={{ fontSize: 13, color: "#f87171" }}>Are you sure? This is permanent.</span>
+            <span style={{ fontSize: 13, color: "#DC2626" }}>Are you sure? This is permanent.</span>
             <button onClick={handleDeleteNoTwoFA} disabled={deleting}
-              style={{ padding: "8px 16px", background: "#ef4444", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+              style={{ padding: "8px 16px", background: "#DC2626", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
               {deleting ? "Deleting..." : "Yes, delete"}
             </button>
             <button onClick={resetDelete}
               style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--muted)", fontSize: 13, cursor: "pointer" }}>
               Cancel
             </button>
-            {deleteMsg && <span style={{ fontSize: 13, color: "#ef4444", width: "100%" }}>{deleteMsg}</span>}
+            {deleteMsg && <span style={{ fontSize: 13, color: "#DC2626", width: "100%" }}>{deleteMsg}</span>}
           </div>
         )}
 
@@ -548,14 +547,14 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               {activeMethods.map(m => (
                 <button key={m.id} onClick={() => sendDeletionCode(m.id)} disabled={sendingCode}
                   style={{ ...styles.methodBtn, opacity: sendingCode ? 0.6 : 1 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#DC2626"; e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
                   {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
                 </button>
               ))}
             </div>
             <button onClick={resetDelete} style={{ ...styles.ghostBtn, marginTop: 10 }}>Cancel</button>
-            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#ef4444" }}>{deleteMsg}</div>}
+            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>{deleteMsg}</div>}
           </div>
         )}
 
@@ -572,7 +571,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
             <CodeInput value={deleteCode} onChange={setDeleteCode} onSubmit={handleVerifyAndDelete} />
             <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
               <button onClick={handleVerifyAndDelete} disabled={deleting}
-                style={{ padding: "9px 18px", borderRadius: 8, background: "#ef4444", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+                style={{ padding: "9px 18px", borderRadius: 8, background: "#DC2626", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
                 {deleting ? "Deleting..." : "Confirm Deletion"}
               </button>
               {deleteStep !== "totp-code" && (
@@ -582,7 +581,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               )}
               <button onClick={resetDelete} style={styles.ghostBtn}>Cancel</button>
             </div>
-            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#ef4444" }}>{deleteMsg}</div>}
+            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>{deleteMsg}</div>}
           </div>
         )}
       </div>
@@ -601,7 +600,7 @@ function LicensesTab({ licenses, loading }: { licenses: License[]; loading: bool
       <div style={styles.tabHeader}><h2 style={styles.tabTitle}>Your Licenses</h2><p style={styles.tabSub}>All license keys associated with your account</p></div>
       {licenses.length === 0 ? (
         <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🔑</div>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
           <p style={{ color: "var(--muted)", margin: "0 0 16px" }}>No licenses yet.</p>
           <Link href="/pricing" style={styles.outlineBtn}>Browse Plans</Link>
         </div>
@@ -651,7 +650,7 @@ function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
 
   const btnStyle: React.CSSProperties = {
     padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-    background: selected.length > 0 ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.06)",
+    background: selected.length > 0 ? "rgba(14,165,233,0.12)" : "#F1F5F9",
     border: selected.length > 0 ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
     color: selected.length > 0 ? "#0ea5e9" : "var(--text)",
     cursor: "pointer", outline: "none", display: "flex", alignItems: "center", gap: 6,
@@ -670,7 +669,7 @@ function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
         }}>
           {options.map(opt => (
             <label key={opt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: selected.includes(opt) ? "var(--text)" : "var(--muted)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(15,23,42,0.04)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
               <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)}
                 style={{ accentColor: "#0ea5e9", width: 14, height: 14, flexShrink: 0 }} />
@@ -746,8 +745,8 @@ function AlertsTab({ email }: { email: string }) {
         <div><h2 style={styles.tabTitle}>Alert History</h2><p style={styles.tabSub}>All notifications sent by the cloud tracker</p></div>
         {logs.length > 0 && (
           <button onClick={() => exportToTxt(filtered)} style={styles.exportBtn}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(15,23,42,0.06)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#F1F5F9"; }}>
             ⬇ Export .txt
           </button>
         )}
@@ -773,7 +772,7 @@ function AlertsTab({ email }: { email: string }) {
           <CheckboxDropdown label="Channels" options={channelOptions} selected={selectedChannels} onChange={setSelectedChannels} formatLabel={formatChannel} />
           {hasFilters && (
             <button onClick={() => { setSelectedAircraft([]); setSelectedTypes([]); setSelectedChannels([]); }}
-              style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", cursor: "pointer" }}>
+              style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", color: "#DC2626", cursor: "pointer" }}>
               ✕ Clear
             </button>
           )}
@@ -792,15 +791,15 @@ function AlertsTab({ email }: { email: string }) {
             : <div style={styles.card}>
                 <div style={styles.tableHeader}><div>Aircraft</div><div>Message</div><div>Type</div><div>Channel</div><div>Status</div><div>Time</div></div>
                 {filtered.map((log, i) => (
-                  <div key={log.id} style={{ ...styles.tableRow, borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                  <div key={log.id} style={{ ...styles.tableRow, borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(15,23,42,0.02)" }}>
                     <div style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 13 }}>{log.aircraft_tail}</div>
                     <div style={{ color: "var(--muted)", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{log.message}</div>
                     <div style={{ fontSize: 12, fontWeight: 600 }}>{formatAlertType(log.alert_type)}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span>{CHANNEL_ICONS[log.integration_type] ?? "🔔"}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", display: "inline-block", flexShrink: 0 }} />
                       <span style={{ fontSize: 11, fontWeight: 700, color: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", textTransform: "capitalize" as const }}>{log.integration_type}</span>
                     </div>
-                    <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#23c76b" : "#ef4444", border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
+                    <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#15803D" : "#DC2626", border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
                     <div style={{ fontSize: 12, color: "var(--muted)" }}><LocalDate iso={log.sent_at} /></div>
                   </div>
                 ))}
@@ -860,7 +859,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
 
       {upgraded && (
         <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-          background: "rgba(35,199,107,0.1)", color: "#23c76b", border: "1px solid rgba(35,199,107,0.3)" }}>
+          background: "rgba(35,199,107,0.1)", color: "#15803D", border: "1px solid rgba(35,199,107,0.3)" }}>
           ✓ Your plan has been upgraded successfully. Your new limits are active immediately.
         </div>
       )}
@@ -870,7 +869,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
           <div><div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Stripe Billing Portal</div><div style={{ fontSize: 13, color: "var(--muted)" }}>Update payment methods, download invoices, or cancel your subscription.</div></div>
           <button onClick={onManageBilling} disabled={portalLoading} style={{ ...styles.primaryBtn, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer" }} onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.background = "#0284c7"; }} onMouseLeave={e => { e.currentTarget.style.background = "#0ea5e9"; }}>{portalLoading ? "Opening..." : "Manage Subscription →"}</button>
         </div>
-        {portalError && <p style={{ fontSize: 13, color: "#ef4444", margin: "12px 0 0" }}>{portalError}</p>}
+        {portalError && <p style={{ fontSize: 13, color: "#DC2626", margin: "12px 0 0" }}>{portalError}</p>}
       </div>
 
       {upgradeableLicenses.length > 0 && (
@@ -887,7 +886,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
                 {upgradeableLicenses.map(l => (
                   <button key={l.licenseKey} onClick={() => { setSelectedLicenseKey(l.licenseKey); resetUpgrade(); }}
                     style={{ padding: "10px 14px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
-                      background: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
+                      background: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "rgba(14,165,233,0.1)" : "var(--panel)",
                       border: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
                       color: "var(--text)", fontSize: 13, fontWeight: 600 }}>
                     {tierLabels[l.tier]} — {l.licenseKey}
@@ -909,7 +908,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
                     <button key={tier} onClick={() => setSelectedTier(tier)} style={{
                       padding: "14px 16px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
                       display: "flex", justifyContent: "space-between", alignItems: "center",
-                      background: selected ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
+                      background: selected ? "rgba(14,165,233,0.1)" : "var(--panel)",
                       border: selected ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
                       color: "var(--text)",
                     }}>
@@ -952,7 +951,7 @@ function TwoFAMethodRow({ label, enabled, onDisable }: { label: string; enabled:
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: enabled ? "#23c76b" : "#374151", boxShadow: enabled ? "0 0 6px #23c76b" : "none" }} />
+        <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: enabled ? "#15803D" : "#374151", boxShadow: enabled ? "0 0 6px #15803D" : "none" }} />
         <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
       </div>
       {enabled ? (
@@ -1089,7 +1088,7 @@ function SecurityTab({ email }: { email: string }) {
             <TwoFAMethodRow label={`SMS${twoFA?.phone ? ` (${twoFA.phone})` : ""}`} enabled={twoFA?.sms ?? false} onDisable={() => disable2FA("sms")} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: twoFA?.totp ? "#23c76b" : "#374151", boxShadow: twoFA?.totp ? "0 0 6px #23c76b" : "none" }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: twoFA?.totp ? "#15803D" : "#374151", boxShadow: twoFA?.totp ? "0 0 6px #15803D" : "none" }} />
                 <span style={{ fontSize: 13, fontWeight: 600 }}>Authenticator App (Google / Microsoft)</span>
               </div>
               {twoFA?.totp ? <button onClick={() => disable2FA("totp")} style={styles.smallDangerBtn} onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Disable</button>
@@ -1138,7 +1137,7 @@ function SecurityTab({ email }: { email: string }) {
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Open Google Authenticator or Microsoft Authenticator and scan this QR code, or enter the key manually.</div>
               {totpQr && <img src={totpQr} alt="TOTP QR Code" style={{ borderRadius: 8, marginBottom: 12, display: "block", background: "#fff", padding: 8 }} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>Manual entry key:</div>
-              <div style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.15em", background: "rgba(255,255,255,0.06)", padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", display: "inline-block", marginBottom: 16 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</div>
+              <div style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.15em", background: "#F1F5F9", padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", display: "inline-block", marginBottom: 16 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setSetupStep("totp-verify")} style={styles.primaryBtn}>Next — Enter Code</button>
                 <button onClick={() => setSetupStep("idle")} style={styles.ghostBtn}>Cancel</button>
@@ -1179,7 +1178,7 @@ function SecurityTab({ email }: { email: string }) {
             <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>Select how you'd like to verify this password change:</div>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
               {activeMethods.map(m => (
-                <button key={m.id} onClick={() => sendPwCode(m.id)} style={styles.methodBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                <button key={m.id} onClick={() => sendPwCode(m.id)} style={styles.methodBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
                   {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
                 </button>
               ))}
@@ -1216,24 +1215,24 @@ function SecurityTab({ email }: { email: string }) {
 
 const styles = {
   shell: { display: "flex", minHeight: "100vh" } as React.CSSProperties,
-  sidebar: { width: 220, minWidth: 220, borderRight: "1px solid var(--border)", padding: "32px 0", display: "flex", flexDirection: "column" as const, gap: 2, background: "rgba(255,255,255,0.02)" } as React.CSSProperties,
-  sidebarLabel: { fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--muted)", padding: "8px 20px 4px" } as React.CSSProperties,
-  navItem: (active: boolean) => ({ display: "flex", alignItems: "center", gap: 10, padding: "9px 20px", fontSize: 13, fontWeight: active ? 600 : 500, color: active ? "var(--text)" : "var(--muted)", background: active ? "rgba(14,165,233,0.08)" : "transparent", borderRight: active ? "2px solid #0ea5e9" : "2px solid transparent", cursor: "pointer", transition: "all 0.15s", border: "none", width: "100%", textAlign: "left" as const }),
-  main: { flex: 1, padding: "40px 48px", maxWidth: 900 } as React.CSSProperties,
+  sidebar: { width: 220, minWidth: 220, borderRight: "1px solid var(--border)", padding: "32px 20px 32px 0", display: "flex", flexDirection: "column" as const, gap: 4 } as React.CSSProperties,
+  sidebarLabel: { fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--muted)", padding: "0 14px 8px" } as React.CSSProperties,
+  navItem: (active: boolean) => ({ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "var(--accent-hover)" : "var(--muted)", background: active ? "rgba(14,165,233,0.1)" : "transparent", cursor: "pointer", transition: "all 0.15s", border: "none", width: "100%", textAlign: "left" as const }),
+  main: { flex: 1, padding: "32px 0 64px 40px", maxWidth: 900 } as React.CSSProperties,
   tabHeader: { marginBottom: 24 } as React.CSSProperties,
   tabTitle: { fontSize: 22, fontWeight: 700, margin: "0 0 4px" } as React.CSSProperties,
   tabSub: { fontSize: 14, color: "var(--muted)", margin: 0 } as React.CSSProperties,
   sectionLabel: { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: 8 } as React.CSSProperties,
-  card: { background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px" } as React.CSSProperties,
+  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" } as React.CSSProperties,
   infoRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--border)" } as React.CSSProperties,
   infoRowLast: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } as React.CSSProperties,
   infoLabel: { fontSize: 13, color: "var(--muted)" } as React.CSSProperties,
   infoValue: { fontSize: 13, fontWeight: 600 } as React.CSSProperties,
   tierBadge: { fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "var(--muted)", textTransform: "uppercase" as const },
-  licenseKey: { fontFamily: "monospace", fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", letterSpacing: "0.05em", display: "inline-block" } as React.CSSProperties,
+  licenseKey: { fontFamily: "monospace", fontSize: 14, fontWeight: 700, background: "#F1F5F9", padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", letterSpacing: "0.05em", display: "inline-block" } as React.CSSProperties,
   metaLabel: { fontSize: 12, color: "var(--muted)", marginBottom: 4 } as React.CSSProperties,
   metaValue: { fontSize: 14 } as React.CSSProperties,
-  statCard: { background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px" } as React.CSSProperties,
+  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" } as React.CSSProperties,
   statLabel: { fontSize: 12, color: "var(--muted)", marginBottom: 4 } as React.CSSProperties,
   statValue: { fontSize: 28, fontWeight: 800 } as React.CSSProperties,
   tableHeader: { display: "grid", gridTemplateColumns: "90px 1fr 120px 100px 80px 160px", gap: 12, padding: "12px 20px", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" } as React.CSSProperties,
@@ -1241,23 +1240,31 @@ const styles = {
   primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "#0ea5e9", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", transition: "background 0.15s", display: "inline-block" } as React.CSSProperties,
   outlineBtn: { padding: "9px 18px", borderRadius: 8, background: "transparent", color: "var(--text)", fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", cursor: "pointer", textDecoration: "none", display: "inline-block" } as React.CSSProperties,
   ghostBtn: { padding: "9px 14px", borderRadius: 8, background: "transparent", color: "var(--muted)", fontSize: 13, fontWeight: 500, border: "1px solid var(--border)", cursor: "pointer" } as React.CSSProperties,
-  dangerBtn: { padding: "9px 18px", borderRadius: 8, background: "rgba(239,68,68,0.06)", color: "#f87171", fontSize: 13, fontWeight: 600, border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", transition: "background 0.15s" } as React.CSSProperties,
-  smallDangerBtn: { padding: "5px 12px", borderRadius: 6, background: "rgba(239,68,68,0.06)", color: "#f87171", fontSize: 12, fontWeight: 600, border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", transition: "background 0.15s" } as React.CSSProperties,
+  dangerBtn: { padding: "9px 18px", borderRadius: 8, background: "var(--bad-bg)", color: "var(--bad)", fontSize: 13, fontWeight: 600, border: "1px solid var(--bad-border)", cursor: "pointer", transition: "background 0.15s" } as React.CSSProperties,
+  smallDangerBtn: { padding: "5px 12px", borderRadius: 6, background: "var(--bad-bg)", color: "var(--bad)", fontSize: 12, fontWeight: 600, border: "1px solid var(--bad-border)", cursor: "pointer", transition: "background 0.15s" } as React.CSSProperties,
   smallBtn: { padding: "6px 14px", borderRadius: 6, background: "transparent", color: "var(--muted)", fontSize: 12, fontWeight: 600, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s" } as React.CSSProperties,
-  methodBtn: { padding: "12px 16px", borderRadius: 8, background: "rgba(255,255,255,0.03)", color: "var(--text)", fontSize: 13, fontWeight: 600, textAlign: "left" as const, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s", width: "100%" } as React.CSSProperties,
-  exportBtn: { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap" as const } as React.CSSProperties,
+  methodBtn: { padding: "12px 16px", borderRadius: 8, background: "var(--panel)", color: "var(--text)", fontSize: 13, fontWeight: 600, textAlign: "left" as const, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s", width: "100%" } as React.CSSProperties,
+  exportBtn: { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap" as const } as React.CSSProperties,
   inputLabel: { display: "block", fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 6 } as React.CSSProperties,
-  input: { width: "100%", padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 13, outline: "none", transition: "border-color 0.15s", boxSizing: "border-box" as const } as React.CSSProperties,
+  input: { width: "100%", padding: "10px 14px", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 8, color: "var(--input-color)", fontSize: 13, outline: "none", transition: "border-color 0.15s", boxSizing: "border-box" as const } as React.CSSProperties,
   loadingText: { color: "var(--muted)", fontSize: 14, padding: "40px 0" } as React.CSSProperties,
 };
 
 const NAV_ITEMS = [
-  { id: "account", label: "Account", icon: "👤" },
-  { id: "licenses", label: "Licenses", icon: "🔑" },
-  { id: "alerts", label: "Alert History", icon: "🔔" },
-  { id: "billing", label: "Billing", icon: "💳" },
-  { id: "security", label: "Security", icon: "🔒" },
+  { id: "account", label: "Account" },
+  { id: "licenses", label: "Licenses" },
+  { id: "alerts", label: "Alert History" },
+  { id: "billing", label: "Billing" },
+  { id: "security", label: "Security" },
 ];
+
+const TAB_ICONS: Record<string, React.ReactNode> = {
+  account: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  licenses: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>,
+  alerts: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
+  billing: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+  security: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+};
 
 function DashboardContent() {
   const { data: session, status } = useSession();
@@ -1309,9 +1316,9 @@ function DashboardContent() {
         <div style={styles.sidebarLabel}>Dashboard</div>
         {NAV_ITEMS.map(item => (
           <button key={item.id} style={styles.navItem(activeTab === item.id)} onClick={() => setActiveTab(item.id)}
-            onMouseEnter={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; } }}
+            onMouseEnter={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "rgba(15,23,42,0.04)"; } }}
             onMouseLeave={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--muted)"; e.currentTarget.style.background = "transparent"; } }}>
-            <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
+            <span style={{ display: "inline-flex", alignItems: "center" }}>{TAB_ICONS[item.id]}</span>{item.label}
           </button>
         ))}
       </div>
@@ -1319,13 +1326,13 @@ function DashboardContent() {
         {show2FABanner && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 16px", marginBottom: 24, borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
-              <span style={{ fontSize: 16 }}>🔒</span>
-              <span style={{ color: "#f9fafb" }}>Secure your account with two-factor authentication.</span>
-              <button onClick={() => setActiveTab("security")} style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span style={{ color: "var(--text)" }}>Secure your account with two-factor authentication.</span>
+              <button onClick={() => setActiveTab("security")} style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(245,158,11,0.15)", color: "#B45309", border: "1px solid rgba(245,158,11,0.35)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                 Enable 2FA →
               </button>
             </div>
-            <button onClick={() => { setShow2FABanner(false); sessionStorage.setItem("2fa-banner-dismissed", "1"); }} style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1 }}>✕</button>
+            <button onClick={() => { setShow2FABanner(false); sessionStorage.setItem("2fa-banner-dismissed", "1"); }} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1 }}>✕</button>
           </div>
         )}
         {activeTab === "account" && <AccountTab email={email} session={session} />}
