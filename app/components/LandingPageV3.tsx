@@ -139,6 +139,8 @@ export default function LandingPageV3() {
         .v3-nav-link:hover { color:#0F172A; }
         .v3-dl-btn { display:inline-flex;align-items:center;gap:7px;background:#F97316;color:#fff;padding:9px 18px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 3px 14px rgba(249,115,22,0.3); }
         .v3-dl-btn:hover { transform:translateY(-1px);box-shadow:0 6px 24px rgba(249,115,22,0.45); }
+        .v3-signin-btn { display:inline-flex;align-items:center;background:transparent;color:#0F172A;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid #CBD5E1;transition:border-color .18s,color .18s; }
+        .v3-signin-btn:hover { border-color:#0EA5E9;color:#0EA5E9; }
         /* card */
         .v3-card { background:#fff;border:1px solid #E2E8F0;border-radius:20px;transition:border-color .25s,transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s; }
         .v3-card:hover { border-color:#BAE6FD;transform:translateY(-3px);box-shadow:0 12px 40px rgba(14,165,233,0.08); }
@@ -183,14 +185,18 @@ export default function LandingPageV3() {
           <span style={{ fontSize:16, fontWeight:800, color:'#0F172A', letterSpacing:-.4 }}>Final<span style={{ color:'#0EA5E9' }}>Ping</span></span>
         </Link>
         <ul style={{ display:'flex', gap:28, listStyle:'none', margin:0, padding:0 }}>
-          <li><a href="#features" className="v3-nav-link">Features</a></li>
-          <li><a href="#demo" className="v3-nav-link">Demo</a></li>
+          <li><Link href="/" className="v3-nav-link">Product</Link></li>
           <li><Link href="/pricing" className="v3-nav-link">Pricing</Link></li>
+          <li><Link href="/download" className="v3-nav-link">Download</Link></li>
+          <li><Link href="/contact" className="v3-nav-link">Contact Us</Link></li>
         </ul>
-        <Link href="/download" className="v3-dl-btn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download Free
-        </Link>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <Link href="/download" className="v3-dl-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Free
+          </Link>
+          <Link href="/login" className="v3-signin-btn">Sign In</Link>
+        </div>
       </nav>
 
       <div className="v3-root">
