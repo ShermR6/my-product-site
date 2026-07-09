@@ -9,7 +9,7 @@ export default function TermsPage() {
   return (
     <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px 80px" }}>
       <h1 style={{ fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>Terms of Service</h1>
-      <p style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "48px" }}>Last Updated: May 12, 2026</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "48px" }}>Last Updated: May 12, 2026</p>
 
       <div className="legal-body">
 
@@ -113,37 +113,6 @@ export default function TermsPage() {
 
       </div>
 
-      <style>{`
-        .legal-body p {
-          color: #d1d5db;
-          font-size: 15px;
-          line-height: 1.8;
-          margin-bottom: 16px;
-        }
-        .legal-body h2 {
-          font-size: 18px;
-          font-weight: 700;
-          color: #f9fafb;
-          margin: 36px 0 12px 0;
-        }
-        .legal-body ul {
-          color: #d1d5db;
-          font-size: 15px;
-          line-height: 1.8;
-          padding-left: 24px;
-          margin-bottom: 16px;
-        }
-        .legal-body li {
-          margin-bottom: 6px;
-        }
-        .legal-body a {
-          color: #60a5fa;
-          text-decoration: underline;
-        }
-        .legal-body strong {
-          color: #f9fafb;
-        }
-      `}</style>
     </div>
   );
 }

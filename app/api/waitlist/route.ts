@@ -38,8 +38,43 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const isNewsletter = source === "newsletter";
+
     // Only send emails on first signup, not duplicate submissions
-    if (created) {
+    if (created && isNewsletter) {
+      await Promise.allSettled([
+        // Confirmation to the user
+        resend.emails.send({
+          from: "FinalPing <support@finalpingapp.com>",
+          to: normalized,
+          subject: "You're subscribed to FinalPing updates",
+          html: `
+            <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0b0b0b;color:#f9fafb;border-radius:12px;">
+              <div style="font-size:20px;font-weight:800;margin-bottom:4px;">FinalPing</div>
+              <div style="font-size:12px;color:#6b7280;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;">Aircraft Alerts</div>
+              <p style="font-size:16px;font-weight:700;margin:0 0 12px;">You're subscribed ✓</p>
+              <p style="font-size:14px;color:#d1d5db;line-height:1.7;margin:0 0 16px;">
+                Thanks for signing up for <strong style="color:#fff;">FinalPing updates</strong>.
+                We'll email you when new features, releases, and products land — no spam, nothing else.
+              </p>
+              <a href="https://finalpingapp.com/download" style="display:inline-block;padding:12px 24px;background:#0ea5e9;color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;">
+                Download FinalPing →
+              </a>
+              <p style="font-size:12px;color:#4b5563;margin-top:32px;">
+                The FinalPing Team · <a href="https://finalpingapp.com" style="color:#4b5563;">finalpingapp.com</a>
+              </p>
+            </div>
+          `,
+        }),
+        // Internal notification
+        resend.emails.send({
+          from: "FinalPing <support@finalpingapp.com>",
+          to: "aircraftalerts@finalpingapp.com",
+          subject: `New updates subscriber: ${normalized}`,
+          text: `${normalized} just subscribed to FinalPing updates via the site footer.\n\nView all signups: https://finalpingapp.com/admin`,
+        }),
+      ]);
+    } else if (created) {
       await Promise.allSettled([
         // Confirmation to the user
         resend.emails.send({

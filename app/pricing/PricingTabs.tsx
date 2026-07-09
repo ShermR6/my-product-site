@@ -65,6 +65,7 @@ export default function PricingTabs() {
   const [trialLoading, setTrialLoading] = useState(false);
   const [trialError, setTrialError] = useState<string | null>(null);
   const [buyError, setBuyError] = useState<string | null>(null);
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
   const router = useRouter();
 
   const handleTrial = async () => {
@@ -311,7 +312,7 @@ export default function PricingTabs() {
   }, [mode, billing]);
 
   return (
-    <div>
+    <div style={{ paddingBottom: 80 }}>
       {/* ── Header ── */}
       <div className="pricing-head">
         <h1>Choose the plan that&apos;s right for you</h1>
@@ -350,7 +351,7 @@ export default function PricingTabs() {
           </div>
           <span style={{ fontSize: "14px", fontWeight: billing === "yearly" ? 600 : 400, color: billing === "yearly" ? "var(--text)" : "var(--muted)", transition: "color 0.2s", display: "flex", alignItems: "center", gap: "8px" }}>
             Yearly
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 999, background: "rgba(34,211,163,0.15)", color: "#22d3a3", border: "1px solid rgba(34,211,163,0.3)" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 999, background: "var(--good-bg)", color: "var(--good)", border: "1px solid var(--good-border)" }}>
               Save 17%
             </span>
           </span>
@@ -406,7 +407,7 @@ export default function PricingTabs() {
                   position: "absolute", top: 14, right: 14,
                   fontSize: 10, fontWeight: 800, letterSpacing: "0.06em",
                   textTransform: "uppercase", padding: "3px 10px",
-                  borderRadius: 999, background: "var(--accent)", color: "#000",
+                  borderRadius: 999, background: "var(--accent)", color: "#fff",
                 }}>
                   Most Popular
                 </span>
@@ -447,9 +448,9 @@ export default function PricingTabs() {
                       width: 18, height: 18, borderRadius: 999,
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       fontWeight: 900, fontSize: 11, lineHeight: 1,
-                      background: "rgba(35, 199, 107, 0.18)",
-                      border: "1px solid rgba(35, 199, 107, 0.45)",
-                      color: "rgba(35, 199, 107, 1)",
+                      background: "var(--good-bg)",
+                      border: "1px solid var(--good-border)",
+                      color: "var(--good)",
                     }}>✓</span>
                     <span style={{ color: "var(--muted)", lineHeight: 1.45 }}>{feat}</span>
                   </div>
@@ -458,13 +459,16 @@ export default function PricingTabs() {
 
               {p.tier.startsWith("team-") ? (
                 <button
+                  type="button"
+                  aria-disabled={true}
+                  aria-label={`${p.name} for Teams — coming soon, not yet available to purchase`}
+                  onClick={(e) => e.preventDefault()}
                   style={{
                     maxWidth: "100%", width: "100%", fontSize: 14, padding: "12px 14px",
                     borderRadius: 999, fontWeight: 700, cursor: "not-allowed",
                     background: "rgba(255,255,255,0.05)", color: "var(--muted)",
                     border: "1px solid var(--border)", boxShadow: "none",
                   }}
-                  disabled
                   title="FinalPing for Teams isn't available to download yet"
                 >
                   Coming soon
@@ -570,7 +574,7 @@ export default function PricingTabs() {
                       {typeof v === "boolean" ? (v ? <CheckIcon /> : <XIcon />) : (
                         <span style={{
                           fontWeight: 700,
-                          color: v === "✦ Included" ? "rgba(35,199,107,1)" : "inherit",
+                          color: v === "✦ Included" ? "var(--good)" : "inherit",
                         }}>{v}</span>
                       )}
                       {row.subtitles?.[i] && (
@@ -619,13 +623,14 @@ export default function PricingTabs() {
 
           <div style={{
             maxWidth: 620, margin: "0 auto",
-            background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(14,165,233,0.03))",
-            border: "1px solid rgba(14,165,233,0.25)", borderRadius: 16, padding: "32px 36px",
+            background: "var(--panel)",
+            border: "1px solid rgba(14,165,233,0.4)", borderRadius: 16, padding: "32px 36px",
+            boxShadow: "0 0 22px rgba(14,165,233,0.22), 0 8px 30px rgba(15,23,42,0.05)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 24, flexWrap: "wrap" as const,
           }}>
             <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 8, letterSpacing: "0.04em" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)", marginBottom: 8, letterSpacing: "0.04em" }}>
                 GROUND STATION
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
@@ -635,8 +640,8 @@ export default function PricingTabs() {
                 <span style={{
                   fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
                   padding: "2px 8px", borderRadius: 999,
-                  background: "rgba(34,211,163,0.15)", color: "#22d3a3",
-                  border: "1px solid rgba(34,211,163,0.3)",
+                  background: "var(--good-bg)", color: "var(--good)",
+                  border: "1px solid var(--good-border)",
                 }}>Free with Pro</span>
               </div>
               <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, marginBottom: 14 }}>
@@ -651,7 +656,7 @@ export default function PricingTabs() {
                   "Fires through all your existing notification channels",
                 ].map(f => (
                   <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--muted)" }}>
-                    <span style={{ color: "#22d3a3", fontWeight: 700 }}>✓</span> {f}
+                    <span style={{ color: "var(--good)", fontWeight: 700 }}>✓</span> {f}
                   </div>
                 ))}
               </div>
@@ -667,7 +672,7 @@ export default function PricingTabs() {
               </button>
               <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "center" as const }}>
                 One-time · No subscription<br/>
-                <span style={{ color: "#22d3a3" }}>Included free on Pro</span>
+                <span style={{ color: "var(--good)" }}>Included free on Pro</span>
               </div>
               <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
                 <a href="/groundstationsetup" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "underline" }}>Setup guide</a>
@@ -688,12 +693,40 @@ export default function PricingTabs() {
           </p>
         </div>
         <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
-          {faqs.map((f) => (
-            <div className="panel" key={f.q} style={{ padding: 20 }}>
-              <h2 style={{ fontSize: 14, marginBottom: 6, color: "var(--text)" }}>{f.q}</h2>
-              <p style={{ fontSize: 13, marginBottom: 0, lineHeight: 1.7 }}>{f.a}</p>
-            </div>
-          ))}
+          {faqs.map((f) => {
+            const open = openFaq === f.q;
+            return (
+              <div className="panel" key={f.q} style={{ padding: 0, overflow: "hidden" }}>
+                <button
+                  onClick={() => setOpenFaq(open ? null : f.q)}
+                  aria-expanded={open}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                    padding: 20, background: "none", border: "none", cursor: "pointer",
+                    fontFamily: "inherit", textAlign: "left",
+                  }}
+                >
+                  <h2 style={{ fontSize: 14, margin: 0, color: "var(--text)" }}>{f.q}</h2>
+                  <svg
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+                    style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .25s ease" }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                <div style={{
+                  display: "grid",
+                  gridTemplateRows: open ? "1fr" : "0fr",
+                  transition: "grid-template-rows .3s ease",
+                }}>
+                  <div style={{ overflow: "hidden" }}>
+                    <p style={{ fontSize: 13, margin: 0, lineHeight: 1.7, padding: "0 20px 20px" }}>{f.a}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

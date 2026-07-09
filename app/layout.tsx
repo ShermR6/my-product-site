@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   authors: [{ name: "FinalPing" }],
   icons: {
     icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico" },
       { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
     ],
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" data-theme="light">
       <body>
         <Providers>
           <Navbar />

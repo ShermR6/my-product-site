@@ -9,13 +9,11 @@ const PERSONAL_BASE = `https://github.com/ShermR6/aircraft-tracker-desktop/relea
 const TEAMS_BASE = `https://github.com/ShermR6/aircraft-tracker-teams/releases/latest/download`;
 
 function PlatformCard({
-  emoji,
   name,
   ext,
   href,
   label,
 }: {
-  emoji: string;
   name: string;
   ext: string;
   href?: string;
@@ -23,7 +21,6 @@ function PlatformCard({
 }) {
   return (
     <div className="panel-white">
-      <div style={{ fontSize: 28, marginBottom: 8 }}>{emoji}</div>
       <h2 style={{ marginBottom: 4 }}>{name}</h2>
       <p style={{ marginTop: 0, color: "#333", fontSize: 13 }}>{ext}</p>
       {href ? (
@@ -85,15 +82,14 @@ function AppSection({
         }}>
           {tag}
         </div>
-        <h2 style={{ fontSize: 20, margin: "0 0 4px", fontWeight: 800 }}>{title}</h2>
+        <h2 style={{ fontSize: 24, margin: "0 0 4px", fontWeight: 800, letterSpacing: -0.5 }}>{title}</h2>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>{tagline}</p>
       </div>
 
       <div className="grid-3">
-        <PlatformCard emoji="🖥️" name="Windows" ext=".exe installer" href={winHref} label="Download for Windows" />
-        <PlatformCard emoji="🍎" name="macOS" ext=".dmg installer" href={macHref} label="Download for macOS" />
+        <PlatformCard name="Windows" ext=".exe installer" href={winHref} label="Download for Windows" />
+        <PlatformCard name="macOS" ext=".dmg installer" href={macHref} label="Download for macOS" />
         <div className="panel-white" style={{ opacity: 0.55 }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🐧</div>
           <h2 style={{ marginBottom: 4 }}>Linux</h2>
           <p style={{ marginTop: 0, color: "#333", fontSize: 13 }}>AppImage / .deb</p>
           <div style={{
@@ -122,17 +118,18 @@ function AppSection({
 
 export default function DownloadPage() {
   return (
-    <>
+    <div style={{ paddingTop: 48, paddingBottom: 80 }}>
       <h1>Download</h1>
       <p>Choose the edition that matches your license. Not sure which one? <a href="/pricing" style={{ color: "var(--accent)" }}>Compare plans →</a></p>
 
       <AppSection
         tag="Personal"
-        title="FinalPing"
+        title="FinalPing Personal"
         tagline="For individual pilots and operators. Activate with your FP- license key."
         version="1.1.0"
         winHref={`${PERSONAL_BASE}/FinalPingSetup.exe`}
         macHref={`${PERSONAL_BASE}/FinalPingSetup.dmg`}
+        accent
       />
 
       {/* Teams — coming soon */}
@@ -153,7 +150,7 @@ export default function DownloadPage() {
           }}>
             Teams
           </div>
-          <h2 style={{ fontSize: 20, margin: "0 0 4px", fontWeight: 800 }}>FinalPing for Teams</h2>
+          <h2 style={{ fontSize: 24, margin: "0 0 4px", fontWeight: 800, letterSpacing: -0.5 }}>FinalPing for Teams</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>For FBOs, ramp crews, and flight schools.</p>
         </div>
 
@@ -166,10 +163,9 @@ export default function DownloadPage() {
           background: "rgba(14,165,233,0.03)",
           textAlign: "center",
         }}>
-          <div style={{ fontSize: 36 }}>🏗️</div>
           <div style={{
             fontSize: 14, fontWeight: 800, letterSpacing: "0.12em",
-            textTransform: "uppercase", color: "#fbbf24",
+            textTransform: "uppercase", color: "var(--accent)",
           }}>Coming Soon</div>
           <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, maxWidth: 380, lineHeight: 1.6 }}>
             The Teams edition is currently in development. Download links will appear here when it launches.
@@ -256,6 +252,6 @@ export default function DownloadPage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

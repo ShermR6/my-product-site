@@ -31,15 +31,15 @@ export default function CookieConsent() {
     <div style={{
       position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)",
       zIndex: 9999,
-      background: "var(--panel-bg, #141414)",
-      border: "1px solid var(--border, rgba(255,255,255,0.08))",
+      background: "var(--panel)",
+      border: "1px solid var(--border)",
       borderRadius: 12,
       padding: "14px 20px",
       display: "flex", alignItems: "center", flexWrap: "wrap", gap: "12px 20px",
       maxWidth: 680, width: "calc(100vw - 32px)",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+      boxShadow: "0 8px 32px rgba(15,23,42,0.18)",
     }}>
-      <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", flex: 1, minWidth: 200, lineHeight: 1.6 }}>
+      <p style={{ margin: 0, fontSize: 13, color: "var(--text)", flex: 1, minWidth: 200, lineHeight: 1.6 }}>
         We use cookies and analytics to improve your experience. See our{" "}
         <Link href="/privacy" style={{ color: "var(--accent, #0ea5e9)" }}>Privacy Policy</Link>.
       </p>
@@ -48,7 +48,7 @@ export default function CookieConsent() {
           onClick={decline}
           style={{
             padding: "7px 16px", borderRadius: 8, fontSize: 13, cursor: "pointer",
-            background: "transparent", border: "1px solid rgba(255,255,255,0.12)",
+            background: "transparent", border: "1px solid var(--border)",
             color: "var(--muted)", transition: "border-color 0.15s",
           }}
         >

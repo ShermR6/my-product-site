@@ -9,7 +9,7 @@ export default function RefundPolicyPage() {
   return (
     <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px 80px" }}>
       <h1 style={{ fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>Refund Policy</h1>
-      <p style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "48px" }}>Last Updated: June 1, 2026</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "48px" }}>Last Updated: June 1, 2026</p>
 
       <div className="legal-body">
 

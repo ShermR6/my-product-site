@@ -440,7 +440,7 @@ function CartSidebar({
               style={{
                 display: "block", width: "100%", padding: "13px",
                 borderRadius: 10, border: "none",
-                background: loading || !selectedRate ? "rgba(14,165,233,0.4)" : "#0ea5e9",
+                background: loading || !selectedRate ? "rgba(249,115,22,0.4)" : "#F97316",
                 color: "#fff", fontSize: 14, fontWeight: 800,
                 cursor: loading || !selectedRate ? "default" : "pointer",
               }}
@@ -471,7 +471,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           position: "absolute", top: 14, right: 14, zIndex: 1,
           fontSize: 9, fontWeight: 800, letterSpacing: "0.08em",
           textTransform: "uppercase", padding: "3px 10px", borderRadius: 999,
-          background: "var(--accent)", color: "#000",
+          background: "var(--accent)", color: "#fff",
         }}>Popular</div>
       )}
 
@@ -499,7 +499,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
           {kit.includes.map(item => (
             <div key={item} style={{ fontSize: 12, color: "var(--muted)", display: "flex", gap: 6, alignItems: "center" }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700, fontSize: 10 }}>✓</span> {item}
+              <span style={{ color: "var(--good)", fontWeight: 700, fontSize: 10 }}>✓</span> {item}
             </div>
           ))}
         </div>
@@ -532,9 +532,13 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
               Pre-built &amp; Pre-flashed
               <span style={{
-                marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 999,
-                background: "rgba(14,165,233,0.15)", color: "var(--accent)", border: "1px solid rgba(14,165,233,0.3)",
-              }}>+$25</span>
+                marginLeft: 6, fontSize: 11, fontWeight: 800, padding: "3px 9px", borderRadius: 999,
+                background: "rgba(14,165,233,0.15)", color: "#0369A1", border: "1px solid rgba(14,165,233,0.45)",
+                display: "inline-flex", alignItems: "center", gap: 2, lineHeight: 1, verticalAlign: "middle",
+              }}>
+                <span style={{ fontSize: 12, transform: "translateY(-0.5px)" }}>+</span>
+                <span>$25</span>
+              </span>
             </div>
             <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.5 }}>
               Assembled and pre-loaded. Plug in, connect WiFi, done.
@@ -557,7 +561,8 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           )}
           style={{
             display: "block", width: "100%", padding: "12px", borderRadius: 10, border: "none",
-            background: "#0ea5e9", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer",
+            background: "#F97316", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer",
+            boxShadow: "0 3px 14px rgba(249,115,22,0.3)",
           }}
         >
           Add to Cart →
@@ -600,9 +605,9 @@ function PartCard({ part, onAdd }: { part: typeof PARTS[0]; onAdd: (tier: string
           onClick={handleAdd}
           style={{
             padding: "8px 16px", borderRadius: 8,
-            border: added ? "1px solid rgba(34,211,163,0.4)" : "1px solid rgba(14,165,233,0.3)",
-            background: added ? "rgba(34,211,163,0.1)" : "rgba(14,165,233,0.1)",
-            color: added ? "#22d3a3" : "var(--accent)",
+            border: added ? "1px solid var(--good-border)" : "1px solid rgba(249,115,22,0.35)",
+            background: added ? "var(--good-bg)" : "rgba(249,115,22,0.09)",
+            color: added ? "var(--good)" : "#EA6A0F",
             fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
           }}
         >
@@ -657,7 +662,7 @@ export default function GroundStationKitPage() {
             {cartCount > 0 && (
               <span style={{
                 fontSize: 11, fontWeight: 800, minWidth: 20, height: 20,
-                borderRadius: 999, background: "#0ea5e9", color: "#fff",
+                borderRadius: 999, background: "#F97316", color: "#fff",
                 display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
               }}>{cartCount}</span>
             )}

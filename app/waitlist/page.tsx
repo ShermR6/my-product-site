@@ -41,11 +41,9 @@ export default function WaitlistPage() {
         padding: "40px 36px",
         textAlign: "center",
       }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🏗️</div>
-
         <div style={{
           fontSize: 11, fontWeight: 800, letterSpacing: "0.14em",
-          textTransform: "uppercase", color: "#fbbf24", marginBottom: 12,
+          textTransform: "uppercase", color: "var(--accent)", marginBottom: 12,
         }}>
           Coming Soon
         </div>
