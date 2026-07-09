@@ -95,6 +95,10 @@ body {
   padding: 0;
 }
 
+.nav .container {
+  max-width: 1280px;
+}
+
 .nav {
   position: sticky;
   top: 0;

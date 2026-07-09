@@ -36,7 +36,7 @@ export default function LoginForm() {
     return score;
   };
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"];
-  const strengthColor = ["", "#ef4444", "#f59e0b", "#0ea5e9", "#23c76b"];
+  const strengthColor = ["", "#ef4444", "#f59e0b", "#0ea5e9", "#15803D"];
   const strength = tab === "signup" ? pwStrength(password) : 0;
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -200,8 +200,8 @@ export default function LoginForm() {
   };
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "11px 14px", background: "#111827",
-    border: "1px solid #374151", borderRadius: "10px", color: "#f9fafb",
+    width: "100%", padding: "11px 14px", background: "#FFFFFF",
+    border: "1px solid #CBD5E1", borderRadius: "10px", color: "#0F172A",
     fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   };
 
@@ -213,26 +213,26 @@ export default function LoginForm() {
 
   return (
     <div style={{
-      maxWidth: 460, margin: "48px auto", background: "#0f1117",
-      border: "1px solid #1f2937", borderRadius: "16px",
-      padding: "32px 28px 24px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+      maxWidth: 460, margin: "48px auto", background: "#FFFFFF",
+      border: "1px solid #E2E8F0", borderRadius: "16px",
+      padding: "32px 28px 24px", boxShadow: "0 8px 40px rgba(15,23,42,0.08)",
     }}>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: "#f9fafb", margin: "0 0 4px 0" }}>Welcome</h2>
-      <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 24px 0" }}>Sign in or create an account to get started</p>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0F172A", margin: "0 0 4px 0" }}>Welcome</h2>
+      <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 24px 0" }}>Sign in or create an account to get started</p>
 
       {/* Tabs — only show on credentials step */}
       {step === "credentials" && (
         <div style={{
           display: "grid", gridTemplateColumns: "1fr 1fr",
-          background: "#1f2937", borderRadius: "10px",
+          background: "#F1F5F9", borderRadius: "10px",
           padding: "4px", marginBottom: "24px",
         }}>
           {(["signin", "signup"] as const).map((t) => (
             <button key={t} onClick={() => { setTab(t); setError(""); setAgreedToTerms(false); }}
               style={{
                 padding: "9px", borderRadius: "8px", border: "none",
-                background: tab === t ? "#111827" : "transparent",
-                color: tab === t ? "#f9fafb" : "#6b7280",
+                background: tab === t ? "#FFFFFF" : "transparent",
+                color: tab === t ? "#0F172A" : "#64748B",
                 fontWeight: tab === t ? 600 : 400, fontSize: "14px",
                 cursor: "pointer", transition: "all 0.15s",
               }}>
@@ -244,8 +244,8 @@ export default function LoginForm() {
 
       {error && (
         <div role="alert" aria-live="assertive" style={{
-          padding: "10px 14px", background: "#ef444420", border: "1px solid #ef444440",
-          borderRadius: "8px", color: "#fca5a5", fontSize: "13px", marginBottom: "16px",
+          padding: "10px 14px", background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.35)",
+          borderRadius: "8px", color: "#DC2626", fontSize: "13px", marginBottom: "16px",
         }}>
           {error}
         </div>
@@ -256,13 +256,13 @@ export default function LoginForm() {
         <>
           <button type="button" onClick={handleGoogleSignIn} style={{
             width: "100%", padding: "11px", borderRadius: "10px",
-            border: "1px solid #374151", background: "rgba(255,255,255,0.03)",
-            color: "#f9fafb", fontSize: "14px", fontWeight: 600,
+            border: "1px solid #CBD5E1", background: "#FFFFFF",
+            color: "#0F172A", fontSize: "14px", fontWeight: 600,
             cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
             marginBottom: "16px", transition: "all 0.15s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "#6b7280"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "#374151"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#64748B"; e.currentTarget.style.background = "#F8FAFC"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "#CBD5E1"; e.currentTarget.style.background = "#FFFFFF"; }}>
             <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
               <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -273,9 +273,9 @@ export default function LoginForm() {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-            <div style={{ flex: 1, height: "1px", background: "#1f2937" }} />
-            <span style={{ fontSize: "12px", color: "#4b5563" }}>or</span>
-            <div style={{ flex: 1, height: "1px", background: "#1f2937" }} />
+            <div style={{ flex: 1, height: "1px", background: "#E2E8F0" }} />
+            <span style={{ fontSize: "12px", color: "#94A3B8" }}>or</span>
+            <div style={{ flex: 1, height: "1px", background: "#E2E8F0" }} />
           </div>
         </>
       )}
@@ -284,31 +284,31 @@ export default function LoginForm() {
         <form onSubmit={tab === "signin" ? handleSignIn : handleSignUp}>
           {tab === "signup" && (
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Full Name</label>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Full Name</label>
               <input style={inputStyle} type="text" placeholder="Your name" value={name}
                 onChange={e => setName(e.target.value)} autoFocus
-                onFocus={e => e.target.style.borderColor = "#3b82f6"}
-                onBlur={e => e.target.style.borderColor = "#374151"} />
+                onFocus={e => e.target.style.borderColor = "#0EA5E9"}
+                onBlur={e => e.target.style.borderColor = "#CBD5E1"} />
             </div>
           )}
           <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Email</label>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Email</label>
             <input style={inputStyle} type="email" placeholder="you@example.com" value={email}
               onChange={e => setEmail(e.target.value)} required autoFocus={tab === "signin"}
-              onFocus={e => e.target.style.borderColor = "#3b82f6"}
-              onBlur={e => e.target.style.borderColor = "#374151"} />
+              onFocus={e => e.target.style.borderColor = "#0EA5E9"}
+              onBlur={e => e.target.style.borderColor = "#CBD5E1"} />
           </div>
 
           <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Password</label>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Password</label>
             <div style={{ position: "relative" }}>
               <input style={{ ...inputStyle, paddingRight: "42px" }}
                 type={showPassword ? "text" : "password"} placeholder="••••••••"
                 value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                onFocus={e => e.target.style.borderColor = "#3b82f6"}
-                onBlur={e => e.target.style.borderColor = "#374151"} />
+                onFocus={e => e.target.style.borderColor = "#0EA5E9"}
+                onBlur={e => e.target.style.borderColor = "#CBD5E1"} />
               <button type="button" onClick={() => setShowPassword(v => !v)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#6b7280", fontSize: "13px", padding: 0, lineHeight: 1 }}>
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748B", fontSize: "13px", padding: 0, lineHeight: 1 }}>
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
@@ -316,17 +316,17 @@ export default function LoginForm() {
               <div style={{ marginTop: 8 }}>
                 <div style={{ display: "flex", gap: 4, marginBottom: 5 }}>
                   {[1, 2, 3, 4].map(i => (
-                    <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: strength >= i ? strengthColor[strength] : "#374151", transition: "background 0.2s" }} />
+                    <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: strength >= i ? strengthColor[strength] : "#CBD5E1", transition: "background 0.2s" }} />
                   ))}
                 </div>
-                <span style={{ fontSize: 11, color: strengthColor[strength] || "#6b7280" }}>{strengthLabel[strength] || "Too weak"}</span>
+                <span style={{ fontSize: 11, color: strengthColor[strength] || "#64748B" }}>{strengthLabel[strength] || "Too weak"}</span>
                 <div style={{ marginTop: 6, display: "flex", flexDirection: "column" as const, gap: 2 }}>
                   {[
                     { label: "8+ characters", met: password.length >= 8 },
                     { label: "Uppercase letter", met: /[A-Z]/.test(password) },
                     { label: "Number", met: /[0-9]/.test(password) },
                   ].map(r => (
-                    <span key={r.label} style={{ fontSize: 11, color: r.met ? "#23c76b" : "#6b7280" }}>
+                    <span key={r.label} style={{ fontSize: 11, color: r.met ? "#15803D" : "#64748B" }}>
                       {r.met ? "✓" : "○"} {r.label}
                     </span>
                   ))}
@@ -348,14 +348,14 @@ export default function LoginForm() {
               />
               <span aria-hidden="true" style={{
                 width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0,
-                border: `2px solid ${rememberMe ? "#0ea5e9" : "#374151"}`,
+                border: `2px solid ${rememberMe ? "#0ea5e9" : "#CBD5E1"}`,
                 background: rememberMe ? "#0ea5e9" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
                 boxShadow: rememberFocus ? "0 0 0 3px rgba(14,165,233,0.5)" : "none",
               }}>
                 {rememberMe && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>✓</span>}
               </span>
-              <span style={{ fontSize: "13px", color: "#9ca3af", userSelect: "none" as const }}>
+              <span style={{ fontSize: "13px", color: "#475569", userSelect: "none" as const }}>
                 Remember me for 30 days
               </span>
             </label>
@@ -374,26 +374,26 @@ export default function LoginForm() {
               />
               <span aria-hidden="true" style={{
                 width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0, marginTop: "1px",
-                border: `2px solid ${agreedToTerms ? "#0ea5e9" : "#374151"}`,
+                border: `2px solid ${agreedToTerms ? "#0ea5e9" : "#CBD5E1"}`,
                 background: agreedToTerms ? "#0ea5e9" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
                 boxShadow: termsFocus ? "0 0 0 3px rgba(14,165,233,0.5)" : "none",
               }}>
                 {agreedToTerms && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>✓</span>}
               </span>
-              <span style={{ fontSize: "13px", color: "#9ca3af", userSelect: "none" as const, lineHeight: "1.5" }}>
+              <span style={{ fontSize: "13px", color: "#475569", userSelect: "none" as const, lineHeight: "1.5" }}>
                 I agree to the{" "}
-                <a href="/terms" onClick={e => e.stopPropagation()} style={{ color: "#60a5fa", textDecoration: "underline" }}>Terms of Service</a>
+                <a href="/terms" onClick={e => e.stopPropagation()} style={{ color: "#0284C7", textDecoration: "underline" }}>Terms of Service</a>
                 {" "}and{" "}
-                <a href="/privacy" onClick={e => e.stopPropagation()} style={{ color: "#60a5fa", textDecoration: "underline" }}>Privacy Policy</a>
+                <a href="/privacy" onClick={e => e.stopPropagation()} style={{ color: "#0284C7", textDecoration: "underline" }}>Privacy Policy</a>
               </span>
             </label>
           )}
 
           <button type="submit" disabled={loading || (tab === "signup" && !agreedToTerms)} style={{
             width: "100%", padding: "13px", borderRadius: "10px", border: "none",
-            background: loading || (tab === "signup" && !agreedToTerms) ? "#1f2937" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
-            color: loading || (tab === "signup" && !agreedToTerms) ? "#6b7280" : "#fff", fontSize: "15px", fontWeight: 600,
+            background: loading || (tab === "signup" && !agreedToTerms) ? "#E2E8F0" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
+            color: loading || (tab === "signup" && !agreedToTerms) ? "#64748B" : "#fff", fontSize: "15px", fontWeight: 600,
             cursor: loading || (tab === "signup" && !agreedToTerms) ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
             boxShadow: loading || (tab === "signup" && !agreedToTerms) ? "none" : "0 4px 20px rgba(14,165,233,0.3)",
@@ -408,24 +408,24 @@ export default function LoginForm() {
       {step === "method-select" && (
         <div>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Two-factor verification</div>
-          <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 16 }}>Choose how you'd like to verify your identity:</div>
+          <div style={{ fontSize: 13, color: "#64748B", marginBottom: 16 }}>Choose how you'd like to verify your identity:</div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
             {twoFAMethods.map(m => (
               <button key={m} onClick={() => selectMethod(m)} disabled={loading}
                 style={{
-                  padding: "13px 16px", borderRadius: "10px", border: "1px solid #374151",
-                  background: "rgba(255,255,255,0.03)", color: "#f9fafb",
+                  padding: "13px 16px", borderRadius: "10px", border: "1px solid #CBD5E1",
+                  background: "#FFFFFF", color: "#0F172A",
                   fontSize: "14px", fontWeight: 600, textAlign: "left" as const,
                   cursor: loading ? "not-allowed" : "pointer",
                   opacity: loading ? 0.6 : 1, transition: "all 0.15s",
                 }}
                 onMouseEnter={e => { if (!loading) { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; } }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#374151"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#CBD5E1"; e.currentTarget.style.background = "#FFFFFF"; }}>
                 {methodLabel[m] ?? m}
               </button>
             ))}
           </div>
-          <button onClick={resetToCredentials} style={{ marginTop: 12, background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer", padding: 0 }}>
+          <button onClick={resetToCredentials} style={{ marginTop: 12, background: "none", border: "none", color: "#64748B", fontSize: 13, cursor: "pointer", padding: 0 }}>
             ← Back
           </button>
         </div>
@@ -437,7 +437,7 @@ export default function LoginForm() {
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
             {selectedMethod === "totp" ? "Enter authenticator code" : "Enter verification code"}
           </div>
-          <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 16 }}>
+          <div style={{ fontSize: 13, color: "#64748B", marginBottom: 16 }}>
             {selectedMethod === "totp"
               ? "Open your authenticator app and enter the 6-digit code."
               : codeSent
@@ -449,13 +449,13 @@ export default function LoginForm() {
             onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="000000" autoFocus
             style={{ ...inputStyle, letterSpacing: "0.3em", fontSize: 22, fontWeight: 700, textAlign: "center" as const, marginBottom: 16 }}
-            onFocus={e => e.target.style.borderColor = "#3b82f6"}
-            onBlur={e => e.target.style.borderColor = "#374151"} />
+            onFocus={e => e.target.style.borderColor = "#0EA5E9"}
+            onBlur={e => e.target.style.borderColor = "#CBD5E1"} />
 
           <button type="submit" disabled={loading || code.length < 6} style={{
             width: "100%", padding: "13px", borderRadius: "10px", border: "none",
-            background: loading || code.length < 6 ? "#1f2937" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
-            color: loading || code.length < 6 ? "#6b7280" : "#fff",
+            background: loading || code.length < 6 ? "#E2E8F0" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
+            color: loading || code.length < 6 ? "#64748B" : "#fff",
             fontSize: "15px", fontWeight: 600,
             cursor: loading || code.length < 6 ? "not-allowed" : "pointer",
             boxShadow: loading || code.length < 6 ? "none" : "0 4px 20px rgba(14,165,233,0.3)",
@@ -467,12 +467,12 @@ export default function LoginForm() {
           <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
             {selectedMethod !== "totp" && (
               <button type="button" onClick={() => selectMethod(selectedMethod)}
-                style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer", padding: 0 }}>
+                style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, cursor: "pointer", padding: 0 }}>
                 Resend code
               </button>
             )}
             <button type="button" onClick={twoFAMethods.length > 1 ? () => setStep("method-select") : resetToCredentials}
-              style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer", padding: 0 }}>
+              style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, cursor: "pointer", padding: 0 }}>
               ← Back
             </button>
           </div>
@@ -481,9 +481,9 @@ export default function LoginForm() {
 
       {step === "credentials" && tab === "signin" && (
         <div style={{ textAlign: "center", marginTop: "14px" }}>
-          <a href="/login/forgot" style={{ fontSize: "13px", color: "#6b7280", textDecoration: "none" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#9ca3af")}
-            onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}>
+          <a href="/login/forgot" style={{ fontSize: "13px", color: "#64748B", textDecoration: "none" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#475569")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#64748B")}>
             Forgot your password?
           </a>
         </div>
@@ -491,13 +491,13 @@ export default function LoginForm() {
 
       {step === "credentials" && tab === "signin" && (
         <div style={{
-          marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #1f2937",
-          textAlign: "center", fontSize: "12px", color: "#6b7280",
+          marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #E2E8F0",
+          textAlign: "center", fontSize: "12px", color: "#64748B",
         }}>
           By signing in, you agree to our{" "}
-          <a href="/terms" style={{ color: "#60a5fa", textDecoration: "underline" }}>Terms of Service</a>
+          <a href="/terms" style={{ color: "#0284C7", textDecoration: "underline" }}>Terms of Service</a>
           {" "}and{" "}
-          <a href="/privacy" style={{ color: "#60a5fa", textDecoration: "underline" }}>Privacy Policy</a>
+          <a href="/privacy" style={{ color: "#0284C7", textDecoration: "underline" }}>Privacy Policy</a>
         </div>
       )}
     </div>
