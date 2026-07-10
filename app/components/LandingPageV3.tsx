@@ -507,7 +507,6 @@ export default function LandingPageV3() {
                 <Link href="/pricing" className="v3-flink">Pricing</Link>
                 <Link href="/download" className="v3-flink">Download</Link>
                 <Link href="/groundstationkit" className="v3-flink">Ground Station Kit</Link>
-                <Link href="/dashboard" className="v3-flink">Dashboard</Link>
               </div>
 
               {/* Support */}

@@ -13,7 +13,6 @@ const PRODUCT_LINKS = [
   { href: "/pricing", label: "Pricing" },
   { href: "/download", label: "Download" },
   { href: "/groundstationkit", label: "Ground Station Kit" },
-  { href: "/dashboard", label: "Dashboard" },
 ];
 
 const SUPPORT_LINKS = [
