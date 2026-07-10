@@ -32,7 +32,7 @@ export default function ContactPage() {
   };
 
   return (
-    <>
+    <div style={{ paddingBottom: 80 }}>
       <h1>Contact us</h1>
       <p>Questions about licensing, installation, or support? Send a message.</p>
 
@@ -160,6 +160,6 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
