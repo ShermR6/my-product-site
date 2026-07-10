@@ -539,37 +539,37 @@ export default function PricingTabs() {
           );
         })}
 
-        {/* Enterprise — custom pricing, dark highlighted card */}
+        {/* Enterprise — custom pricing */}
         <div style={{
-          background: "#0F172A",
-          border: "1px solid #1E293B",
+          background: "var(--panel)",
+          border: "1px solid var(--border)",
           borderRadius: 20,
           padding: "24px",
           position: "relative",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "0 12px 40px rgba(15,23,42,0.25)",
+          boxShadow: "0 4px 24px rgba(15,23,42,0.05)",
         }}>
           <div style={{
             fontSize: 12, fontWeight: 800, letterSpacing: "0.1em",
-            textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 10,
+            textTransform: "uppercase", color: "var(--muted)", marginBottom: 10,
           }}>
             {mode === "team" ? "Teams · " : ""}Enterprise
           </div>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-0.02em", color: "#fff", lineHeight: 1 }}>
+            <span style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>
               Custom
             </span>
           </div>
 
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 20, minHeight: 36 }}>
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, marginBottom: 20, minHeight: 36 }}>
             {mode === "team"
               ? "For multi-base and high-volume ground operations"
               : "For operations that outgrow Pro limits"}
           </p>
 
-          <div style={{ height: 1, background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
+          <div style={{ height: 1, background: "var(--border)", marginBottom: 18 }} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24, flex: 1 }}>
             {(mode === "team"
@@ -594,11 +594,11 @@ export default function PricingTabs() {
                   width: 18, height: 18, borderRadius: 999,
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
                   fontWeight: 900, fontSize: 11, lineHeight: 1,
-                  background: "rgba(255,255,255,0.1)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  color: "#fff",
+                  background: "var(--good-bg)",
+                  border: "1px solid var(--good-border)",
+                  color: "var(--good)",
                 }}>✓</span>
-                <span style={{ color: "rgba(255,255,255,0.75)", lineHeight: 1.45 }}>{feat}</span>
+                <span style={{ color: "var(--muted)", lineHeight: 1.45 }}>{feat}</span>
               </div>
             ))}
           </div>
@@ -608,14 +608,14 @@ export default function PricingTabs() {
             style={{
               display: "block", textAlign: "center", width: "100%",
               fontSize: 14, padding: "12px 14px", borderRadius: 999, fontWeight: 700,
-              background: "#fff", color: "#0F172A", textDecoration: "none",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+              background: "#0F172A", color: "#fff", textDecoration: "none",
+              boxShadow: "0 4px 20px rgba(15,23,42,0.25)",
             }}
           >
             Contact Us
           </a>
 
-          <div className="pt-tagline" style={{ textAlign: "center", marginTop: 8, color: "rgba(255,255,255,0.5)" }}>
+          <div className="pt-tagline" style={{ textAlign: "center", marginTop: 8 }}>
             Custom quote · Tailored to your operation
           </div>
         </div>
