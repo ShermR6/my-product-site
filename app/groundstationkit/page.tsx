@@ -239,7 +239,7 @@ function CartSidebar({
       />
       {/* Panel */}
       <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0, width: 400,
+        position: "fixed", top: 0, right: 0, bottom: 0, width: "min(400px, 100vw)",
         background: "var(--panel, #111)", borderLeft: "1px solid var(--border)",
         zIndex: 101, display: "flex", flexDirection: "column",
         boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
@@ -701,7 +701,7 @@ export default function GroundStationKitPage() {
             The Raspberry Pi runs silently in the background on its own power — no PC required, no interruptions to your tracking.
             Set it up once and forget it; the ground station software updates automatically in the background.
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div className="grid-2" style={{ gap: 20 }}>
             {KITS.map(kit => <KitCard key={kit.id} kit={kit} onAdd={addToCart} />)}
           </div>
         </div>
@@ -715,7 +715,7 @@ export default function GroundStationKitPage() {
           <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 20px" }}>
             Already have some of the hardware? Pick up just what you need.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <div className="grid-3" style={{ gap: 16 }}>
             {PARTS.map(part => <PartCard key={part.id} part={part} onAdd={addToCart} />)}
           </div>
         </div>

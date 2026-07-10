@@ -373,14 +373,7 @@ export default function PricingTabs() {
       </div>
 
       {/* ── Plan cards ── */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-        gap: "16px",
-        alignItems: "stretch",
-        margin: "24px 0 48px",
-        padding: "12px 0 4px",
-      }}>
+      <div className="plan-grid">
         {data.plans.map((p) => {
           const isPopular = !!p.popular;
           return (

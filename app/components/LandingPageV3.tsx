@@ -139,9 +139,9 @@ export default function LandingPageV3() {
         .v3-nav-scrolled { background:rgba(255,255,255,0.97);border:1px solid #E2E8F0;box-shadow:0 4px 24px rgba(0,0,0,0.06);backdrop-filter:blur(24px); }
         .v3-nav-link { font-size:13.5px;font-weight:500;color:#64748B;text-decoration:none;transition:color .18s; }
         .v3-nav-link:hover { color:#0F172A; }
-        .v3-dl-btn { display:inline-flex;align-items:center;gap:7px;background:#F97316;color:#fff;padding:9px 18px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 3px 14px rgba(249,115,22,0.3); }
+        .v3-dl-btn { display:inline-flex;align-items:center;white-space:nowrap;gap:7px;background:#F97316;color:#fff;padding:9px 18px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 3px 14px rgba(249,115,22,0.3); }
         .v3-dl-btn:hover { transform:translateY(-1px);box-shadow:0 6px 24px rgba(249,115,22,0.45); }
-        .v3-signin-btn { display:inline-flex;align-items:center;background:transparent;color:#0F172A;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid #CBD5E1;transition:border-color .18s,color .18s; }
+        .v3-signin-btn { display:inline-flex;align-items:center;white-space:nowrap;background:transparent;color:#0F172A;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid #CBD5E1;transition:border-color .18s,color .18s; }
         .v3-signin-btn:hover { border-color:#0EA5E9;color:#0EA5E9; }
         /* card */
         .v3-card { background:#fff;border:1px solid #E2E8F0;border-radius:20px;transition:border-color .25s,transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s; }
@@ -172,6 +172,25 @@ export default function LandingPageV3() {
         .v3-flink:hover { color:#38BDF8; }
         .v3-social { display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.55);transition:color .18s,border-color .18s,transform .18s; }
         .v3-social:hover { color:#38BDF8;border-color:#38BDF8;transform:translateY(-2px); }
+        /* mobile */
+        @media(max-width:900px){
+          .v3-nav ul { display:none !important; }
+          .v3-root section, .v3-root footer { padding-left:20px !important; padding-right:20px !important; }
+          .v3-hero { flex-direction:column !important; padding:32px 20px 48px !important; gap:44px !important; }
+          .v3-hero > div { max-width:100% !important; flex:none !important; width:100%; }
+          .v3-hero h1 { font-size:clamp(40px,11.5vw,64px) !important; letter-spacing:-2px !important; }
+          .v3-hero-globe { justify-content:center !important; }
+          .v3-hero-globe > div { width:min(420px,86vw) !important; }
+          .v3-grid3, .v3-grid2 { grid-template-columns:1fr !important; }
+          .v3-grid4 { grid-template-columns:repeat(2,1fr) !important; }
+          .v3-grid4 > div { padding:32px 16px !important; border-right:none !important; }
+        }
+        @media(max-width:560px){
+          .v3-nav { padding:0 12px; }
+          .v3-dl-btn { padding:8px 11px; font-size:12px; }
+          .v3-signin-btn { padding:7px 11px; font-size:12px; }
+          .nav-dl-long { display:none; }
+        }
         @media(prefers-reduced-motion:reduce){ .v3-marquee-inner{animation:none} *, *::before, *::after {animation-duration:.01ms!important;transition-duration:.01ms!important;animation-iteration-count:1!important} }
       `}</style>
 
@@ -195,7 +214,7 @@ export default function LandingPageV3() {
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <Link href="/download" className="v3-dl-btn">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Free
+            Download<span className="nav-dl-long">&nbsp;Free</span>
           </Link>
           {session
             ? <Link href="/dashboard" className="v3-signin-btn">Dashboard</Link>
@@ -210,7 +229,7 @@ export default function LandingPageV3() {
           <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle, #0EA5E908 1px, transparent 1px)', backgroundSize:'32px 32px', pointerEvents:'none' }}/>
           <div style={{ position:'absolute', top:-80, right:-100, width:700, height:700, borderRadius:'50%', background:'radial-gradient(circle,rgba(14,165,233,0.07) 0%,transparent 70%)', pointerEvents:'none' }}/>
 
-          <div style={{ maxWidth:1280, margin:'0 auto', padding:'60px 40px', display:'flex', alignItems:'center', gap:0, width:'100%' }}>
+          <div className="v3-hero" style={{ maxWidth:1280, margin:'0 auto', padding:'60px 40px', display:'flex', alignItems:'center', gap:0, width:'100%' }}>
             <div style={{ flex:'1 1 0', minWidth:0, maxWidth:580 }}>
               <motion.div initial="hidden" animate="show" variants={{ hidden:{}, show:{} }}>
                 <motion.div variants={stagger(0)} style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(14,165,233,0.08)', border:'1px solid rgba(14,165,233,0.18)', color:'#0EA5E9', fontSize:11, fontWeight:700, letterSpacing:'1.8px', textTransform:'uppercase', padding:'6px 14px', borderRadius:999, marginBottom:28 }}>
@@ -247,7 +266,7 @@ export default function LandingPageV3() {
               </motion.div>
             </div>
 
-            <div style={{ flex:'1 1 0', minWidth:0, display:'flex', justifyContent:'flex-end', alignItems:'center', position:'relative' }}>
+            <div className="v3-hero-globe" style={{ flex:'1 1 0', minWidth:0, display:'flex', justifyContent:'flex-end', alignItems:'center', position:'relative' }}>
               <motion.div
                 initial={{ opacity:0, scale:.9 }}
                 animate={{ opacity:1, scale:1 }}
@@ -307,7 +326,7 @@ export default function LandingPageV3() {
               </motion.p>
             </motion.div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
+            <div className="v3-grid3" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
               {[
                 {
                   title: 'Instant Alerts',
@@ -338,7 +357,7 @@ export default function LandingPageV3() {
             </div>
 
             {/* extra 2 features */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20, marginTop:20 }}>
+            <div className="v3-grid2" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20, marginTop:20 }}>
               {[
                 {
                   title:'Integrations', desc:'Route alerts wherever you\'ll see them fastest. The moment an aircraft enters your zone, every channel you\'ve connected fires at once.',
@@ -375,7 +394,7 @@ export default function LandingPageV3() {
 
         {/* ── STATS ───────────────────────────────────────────── */}
         <section style={{ background:'#fff', borderTop:'1px solid #E2E8F0', borderBottom:'1px solid #E2E8F0' }}>
-          <div style={{ maxWidth:1280, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
+          <div className="v3-grid4" style={{ maxWidth:1280, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
             {[
               { to:1200,  suf:'+',  label:'Active users',       dec:0, color:'#0EA5E9' },
               { to:30,    suf:'s',  label:'Avg alert time',     dec:0, color:'#F97316' },

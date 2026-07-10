@@ -1311,9 +1311,18 @@ function DashboardContent() {
   const email = session?.user?.email ?? "";
 
   return (
-    <div style={styles.shell}>
-      <div style={styles.sidebar}>
-        <div style={styles.sidebarLabel}>Dashboard</div>
+    <div className="dash-shell" style={styles.shell}>
+      <style>{`
+        @media(max-width:800px){
+          .dash-shell { flex-direction:column !important; }
+          .dash-sidebar { width:100% !important; min-width:0 !important; flex-direction:row !important; overflow-x:auto; border-right:none !important; border-bottom:1px solid var(--border); padding:12px 0 16px !important; gap:6px !important; }
+          .dash-sidebar-label { display:none; }
+          .dash-sidebar button { width:auto !important; white-space:nowrap; flex-shrink:0; }
+          .dash-main { padding:24px 0 48px !important; }
+        }
+      `}</style>
+      <div className="dash-sidebar" style={styles.sidebar}>
+        <div className="dash-sidebar-label" style={styles.sidebarLabel}>Dashboard</div>
         {NAV_ITEMS.map(item => (
           <button key={item.id} style={styles.navItem(activeTab === item.id)} onClick={() => setActiveTab(item.id)}
             onMouseEnter={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "rgba(15,23,42,0.04)"; } }}
@@ -1322,7 +1331,7 @@ function DashboardContent() {
           </button>
         ))}
       </div>
-      <div style={styles.main}>
+      <div className="dash-main" style={styles.main}>
         {show2FABanner && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 16px", marginBottom: 24, borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>

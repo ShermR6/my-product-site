@@ -136,6 +136,7 @@ body {
 .nav-dl-btn {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
   gap: 7px;
   background: var(--cta);
   color: #fff;
@@ -155,6 +156,7 @@ body {
 .nav-signin-btn {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
   background: transparent;
   color: var(--text);
   padding: 8px 16px;
@@ -168,6 +170,31 @@ body {
 .nav-signin-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* Pricing plan cards */
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  margin: 24px 0 48px;
+  padding: 12px 0 4px;
+}
+
+/* ── Mobile ── */
+html, body { overflow-x: clip; }
+
+@media (max-width: 900px) {
+  .nav-inner nav { display: none !important; }
+  .plan-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .nav .container { padding: 0 12px; }
+  .nav-dl-btn { padding: 8px 11px; font-size: 12px; }
+  .nav-signin-btn { padding: 7px 11px; font-size: 12px; }
+  .nav-dl-long { display: none; }
 }
 
 /* Option C Logo */
