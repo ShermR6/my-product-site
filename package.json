@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@number-flow/react": "^0.6.1",
     "@prisma/client": "^6.19.2",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.8",

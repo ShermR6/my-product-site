@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import NumberFlow from "@number-flow/react";
 
 type Plan = {
   name: string;
   tier: string;
   price: string;
+  amount: number;
   perMonth?: string;
   oldPrice?: string;
   tagline: string;
@@ -124,6 +127,7 @@ export default function PricingTabs() {
         name: "Starter",
         tier: yearly ? "starter-yearly" : "starter",
         price: yearly ? "$149/yr" : "$14.99",
+        amount: yearly ? 149 : 14.99,
         perMonth: yearly ? "$12.42/mo" : undefined,
         tagline: yearly ? "Billed annually" : "Monthly Access",
         desc: "Essential tracking for individual operators",
@@ -141,6 +145,7 @@ export default function PricingTabs() {
         name: "Premium",
         tier: yearly ? "premium-yearly" : "premium",
         price: yearly ? "$249/yr" : "$24.99",
+        amount: yearly ? 249 : 24.99,
         perMonth: yearly ? "$20.75/mo" : undefined,
         tagline: yearly ? "Billed annually" : "Monthly Access",
         desc: "More aircraft and channels for serious tracking",
@@ -159,6 +164,7 @@ export default function PricingTabs() {
         name: "Pro",
         tier: yearly ? "pro-yearly" : "pro",
         price: yearly ? "$499/yr" : "$49.99",
+        amount: yearly ? 499 : 49.99,
         perMonth: yearly ? "$41.58/mo" : undefined,
         tagline: yearly ? "Billed annually" : "Monthly Access",
         desc: "Maximum capacity for high-volume operations",
@@ -180,6 +186,7 @@ export default function PricingTabs() {
         name: "Starter",
         tier: yearly ? "team-starter-yearly" : "team-starter",
         price: yearly ? "$199/yr" : "$19.99",
+        amount: yearly ? 199 : 19.99,
         perMonth: yearly ? "$16.58/mo" : undefined,
         oldPrice: yearly ? undefined : "$54.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
@@ -198,6 +205,7 @@ export default function PricingTabs() {
         name: "Premium",
         tier: yearly ? "team-premium-yearly" : "team-premium",
         price: yearly ? "$349/yr" : "$34.99",
+        amount: yearly ? 349 : 34.99,
         perMonth: yearly ? "$29.08/mo" : undefined,
         oldPrice: yearly ? undefined : "$89.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
@@ -219,6 +227,7 @@ export default function PricingTabs() {
         name: "Pro",
         tier: yearly ? "team-pro-yearly" : "team-pro",
         price: yearly ? "$699/yr" : "$69.99",
+        amount: yearly ? 699 : 69.99,
         perMonth: yearly ? "$58.25/mo" : undefined,
         oldPrice: yearly ? undefined : "$139.99",
         tagline: yearly ? "Billed annually" : "Monthly Team License",
@@ -325,36 +334,54 @@ export default function PricingTabs() {
           </button>
         </div>
 
-        {/* Billing toggle — shown for both modes */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "12px",
-          marginTop: "20px",
-        }}>
-          <span style={{ fontSize: "14px", fontWeight: billing === "monthly" ? 600 : 400, color: billing === "monthly" ? "var(--text)" : "var(--muted)", transition: "color 0.2s" }}>
-            Monthly
-          </span>
-          <div
-            onClick={() => setBilling(b => b === "monthly" ? "yearly" : "monthly")}
-            style={{
-              width: "48px", height: "26px", borderRadius: "13px",
-              background: billing === "yearly" ? "var(--accent)" : "rgba(255,255,255,0.12)",
-              cursor: "pointer", position: "relative", transition: "background 0.25s", flexShrink: 0,
-            }}
-          >
-            <div style={{
-              position: "absolute", top: "3px",
-              left: billing === "yearly" ? "25px" : "3px",
-              width: "20px", height: "20px", borderRadius: "50%",
-              background: "#fff", transition: "left 0.25s",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-            }} />
+        {/* Billing frequency pill tabs — shown for both modes */}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+          <div style={{
+            display: "inline-flex", padding: 4, borderRadius: 999,
+            background: "var(--panel-2, #F1F5F9)", border: "1px solid var(--border)",
+          }}>
+            {(["monthly", "yearly"] as const).map((freq) => {
+              const selected = billing === freq;
+              return (
+                <button
+                  key={freq}
+                  onClick={() => setBilling(freq)}
+                  aria-pressed={selected}
+                  style={{
+                    position: "relative", appearance: "none", border: "none", background: "none",
+                    padding: "8px 18px", borderRadius: 999, cursor: "pointer",
+                    fontFamily: "inherit", fontSize: 13, fontWeight: 700, textTransform: "capitalize",
+                    color: selected ? "var(--text)" : "var(--muted)",
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    transition: "color 0.2s",
+                  }}
+                >
+                  {selected && (
+                    <motion.span
+                      layoutId="billing-pill"
+                      transition={{ type: "spring", duration: 0.5, bounce: 0.15 }}
+                      style={{
+                        position: "absolute", inset: 0, borderRadius: 999,
+                        background: "var(--panel)", border: "1px solid var(--border)",
+                        boxShadow: "0 2px 8px rgba(15,23,42,0.08)",
+                      }}
+                    />
+                  )}
+                  <span style={{ position: "relative", zIndex: 1 }}>{freq}</span>
+                  {freq === "yearly" && (
+                    <span style={{
+                      position: "relative", zIndex: 1,
+                      fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+                      padding: "2px 8px", borderRadius: 999,
+                      background: "var(--good-bg)", color: "var(--good)", border: "1px solid var(--good-border)",
+                    }}>
+                      Save 17%
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          <span style={{ fontSize: "14px", fontWeight: billing === "yearly" ? 600 : 400, color: billing === "yearly" ? "var(--text)" : "var(--muted)", transition: "color 0.2s", display: "flex", alignItems: "center", gap: "8px" }}>
-            Yearly
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 999, background: "var(--good-bg)", color: "var(--good)", border: "1px solid var(--good-border)" }}>
-              Save 17%
-            </span>
-          </span>
         </div>
 
         {/* Team mode callout */}
@@ -383,15 +410,13 @@ export default function PricingTabs() {
                 background: "var(--panel)",
                 border: isPopular ? "2px solid rgba(14,165,233,0.5)" : "1px solid var(--border)",
                 borderRadius: 20,
-                padding: "28px",
+                padding: "24px",
                 position: "relative",
                 display: "flex",
                 flexDirection: "column",
-                marginTop: isPopular ? "-12px" : "0",
-                marginBottom: isPopular ? "-12px" : "0",
                 boxShadow: isPopular
-                  ? "0 0 40px rgba(14,165,233,0.08), 0 20px 60px rgba(0,0,0,0.35)"
-                  : "0 4px 24px rgba(0,0,0,0.15)",
+                  ? "0 0 40px rgba(14,165,233,0.1), 0 12px 40px rgba(15,23,42,0.08)"
+                  : "0 4px 24px rgba(15,23,42,0.05)",
                 zIndex: isPopular ? 1 : 0,
               }}
             >
@@ -416,8 +441,14 @@ export default function PricingTabs() {
               </div>
 
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>
-                  {p.price}
+                <span style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>
+                  <NumberFlow
+                    value={p.amount}
+                    format={{ style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }}
+                  />
+                </span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--muted)" }}>
+                  /{billing === "yearly" ? "yr" : "mo"}
                 </span>
                 {p.oldPrice && (
                   <span style={{ fontSize: 13, color: "var(--muted)", textDecoration: "line-through" }}>{p.oldPrice}</span>
@@ -507,6 +538,87 @@ export default function PricingTabs() {
             </div>
           );
         })}
+
+        {/* Enterprise — custom pricing, dark highlighted card */}
+        <div style={{
+          background: "#0F172A",
+          border: "1px solid #1E293B",
+          borderRadius: 20,
+          padding: "24px",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 12px 40px rgba(15,23,42,0.25)",
+        }}>
+          <div style={{
+            fontSize: 12, fontWeight: 800, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 10,
+          }}>
+            {mode === "team" ? "Teams · " : ""}Enterprise
+          </div>
+
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-0.02em", color: "#fff", lineHeight: 1 }}>
+              Custom
+            </span>
+          </div>
+
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 20, minHeight: 36 }}>
+            {mode === "team"
+              ? "For multi-base and high-volume ground operations"
+              : "For operations that outgrow Pro limits"}
+          </p>
+
+          <div style={{ height: 1, background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24, flex: 1 }}>
+            {(mode === "team"
+              ? [
+                  "Everything in Teams Pro",
+                  "Multi-base & multi-tenant setups",
+                  "Custom integrations & API access",
+                  "Volume seat licensing",
+                  "SLA & dedicated support",
+                ]
+              : [
+                  "Everything in Pro",
+                  "Custom aircraft & zone limits",
+                  "Multiple ground stations",
+                  "Custom notification integrations",
+                  "White-glove onboarding",
+                ]
+            ).map((feat) => (
+              <div key={feat} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13 }}>
+                <span style={{
+                  flexShrink: 0, marginTop: 1,
+                  width: 18, height: 18, borderRadius: 999,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 900, fontSize: 11, lineHeight: 1,
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  color: "#fff",
+                }}>✓</span>
+                <span style={{ color: "rgba(255,255,255,0.75)", lineHeight: 1.45 }}>{feat}</span>
+              </div>
+            ))}
+          </div>
+
+          <a
+            href="/contact"
+            style={{
+              display: "block", textAlign: "center", width: "100%",
+              fontSize: 14, padding: "12px 14px", borderRadius: 999, fontWeight: 700,
+              background: "#fff", color: "#0F172A", textDecoration: "none",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+            }}
+          >
+            Contact Us
+          </a>
+
+          <div className="pt-tagline" style={{ textAlign: "center", marginTop: 8, color: "rgba(255,255,255,0.5)" }}>
+            Custom quote · Tailored to your operation
+          </div>
+        </div>
       </div>
 
       {/* ── Full feature comparison ── */}
