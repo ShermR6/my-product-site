@@ -221,7 +221,7 @@ export default function LandingPageV3() {
                 <motion.h1 variants={stagger(0.18)} style={{ fontSize:'clamp(48px,5.5vw,82px)', fontWeight:900, letterSpacing:-4, lineHeight:.92, color:'#0F172A', marginBottom:24 }}>
                   Know when<br/>
                   your aircraft is<br/>
-                  <span style={{ color:'#0EA5E9' }}>on final.</span>
+                  <span style={{ color:'#0EA5E9' }}>on final</span>
                 </motion.h1>
 
                 <motion.p variants={stagger(0.36)} style={{ fontSize:17, color:'#64748B', lineHeight:1.78, marginBottom:36, maxWidth:440 }}>
