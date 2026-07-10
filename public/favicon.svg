@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <!-- FinalPing favicon: same geometry as the site lockup.
-       White tile, ink broken ring, sky blue jet crossing the gap. -->
-  <rect width="120" height="120" rx="26" fill="#FFFFFF"/>
-  <circle cx="60" cy="60" r="40" fill="none" stroke="#0F172A" stroke-width="12"
+  <!-- FinalPing favicon: navy tile, white broken ring, sky blue jet crossing the gap. -->
+  <rect width="120" height="120" rx="26" fill="#0F172A"/>
+  <circle cx="60" cy="60" r="40" fill="none" stroke="#FFFFFF" stroke-width="12"
           stroke-dasharray="195.4 48.9" stroke-linecap="round"/>
-  <path fill="#0EA5E9" transform="translate(87.5,32.5) rotate(225) scale(1.75)"
+  <path fill="#38BDF8" transform="translate(87.5,32.5) rotate(225) scale(1.75)"
         d="M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z"/>
 </svg>
