@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -20,6 +21,8 @@ export default function Navbar() {
     <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <div className="container">
         <div className="nav-inner">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <MobileMenu />
           <Link className="brand" href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
             <svg width="28" height="28" viewBox="0 0 120 120" style={{ flexShrink: 0 }} aria-hidden="true">
               <circle cx="60" cy="60" r="40" fill="none" stroke="var(--text)" strokeWidth="7.5"
@@ -31,6 +34,7 @@ export default function Navbar() {
               Final<span style={{ color: "var(--accent)" }}>Ping</span>
             </span>
           </Link>
+          </div>
 
           <nav style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <Link className="nav-link" href="/">Product</Link>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import NewsletterSignup from './NewsletterSignup';
+import MobileMenu from './MobileMenu';
 import { SOCIAL_LINKS } from './Footer';
 
 const Globe = dynamic(() => import('./ui/cobe-globe').then(m => m.Globe), { ssr: false });
@@ -196,6 +197,8 @@ export default function LandingPageV3() {
 
       {/* ── NAV ─────────────────────────────────────────────── */}
       <nav ref={navRef} className={`v3-nav ${scrolled ? 'v3-nav-scrolled' : 'v3-nav-default'}`}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <MobileMenu />
         <Link href="/" style={{ display:'flex', alignItems:'center', gap:9, textDecoration:'none' }}>
           <svg width="30" height="30" viewBox="0 0 120 120" style={{ flexShrink:0 }} aria-hidden="true">
             <circle cx="60" cy="60" r="40" fill="none" stroke="#0F172A" strokeWidth="7.5"
@@ -205,6 +208,7 @@ export default function LandingPageV3() {
           </svg>
           <span style={{ fontSize:16, fontWeight:800, color:'#0F172A', letterSpacing:-.4 }}>Final<span style={{ color:'#0EA5E9' }}>Ping</span></span>
         </Link>
+        </div>
         <ul style={{ display:'flex', gap:28, listStyle:'none', margin:0, padding:0 }}>
           <li><Link href="/" className="v3-nav-link">Product</Link></li>
           <li><Link href="/pricing" className="v3-nav-link">Pricing</Link></li>
