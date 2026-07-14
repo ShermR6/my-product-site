@@ -23,6 +23,9 @@ export default function CookieConsent() {
   const decline = () => {
     localStorage.setItem("cookieConsent", "declined");
     setVisible(false);
+    if (posthog && posthog.__loaded) {
+      posthog.opt_out_capturing();
+    }
   };
 
   if (!visible) return null;

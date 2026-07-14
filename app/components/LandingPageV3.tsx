@@ -133,8 +133,7 @@ export default function LandingPageV3() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
-        .v3-root, .v3-root * { font-family:'Plus Jakarta Sans',system-ui,sans-serif; box-sizing:border-box; }
+        .v3-root, .v3-root * { font-family:var(--font-jakarta),'Plus Jakarta Sans',system-ui,sans-serif; box-sizing:border-box; }
         .v3-nav { position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:1000;width:min(calc(100% - 32px),1280px);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-radius:14px;transition:background .35s,border-color .35s,box-shadow .35s; }
         .v3-nav-default { background:rgba(255,255,255,0.85);border:1px solid rgba(226,232,240,0.7);backdrop-filter:blur(16px); }
         .v3-nav-scrolled { background:rgba(255,255,255,0.97);border:1px solid #E2E8F0;box-shadow:0 4px 24px rgba(0,0,0,0.06);backdrop-filter:blur(24px); }

@@ -1,0 +1,5 @@
+Contact: mailto:aircraftalerts@finalpingapp.com
+Expires: 2027-07-10T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://finalpingapp.com/.well-known/security.txt
+Policy: https://finalpingapp.com/terms

@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import crypto from "crypto";
+import { rateLimit } from "@/lib/rateLimit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { allowed, retryAfter } = rateLimit(`forgot-pw:${ip}`, 5, 15 * 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Please try again later." }, {
+      status: 429, headers: { "Retry-After": String(retryAfter) }
+    });
+  }
+
   try {
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: "Email is required." }, { status: 400 });

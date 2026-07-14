@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import twilio from "twilio";
+import { rateLimit } from "@/lib/rateLimit";
 const bcrypt = require("bcryptjs");
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -21,6 +22,14 @@ function generateCode(): string {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { allowed, retryAfter } = rateLimit(`2fa-send:${ip}`, 6, 10 * 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Please try again later." }, {
+      status: 429, headers: { "Retry-After": String(retryAfter) }
+    });
+  }
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
