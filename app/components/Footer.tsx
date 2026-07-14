@@ -2,9 +2,9 @@
 import Link from "next/link";
 import NewsletterSignup from "./NewsletterSignup";
 
-// TODO: replace with the real invite/profile URLs
+// TODO: replace X with the real profile URL when the account exists
 export const SOCIAL_LINKS = {
-  discord: "https://discord.gg/finalping",
+  discord: "https://discord.gg/4ha3ZF8pGk",
   x: "https://x.com/finalping",
 };
 
