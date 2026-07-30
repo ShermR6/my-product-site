@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 import * as OTPAuth from "otpauth";
 import crypto from "crypto";
 const bcrypt = require("bcryptjs");
+
+// After this many wrong codes we burn the pending code so the attacker has to
+// request a fresh one (which is itself rate-limited in send-2fa-login).
+const MAX_CODE_ATTEMPTS = 5;
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +16,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+    const normEmail = email.toLowerCase().trim();
+
+    // Two layers: per-IP (blocks distributed hammering) and per-account
+    // (blocks brute-force spread across many IPs against one target).
+    const rlIp = await rateLimit(`2fa-verify-ip:${clientIp(req)}`, 20, 60_000);
+    const rlAcct = await rateLimit(`2fa-verify:${normEmail}`, 10, 5 * 60_000);
+    if (!rlIp.allowed || !rlAcct.allowed) {
+      return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: normEmail } });
     if (!user || !user.password) {
       return NextResponse.json({ error: "Invalid request." }, { status: 401 });
     }
@@ -44,6 +59,22 @@ export async function POST(req: NextRequest) {
       }
       const codeValid = await bcrypt.compare(code.trim(), user.pendingLoginToken);
       if (!codeValid) {
+        const attempts = (user.pendingLoginAttempts ?? 0) + 1;
+        if (attempts >= MAX_CODE_ATTEMPTS) {
+          // Burn the code so a fresh (rate-limited) one must be requested.
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { pendingLoginToken: null, pendingLoginExpiry: null, pendingLoginAttempts: 0 },
+          });
+          return NextResponse.json(
+            { error: "Too many incorrect codes. Please request a new one." },
+            { status: 429 }
+          );
+        }
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { pendingLoginAttempts: attempts },
+        });
         return NextResponse.json({ error: "Invalid code." }, { status: 400 });
       }
     }
@@ -57,6 +88,7 @@ export async function POST(req: NextRequest) {
       data: {
         pendingLoginToken: loginToken,
         pendingLoginExpiry: loginExpiry,
+        pendingLoginAttempts: 0,
       },
     });
 

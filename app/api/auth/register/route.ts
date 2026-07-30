@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { Resend } from "resend";
 const bcrypt = require("bcryptjs");
 
@@ -7,6 +8,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
+    // Cap signups per IP — stops mass account creation and welcome-email spam.
+    const { allowed } = await rateLimit(`register:${clientIp(req)}`, 5, 60 * 60_000);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
+    }
+
     const { email: rawEmail, password, name } = await req.json();
 
     if (!rawEmail || !password) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { Resend } from "resend";
 import crypto from "crypto";
 
@@ -7,6 +8,13 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
+    // Cap reset requests per IP — stops using this endpoint to email-bomb
+    // victims (each request sends mail via Resend).
+    const { allowed } = await rateLimit(`forgot:${clientIp(req)}`, 5, 15 * 60_000);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
+    }
+
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: "Email is required." }, { status: 400 });
 
