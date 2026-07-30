@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { rateLimit } from "@/lib/rateLimit";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 const bcrypt = require("bcryptjs");
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(`reset-pw:${ip}`, 10, 15 * 60_000);
-  if (!allowed) {
-    return NextResponse.json({ error: "Too many attempts. Please try again later." }, {
-      status: 429, headers: { "Retry-After": String(retryAfter) }
-    });
-  }
-
   try {
+    // Cap attempts per IP as a backstop (tokens are already 256-bit).
+    const { allowed } = await rateLimit(`reset:${clientIp(req)}`, 10, 15 * 60_000);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
+    }
+
     const { token, email, password } = await req.json();
 
     if (!token || !email || !password) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
+    // Match the signup policy so a reset can't set a weaker password.
     if (password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one uppercase letter." }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one number." }, { status: 400 });
     }
 
     // Find and validate token

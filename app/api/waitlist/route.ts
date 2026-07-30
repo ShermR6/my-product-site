@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     // Throttle by IP — this is unauthenticated and sends email.
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const rl = rateLimit(`waitlist:${ip}`, 5, 60 * 1000);
+    const rl = await rateLimit(`waitlist:${ip}`, 5, 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
     }

@@ -23,7 +23,7 @@ function generateCode(): string {
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(`2fa-send:${ip}`, 6, 10 * 60_000);
+  const { allowed, retryAfter } = await rateLimit(`2fa-send:${ip}`, 6, 10 * 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, {
       status: 429, headers: { "Retry-After": String(retryAfter) }

@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
+import { rateLimit } from "./rateLimit";
 const bcrypt = require("bcryptjs");
 
 export const authOptions: NextAuthOptions = {
@@ -38,7 +39,12 @@ export const authOptions: NextAuthOptions = {
           return { id: user.id, email: user.email, name: user.name };
         }
 
-        // Password login flow
+        // Password login flow.
+        // Rate-limit per account (not per IP) so brute-force can't be spread
+        // across many IPs against a single target. 10 attempts/minute.
+        const rl = await rateLimit(`login:${email}`, 10, 60_000);
+        if (!rl.allowed) return null;
+
         if (!credentials.password || !user.password) return null;
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
