@@ -20,7 +20,13 @@ function PlatformCard({
   label: string;
 }) {
   return (
-    <div className="panel-white">
+    <div
+      className="panel-white"
+      style={{
+        border: "1px solid var(--border-strong)",
+        boxShadow: "0 1px 3px rgba(15,23,42,0.06)",
+      }}
+    >
       <h2 style={{ marginBottom: 4 }}>{name}</h2>
       <p style={{ marginTop: 0, color: "#333", fontSize: 13 }}>{ext}</p>
       {href ? (
@@ -65,8 +71,9 @@ function AppSection({
   return (
     <div style={{
       borderRadius: 16,
-      border: accent ? "1px solid rgba(14,165,233,0.25)" : "1px solid var(--border)",
+      border: accent ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border-strong)",
       background: accent ? "linear-gradient(135deg, rgba(14,165,233,0.06), transparent)" : "rgba(255,255,255,0.02)",
+      boxShadow: accent ? "0 2px 12px rgba(14,165,233,0.08)" : "none",
       padding: "28px 28px 24px",
       marginTop: 32,
     }}>
@@ -89,7 +96,7 @@ function AppSection({
       <div className="grid-3">
         <PlatformCard name="Windows" ext=".exe installer" href={winHref} label="Download for Windows" />
         <PlatformCard name="macOS" ext=".dmg installer" href={macHref} label="Download for macOS" />
-        <div className="panel-white" style={{ opacity: 0.55 }}>
+        <div className="panel-white" style={{ opacity: 0.55, border: "1px solid var(--border-strong)", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" }}>
           <h2 style={{ marginBottom: 4 }}>Linux</h2>
           <p style={{ marginTop: 0, color: "#333", fontSize: 13 }}>AppImage / .deb</p>
           <div style={{
@@ -104,11 +111,18 @@ function AppSection({
       </div>
 
       <div style={{
-        marginTop: 16, display: "flex", gap: 24, flexWrap: "wrap",
-        borderTop: "1px solid var(--border)", paddingTop: 16,
+        marginTop: 16, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap",
+        borderTop: "1px solid var(--border-strong)", paddingTop: 16,
         fontSize: 12, color: "var(--muted)",
       }}>
-        <span><strong style={{ color: "var(--text)" }}>v{version}</strong> · Latest</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <strong style={{ color: "var(--text)", fontSize: 13 }}>v{version}</strong>
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
+            background: "rgba(34,197,94,0.12)", color: "#16a34a",
+            textTransform: "uppercase", letterSpacing: "0.05em",
+          }}>Latest</span>
+        </span>
         <span>Windows 10/11 · macOS 12+</span>
         <span>~101 MB</span>
       </div>
