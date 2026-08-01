@@ -126,7 +126,7 @@ export default function DownloadPage() {
         tag="Personal"
         title="FinalPing Personal"
         tagline="For individual pilots and operators. Activate with your FP- license key."
-        version="1.1.0"
+        version="1.1.1"
         winHref={`${PERSONAL_BASE}/FinalPingSetup.exe`}
         macHref={`${PERSONAL_BASE}/FinalPingSetup.dmg`}
         accent
