@@ -14,7 +14,7 @@ function generateCode(): string {
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(ip, 5, 60_000);
+  const { allowed, retryAfter } = await rateLimit(`send-2fa:${ip}`, 5, 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, {
       status: 429, headers: { "Retry-After": String(retryAfter) }
@@ -43,7 +43,8 @@ export async function POST(req: NextRequest) {
 
     await prisma.user.update({
       where: { email: user.email! },
-      data: { pendingLoginToken: hashedCode, pendingLoginExpiry: expiry },
+      // Reset the attempt counter whenever a fresh code is issued.
+      data: { pendingLoginToken: hashedCode, pendingLoginExpiry: expiry, pendingLoginAttempts: 0 },
     });
 
     if (method === "email") {

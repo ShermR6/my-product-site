@@ -15,9 +15,21 @@ type Entry = {
 
 const entries: Entry[] = [
   {
+    version: "1.1.1",
+    date: "August 2026",
+    tag: "latest",
+    changes: [
+      { type: "new", text: "Two-factor authentication at sign-in — enter your code (authenticator app, email, or SMS) after your password" },
+      { type: "new", text: "Account display name now shown in the desktop app, synced from your account" },
+      { type: "new", text: "Updates now install on a splash screen at launch, so you always open on the latest version" },
+      { type: "fix", text: "Live map now flags stale aircraft correctly for the 30-second position-update interval" },
+      { type: "fix", text: "Alert-ring clicks fixed — proximity rings drawn largest-first so inner rings are selectable" },
+      { type: "improved", text: "Sharper multi-resolution app and tray icons" },
+    ],
+  },
+  {
     version: "1.1.0",
     date: "June 2026",
-    tag: "latest",
     changes: [
       { type: "new", text: "Setup wizard installer — choose your install directory and opt in to a desktop shortcut" },
       { type: "new", text: "Ground Station device key system — permanent non-expiring key replaces JWT, claimed automatically on first boot" },

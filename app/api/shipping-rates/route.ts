@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Throttle the billable EasyPost lookups per account.
-    const rl = rateLimit(`shipping-rates:${session.user.email}`, 20, 60 * 1000);
+    const rl = await rateLimit(`shipping-rates:${session.user.email}`, 20, 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
     }

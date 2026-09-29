@@ -81,6 +81,7 @@ model User {
   // Pending 2FA login
   pendingLoginToken       String?
   pendingLoginExpiry      DateTime?
+  pendingLoginAttempts    Int       @default(0)
 
   // Desktop OAuth token exchange
   desktopOAuthToken       String?
@@ -92,6 +93,14 @@ model OAuthState {
   state     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// Durable rate-limit counters. Lives in Postgres (not memory) so limits are
+// shared across all Vercel serverless instances and survive cold starts.
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
 }
 
 model VerificationToken {
