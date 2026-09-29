@@ -650,7 +650,7 @@ function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
 
   const btnStyle: React.CSSProperties = {
     padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-    background: selected.length > 0 ? "rgba(14,165,233,0.12)" : "#F1F5F9",
+    background: selected.length > 0 ? "rgba(14,165,233,0.12)" : "var(--panel-2)",
     border: selected.length > 0 ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
     color: selected.length > 0 ? "#0ea5e9" : "var(--text)",
     cursor: "pointer", outline: "none", display: "flex", alignItems: "center", gap: 6,
@@ -664,8 +664,8 @@ function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
       {open && (
         <div style={{
           position: "absolute" as const, top: "calc(100% + 6px)", left: 0, zIndex: 100,
-          background: "#1a1a2e", border: "1px solid var(--border)", borderRadius: 10,
-          padding: "8px 0", minWidth: 180, boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          background: "var(--panel)", border: "1px solid var(--border-strong)", borderRadius: 10, boxShadow: "0 8px 28px rgba(15,23,42,0.14)",
+          padding: "8px 0", minWidth: 180,
         }}>
           {options.map(opt => (
             <label key={opt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: selected.includes(opt) ? "var(--text)" : "var(--muted)" }}
@@ -746,7 +746,7 @@ function AlertsTab({ email }: { email: string }) {
         {logs.length > 0 && (
           <button onClick={() => exportToTxt(filtered)} style={styles.exportBtn}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(15,23,42,0.06)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#F1F5F9"; }}>
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--panel-2)"; }}>
             ⬇ Export .txt
           </button>
         )}
@@ -951,7 +951,7 @@ function TwoFAMethodRow({ label, enabled, onDisable }: { label: string; enabled:
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: enabled ? "#15803D" : "#374151", boxShadow: enabled ? "0 0 6px #15803D" : "none" }} />
+        <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: enabled ? "#15803D" : "var(--border-strong)", boxShadow: enabled ? "0 0 6px #15803D" : "none" }} />
         <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
       </div>
       {enabled ? (
@@ -1088,7 +1088,7 @@ function SecurityTab({ email }: { email: string }) {
             <TwoFAMethodRow label={`SMS${twoFA?.phone ? ` (${twoFA.phone})` : ""}`} enabled={twoFA?.sms ?? false} onDisable={() => disable2FA("sms")} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: twoFA?.totp ? "#15803D" : "#374151", boxShadow: twoFA?.totp ? "0 0 6px #15803D" : "none" }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: twoFA?.totp ? "#15803D" : "var(--border-strong)", boxShadow: twoFA?.totp ? "0 0 6px #15803D" : "none" }} />
                 <span style={{ fontSize: 13, fontWeight: 600 }}>Authenticator App (Google / Microsoft)</span>
               </div>
               {twoFA?.totp ? <button onClick={() => disable2FA("totp")} style={styles.smallDangerBtn} onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Disable</button>
@@ -1137,7 +1137,7 @@ function SecurityTab({ email }: { email: string }) {
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Open Google Authenticator or Microsoft Authenticator and scan this QR code, or enter the key manually.</div>
               {totpQr && <img src={totpQr} alt="TOTP QR Code" style={{ borderRadius: 8, marginBottom: 12, display: "block", background: "#fff", padding: 8 }} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>Manual entry key:</div>
-              <div style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.15em", background: "#F1F5F9", padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", display: "inline-block", marginBottom: 16 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</div>
+              <div style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.15em", background: "var(--panel-2)", padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", display: "inline-block", marginBottom: 16 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setSetupStep("totp-verify")} style={styles.primaryBtn}>Next — Enter Code</button>
                 <button onClick={() => setSetupStep("idle")} style={styles.ghostBtn}>Cancel</button>
@@ -1223,16 +1223,16 @@ const styles = {
   tabTitle: { fontSize: 22, fontWeight: 700, margin: "0 0 4px" } as React.CSSProperties,
   tabSub: { fontSize: 14, color: "var(--muted)", margin: 0 } as React.CSSProperties,
   sectionLabel: { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: 8 } as React.CSSProperties,
-  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" } as React.CSSProperties,
+  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" } as React.CSSProperties,
   infoRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--border)" } as React.CSSProperties,
   infoRowLast: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } as React.CSSProperties,
   infoLabel: { fontSize: 13, color: "var(--muted)" } as React.CSSProperties,
   infoValue: { fontSize: 13, fontWeight: 600 } as React.CSSProperties,
   tierBadge: { fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "var(--muted)", textTransform: "uppercase" as const },
-  licenseKey: { fontFamily: "monospace", fontSize: 14, fontWeight: 700, background: "#F1F5F9", padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", letterSpacing: "0.05em", display: "inline-block" } as React.CSSProperties,
+  licenseKey: { fontFamily: "monospace", fontSize: 14, fontWeight: 700, background: "var(--panel-2)", padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", letterSpacing: "0.05em", display: "inline-block" } as React.CSSProperties,
   metaLabel: { fontSize: 12, color: "var(--muted)", marginBottom: 4 } as React.CSSProperties,
   metaValue: { fontSize: 14 } as React.CSSProperties,
-  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" } as React.CSSProperties,
+  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px", boxShadow: "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" } as React.CSSProperties,
   statLabel: { fontSize: 12, color: "var(--muted)", marginBottom: 4 } as React.CSSProperties,
   statValue: { fontSize: 28, fontWeight: 800 } as React.CSSProperties,
   tableHeader: { display: "grid", gridTemplateColumns: "90px 1fr 120px 100px 80px 160px", gap: 12, padding: "12px 20px", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" } as React.CSSProperties,
