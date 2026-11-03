@@ -4,9 +4,13 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
 // Self-hosted at build time — no runtime requests to Google (GDPR + CSP).
+// Plus Jakarta Sans is a variable font (200–800), so no weight list: asking for
+// six static weights made next/font emit a separate module per weight per
+// unicode subset — 24 of them — and Turbopack intermittently failed to resolve
+// them on Vercel ("next/font/google queries have exactly one entry") while
+// building fine locally. The variable axis covers every weight the site uses.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-jakarta",
   display: "swap",
 });
