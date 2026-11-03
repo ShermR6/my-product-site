@@ -32,6 +32,36 @@ function backendFor(tier: string): string {
   return tier.startsWith("team-") ? TEAMS_BACKEND_URL : BACKEND_URL;
 }
 
+// Where an invoice keeps its subscription id. Older API versions put it on
+// invoice.subscription; from 2025 it moved under invoice.parent. Handle both.
+function subscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
+  const direct = (invoice as any).subscription;
+  if (typeof direct === "string") return direct;
+  if (direct?.id && typeof direct.id === "string") return direct.id;
+
+  const viaParent = (invoice as any).parent?.subscription_details?.subscription;
+  if (typeof viaParent === "string") return viaParent;
+  if (viaParent?.id && typeof viaParent.id === "string") return viaParent.id;
+
+  return null;
+}
+
+/**
+ * The licence a Stripe subscription belongs to — matched on the subscription
+ * id, and nothing else.
+ *
+ * These handlers used to look up `{ purchaseEmail, status: "active" }`, which
+ * finds whatever licence that address happens to have live rather than the one
+ * the event is about. Cancelling any subscription then expired an unrelated
+ * licence, and a renewal extended one. Identifying by subscription id is the
+ * only safe match; if it finds nothing, the handler must do nothing rather
+ * than guess, because guessing is what caused the damage.
+ */
+async function licenseForSubscription(subscriptionId: string | null) {
+  if (!subscriptionId) return null;
+  return prisma.license.findFirst({ where: { stripeSubscriptionId: subscriptionId } });
+}
+
 const HARDWARE_TIERS = new Set([
   "ground-station-kit", "ground-station-kit-built",
   "ground-station-kit-stubby", "ground-station-kit-stubby-built",
@@ -292,13 +322,10 @@ export async function POST(req: NextRequest) {
       if (!customerEmail) return NextResponse.json({ received: true });
 
       const email = customerEmail.toLowerCase().trim();
-      const license = await prisma.license.findFirst({
-        where: { purchaseEmail: email, status: "active" },
-        orderBy: { activatedAt: "desc" },
-      });
+      const license = await licenseForSubscription(subscriptionIdFromInvoice(invoice));
 
       if (!license) {
-        console.error(`No active license found for renewal: ${email}`);
+        console.error(`No licence matches renewed subscription for ${email}`);
         return NextResponse.json({ received: true });
       }
 
@@ -346,13 +373,10 @@ export async function POST(req: NextRequest) {
       if (!customerEmail) return NextResponse.json({ received: true });
 
       const email = customerEmail.toLowerCase().trim();
-      const license = await prisma.license.findFirst({
-        where: { purchaseEmail: email, status: "active" },
-        orderBy: { activatedAt: "desc" },
-      });
+      const license = await licenseForSubscription(subscription.id);
 
       if (!license) {
-        console.error(`No active license to expire for: ${email}`);
+        console.error(`No licence matches cancelled subscription ${subscription.id} (${email})`);
         return NextResponse.json({ received: true });
       }
 
@@ -410,10 +434,7 @@ export async function POST(req: NextRequest) {
       const email = customerEmail.toLowerCase().trim();
       const attemptCount = invoice.attempt_count ?? 1;
 
-      const license = await prisma.license.findFirst({
-        where: { purchaseEmail: email, status: "active" },
-        orderBy: { activatedAt: "desc" },
-      });
+      const license = await licenseForSubscription(subscriptionIdFromInvoice(invoice));
 
       const tierLabel = license?.tier === "pro" ? "Pro" : license?.tier === "premium" ? "Premium" : "Starter";
 
