@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validInternalSecret } from "@/lib/internalSecret";
+import { getEntitlement } from "@/lib/entitlement";
 import * as OTPAuth from "otpauth";
 const bcrypt = require("bcryptjs");
 
@@ -109,40 +110,13 @@ export async function POST(req: NextRequest) {
   // "inactive" counts as entitled: it means bought-and-paid but never activated
   // on a desktop, and desktop activation is exactly what this removes. "pending"
   // (pre-payment) and "expired" do not.
-  // `owner` is deliberately not team-prefixed, so it satisfies both scopes.
-  const scope =
-    product === "teams"
-      ? { OR: [{ tier: { startsWith: "team-" } }, { tier: "owner" }] }
-      : { NOT: { tier: { startsWith: "team-" } } };
-
-  const licence = await prisma.license.findFirst({
-    where: {
-      status: { in: ["active", "inactive"] },
-      AND: [
-        { OR: [{ userId: user.id }, { purchaseEmail: normalizedEmail }] },
-        scope,
-      ],
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const live =
-    licence && (!licence.expiresAt || licence.expiresAt.getTime() > Date.now())
-      ? licence
-      : null;
+  const entitlement = await getEntitlement(normalizedEmail, user.id, product);
 
   // Return user info — the backend uses this to look up or create the user.
   return NextResponse.json({
     valid: true,
     email: user.email,
     name: user.name,
-    entitlement: live
-      ? {
-          tier: live.tier,
-          status: live.status,
-          expires_at: live.expiresAt ? live.expiresAt.toISOString() : null,
-          license_key: live.licenseKey,
-        }
-      : { tier: "free", status: "none", expires_at: null, license_key: null },
+    entitlement,
   });
 }
