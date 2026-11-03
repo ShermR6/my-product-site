@@ -98,10 +98,38 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // What this account is entitled to, so the desktop app never has to ask for a
+  // licence key. Matched by relation OR by purchase email, because a licence
+  // bought before the account existed has userId null.
+  //
+  // "inactive" counts as entitled: it means bought-and-paid but never activated
+  // on a desktop, and desktop activation is exactly what this removes. "pending"
+  // (pre-payment) and "expired" do not.
+  const licence = await prisma.license.findFirst({
+    where: {
+      status: { in: ["active", "inactive"] },
+      OR: [{ userId: user.id }, { purchaseEmail: normalizedEmail }],
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const live =
+    licence && (!licence.expiresAt || licence.expiresAt.getTime() > Date.now())
+      ? licence
+      : null;
+
   // Return user info — the backend uses this to look up or create the user.
   return NextResponse.json({
     valid: true,
     email: user.email,
     name: user.name,
+    entitlement: live
+      ? {
+          tier: live.tier,
+          status: live.status,
+          expires_at: live.expiresAt ? live.expiresAt.toISOString() : null,
+          license_key: live.licenseKey,
+        }
+      : { tier: "free", status: "none", expires_at: null, license_key: null },
   });
 }
