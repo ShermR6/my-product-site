@@ -20,6 +20,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
+const TEAMS_BACKEND_URL =
+  process.env.TEAMS_BACKEND_URL ||
+  "https://aircraft-tracker-backend-teams-production.up.railway.app";
+
+// Personal and teams are fully separate Railway services with their own
+// databases, so a licence has to be provisioned into the one whose app will
+// read it. Sending every licence to the personal backend left team purchases
+// invisible to the teams app.
+function backendFor(tier: string): string {
+  return tier.startsWith("team-") ? TEAMS_BACKEND_URL : BACKEND_URL;
+}
 
 const HARDWARE_TIERS = new Set([
   "ground-station-kit", "ground-station-kit-built",
@@ -38,7 +49,7 @@ function generateLicenseKey(tier: string): string {
 
 async function createLicenseInBackend(licenseKey: string, tier: string, email: string) {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/licenses/provision`, {
+    const res = await fetch(`${backendFor(tier)}/api/licenses/provision`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,7 +58,7 @@ async function createLicenseInBackend(licenseKey: string, tier: string, email: s
       body: JSON.stringify({ license_key: licenseKey, tier, email }),
     });
     if (!res.ok) console.error("Backend license creation failed:", await res.text());
-    else console.log(`Backend license created for ${email}`);
+    else console.log(`Backend license created for ${email} (${tier})`);
   } catch (err) {
     console.error("Failed to reach backend for license creation:", err);
   }
@@ -85,7 +96,7 @@ export async function POST(req: NextRequest) {
         }
         if (licenseKey && newTier) {
           await prisma.license.updateMany({ where: { licenseKey }, data: { tier: newTier } });
-          await fetch(`${BACKEND_URL}/api/licenses/${licenseKey}/tier`, {
+          await fetch(`${backendFor(newTier)}/api/licenses/${licenseKey}/tier`, {
             method: "PUT",
             headers: { "Content-Type": "application/json", "x-internal-secret": INTERNAL_SECRET },
             body: JSON.stringify({ tier: newTier }),
@@ -116,14 +127,21 @@ export async function POST(req: NextRequest) {
       });
 
       try {
-        await fetch(`${BACKEND_URL}/api/admin/grant-ground-station`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-secret": INTERNAL_SECRET,
-          },
-          body: JSON.stringify({ email, enabled: true }),
-        });
+        // A Ground Station is hardware bought against an account, not against a
+        // plan, so the buyer may use it from either app. Granted on both
+        // services; the call just sets a flag, so doing it twice is harmless.
+        await Promise.allSettled(
+          [BACKEND_URL, TEAMS_BACKEND_URL].map((base) =>
+            fetch(`${base}/api/admin/grant-ground-station`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-internal-secret": INTERNAL_SECRET,
+              },
+              body: JSON.stringify({ email, enabled: true }),
+            })
+          )
+        );
       } catch (err) {
         console.error("Failed to enable ground station on Railway:", err);
       }
@@ -292,7 +310,7 @@ export async function POST(req: NextRequest) {
       await prisma.license.update({ where: { id: license.id }, data: { expiresAt: newExpiry } });
 
       try {
-        await fetch(`${BACKEND_URL}/api/licenses/renew`, {
+        await fetch(`${backendFor(license.tier)}/api/licenses/renew`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "X-Webhook-Secret": INTERNAL_SECRET },
           body: JSON.stringify({ license_key: license.licenseKey, expires_at: newExpiry.toISOString() }),

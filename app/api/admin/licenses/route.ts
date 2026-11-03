@@ -6,6 +6,15 @@ import { INTERNAL_SECRET } from "@/lib/internalSecret";
 import crypto from "crypto";
 
 const BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app";
+const TEAMS_BACKEND_URL =
+  process.env.TEAMS_BACKEND_URL ||
+  "https://aircraft-tracker-backend-teams-production.up.railway.app";
+
+// Separate Railway services, separate databases — provision into the one whose
+// app will actually read the licence.
+function backendFor(tier: string): string {
+  return tier.startsWith("team-") ? TEAMS_BACKEND_URL : BACKEND_URL;
+}
 
 function generateLicenseKey(tier: string): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -18,7 +27,7 @@ function generateLicenseKey(tier: string): string {
 
 async function provisionInBackend(licenseKey: string, tier: string, email: string) {
   try {
-    await fetch(`${BACKEND_URL}/api/licenses/provision`, {
+    await fetch(`${backendFor(tier)}/api/licenses/provision`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

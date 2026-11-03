@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { email, password, code, method } = await req.json();
+  // `product` says which app is asking ("personal" | "teams"). Personal and
+  // teams are separate services with separate databases, so each must only be
+  // told about its own entitlements. Absent means personal, which is how the
+  // backends behaved before they started sending it.
+  const { email, password, code, method, product } = await req.json();
 
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });
@@ -105,10 +109,19 @@ export async function POST(req: NextRequest) {
   // "inactive" counts as entitled: it means bought-and-paid but never activated
   // on a desktop, and desktop activation is exactly what this removes. "pending"
   // (pre-payment) and "expired" do not.
+  // `owner` is deliberately not team-prefixed, so it satisfies both scopes.
+  const scope =
+    product === "teams"
+      ? { OR: [{ tier: { startsWith: "team-" } }, { tier: "owner" }] }
+      : { NOT: { tier: { startsWith: "team-" } } };
+
   const licence = await prisma.license.findFirst({
     where: {
       status: { in: ["active", "inactive"] },
-      OR: [{ userId: user.id }, { purchaseEmail: normalizedEmail }],
+      AND: [
+        { OR: [{ userId: user.id }, { purchaseEmail: normalizedEmail }] },
+        scope,
+      ],
     },
     orderBy: { createdAt: "desc" },
   });
