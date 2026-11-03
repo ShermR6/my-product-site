@@ -22,7 +22,7 @@ import requests
 from datetime import datetime
 from math import radians, cos, sin, asin, sqrt, atan2, degrees
 
-VERSION    = "3.3"
+VERSION    = "3.4"
 API_BASE   = "https://aircraft-tracker-backend-production.up.railway.app"
 UPDATE_URL = "https://raw.githubusercontent.com/ShermR6/aircraft-tracker-backend/main"
 
@@ -106,19 +106,57 @@ def api_post(endpoint, token, body):
 # ── Auto-updater ──────────────────────────────────────────────────────────────
 
 def check_for_update():
+    """Pull a newer agent, but never replace a working one with rubbish.
+
+    The previous version wrote the download straight to disk and re-executed
+    it without ever looking at the HTTP status. On 2026-07-30 one transient
+    404 from the CDN was enough: the literal body "404: Not Found" was written
+    over this file, os.execv restarted into it, and the station died with a
+    SyntaxError on line 1. systemd dutifully restarted it every 10 seconds,
+    each attempt failing identically, and because it never got far enough to
+    send a heartbeat the backend just showed Offline. It stayed that way for
+    three months.
+
+    Three independent guards now. Any one of them would have caught it.
+    """
     try:
         r = requests.get(f"{UPDATE_URL}/version.txt", timeout=5)
+        if r.status_code != 200:
+            return
         latest = r.text.strip()
+        # A version is short and dotted. An error page, a captive-portal
+        # redirect or a 404 body is not a version, so do not act on one.
+        if not latest or len(latest) > 12 or not all(c.isdigit() or c == "." for c in latest):
+            log(f"[UPDATE] Ignoring unexpected version payload ({latest[:40]!r})")
+            return
         if latest == VERSION:
             return
-        log(f"[UPDATE] v{VERSION} → v{latest} — downloading...")
+
+        log(f"[UPDATE] v{VERSION} -> v{latest} - downloading...")
         r2 = requests.get(f"{UPDATE_URL}/finalping_ground.py", timeout=30)
+
+        # Guard 1: it must actually have been served.
+        if r2.status_code != 200:
+            log(f"[UPDATE] Download returned HTTP {r2.status_code} - keeping v{VERSION}")
+            return
+        body = r2.content.decode("utf-8", "replace")
+        # Guard 2: it must look like this program.
+        if len(body) < 4000 or "def run(" not in body:
+            log(f"[UPDATE] Download is not the agent ({len(body)} bytes) - keeping v{VERSION}")
+            return
+        # Guard 3: it must parse, so we never exec into a SyntaxError.
+        try:
+            compile(body, "finalping_ground.py", "exec")
+        except SyntaxError as e:
+            log(f"[UPDATE] Download will not compile ({e}) - keeping v{VERSION}")
+            return
+
         script_path = os.path.abspath(__file__)
         tmp_path = script_path + ".tmp"
-        with open(tmp_path, "w") as f:
-            f.write(r2.text)
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(body)
         os.replace(tmp_path, script_path)
-        log(f"[UPDATE] Updated to v{latest} — restarting...")
+        log(f"[UPDATE] Updated to v{latest} - restarting...")
         os.execv(sys.executable, [sys.executable, script_path] + sys.argv[1:])
     except Exception as e:
         log(f"[UPDATE] Check failed: {e}")
