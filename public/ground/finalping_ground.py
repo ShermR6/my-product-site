@@ -22,7 +22,7 @@ import requests
 from datetime import datetime
 from math import radians, cos, sin, asin, sqrt, atan2, degrees
 
-VERSION    = "3.4"
+VERSION    = "3.5"
 API_BASE   = "https://aircraft-tracker-backend-production.up.railway.app"
 UPDATE_URL = "https://raw.githubusercontent.com/ShermR6/aircraft-tracker-backend/main"
 
@@ -37,6 +37,10 @@ RANGE_PUSH_INTERVAL = 300
 # Consecutive heartbeat failures before we stop assuming it is the network
 # and go re-check our credentials.
 REVALIDATE_AFTER_FAILURES = 5
+# A single bad decode can place an aircraft on the far side of the planet and
+# stretch one bearing of the outline forever, so ignore implausible hits.
+MAX_PLAUSIBLE_RANGE_NM = 300
+RANGE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "range_data.json")
 
 DUMP1090_HTTP_URLS = [
     DUMP1090_URL,
@@ -260,6 +264,69 @@ def fetch_dump1090():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+def load_range():
+    """Reception range accumulates over days, so it has to outlive a restart.
+
+    Previously range_nm was initialised to zeros on every start, which meant a
+    reboot, an update or a crash silently discarded however many weeks of
+    coverage had been built up.
+    """
+    try:
+        with open(RANGE_FILE, encoding="utf-8") as f:
+            saved = json.load(f).get("range_nm")
+        if isinstance(saved, list) and len(saved) == 36:
+            return [float(v or 0.0) for v in saved]
+    except Exception:
+        pass
+    return [0.0] * 36
+
+
+def is_airborne(ac):
+    """Treat an aircraft as airborne unless it says otherwise.
+
+    Surface reports and very slow targets are excluded: they sit essentially on
+    top of the receiver and say nothing about range.
+    """
+    gs_kt = ac.get("gs")
+    return not (ac.get("on_ground", False)
+                or ac.get("alt_baro") == "ground"
+                or (gs_kt is not None and gs_kt < 50))
+
+
+def bin_range(range_nm, aircraft_list, center_lat, center_lon):
+    """Record the furthest airborne contact per 10-degree bearing, in place.
+
+    Every aircraft with a position counts. The binning used to live below the
+    `tracked` filter inside run(), so the outline only ever recorded where the
+    handful of tracked aircraft happened to fly -- which is a map of their
+    routes, not of what the antenna can receive.
+    """
+    for ac in aircraft_list:
+        lat, lon = ac.get("lat"), ac.get("lon")
+        if lat is None or lon is None or not is_airborne(ac):
+            continue
+        d = haversine_distance(center_lat, center_lon, lat, lon)
+        # A single bad decode can place an aircraft on the far side of the
+        # planet and stretch that bearing forever.
+        if not (0 < d < MAX_PLAUSIBLE_RANGE_NM):
+            continue
+        bucket = int(haversine_bearing(center_lat, center_lon, lat, lon) / 10) % 36
+        if d > range_nm[bucket]:
+            range_nm[bucket] = round(d, 1)
+    return range_nm
+
+
+def save_range(range_nm):
+    try:
+        tmp = RANGE_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"range_nm": range_nm,
+                       "updated_at": datetime.utcnow().isoformat()}, f)
+        os.replace(tmp, RANGE_FILE)
+    except Exception as e:
+        log(f"[WARN] Could not save range data: {e}")
+
+
 def _is_auth_error(exc):
     """True when the backend actively rejected our credentials, as opposed to
     the network being down."""
@@ -345,7 +412,7 @@ def run():
     log(f"[OK] Dump1090 source: {source_label}")
     log("Ground station running...")
 
-    range_nm          = [0.0] * 36
+    range_nm          = load_range()
     last_heartbeat    = 0.0
     heartbeat_failures = 0
     last_range_push   = 0.0
@@ -396,6 +463,7 @@ def run():
         if now - last_range_push >= RANGE_PUSH_INTERVAL and any(v > 0 for v in range_nm):
             try:
                 api_post("/api/ground/range", token, {"range_nm": range_nm})
+                save_range(range_nm)
                 last_range_push = now
                 log(f"[OK] Range updated (max {max(range_nm):.0f}nm)")
             except Exception as e:
@@ -408,13 +476,18 @@ def run():
             time.sleep(POLL_INTERVAL)
             continue
 
+        # Reception range is a property of the antenna, so it is measured from
+        # every aircraft we can hear -- not just the tracked ones.
+        bin_range(range_nm, aircraft_list, center_lat, center_lon)
+
         positions = {}
         for ac in aircraft_list:
             icao24 = ac.get("hex", "").lower()
-            if icao24 not in tracked:
-                continue
             lat = ac.get("lat")
             lon = ac.get("lon")
+
+            if icao24 not in tracked:
+                continue
             if lat is None or lon is None:
                 continue
 
@@ -433,13 +506,6 @@ def run():
                 "on_ground": on_ground,
                 "updated_at": datetime.utcnow().isoformat(),
             }
-
-            if not on_ground:
-                dist    = haversine_distance(center_lat, center_lon, lat, lon)
-                bearing = haversine_bearing(center_lat, center_lon, lat, lon)
-                bucket  = int(bearing / 10) % 36
-                if dist > range_nm[bucket]:
-                    range_nm[bucket] = round(dist, 1)
 
         if positions:
             try:
