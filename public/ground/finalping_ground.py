@@ -22,7 +22,7 @@ import requests
 from datetime import datetime
 from math import radians, cos, sin, asin, sqrt, atan2, degrees
 
-VERSION    = "3.5"
+VERSION    = "3.6"
 API_BASE   = "https://aircraft-tracker-backend-production.up.railway.app"
 UPDATE_URL = "https://raw.githubusercontent.com/ShermR6/aircraft-tracker-backend/main"
 
@@ -109,6 +109,14 @@ def api_post(endpoint, token, body):
 
 # ── Auto-updater ──────────────────────────────────────────────────────────────
 
+def _version_tuple(v):
+    """(3, 6) from "3.6". None if it is not a version at all."""
+    try:
+        return tuple(int(x) for x in str(v).strip().split("."))
+    except (ValueError, AttributeError):
+        return None
+
+
 def check_for_update():
     """Pull a newer agent, but never replace a working one with rubbish.
 
@@ -133,7 +141,12 @@ def check_for_update():
         if not latest or len(latest) > 12 or not all(c.isdigit() or c == "." for c in latest):
             log(f"[UPDATE] Ignoring unexpected version payload ({latest[:40]!r})")
             return
-        if latest == VERSION:
+        # Only ever move forward. Comparing for inequality meant a stale or
+        # rolled-back version.txt downgraded every station that had already
+        # updated -- observed live: a 3.6 agent "updated" itself to 3.5
+        # because the published version file still said 3.5.
+        latest_t, current_t = _version_tuple(latest), _version_tuple(VERSION)
+        if latest_t is None or current_t is None or latest_t <= current_t:
             return
 
         log(f"[UPDATE] v{VERSION} -> v{latest} - downloading...")
@@ -264,6 +277,30 @@ def fetch_dump1090():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+def load_receiver_location(airport_lat, airport_lon):
+    """Where the antenna is, which is not necessarily the airport.
+
+    Range is a property of the receiver, so binning it around the field being
+    watched shifts the whole outline by the distance between the two and
+    distorts the shape. A station at home watching a field 7 nm away is the
+    normal case, not a misconfiguration.
+
+    Falls back to the airport so an unconfigured station still produces
+    something, but says so loudly, because the result is subtly wrong.
+    """
+    try:
+        with open(CONFIG_FILE, encoding="utf-8") as f:
+            cfg = json.load(f)
+        lat, lon = cfg.get("receiver_lat"), cfg.get("receiver_lon")
+        if lat is not None and lon is not None:
+            lat, lon = float(lat), float(lon)
+            if -90 <= lat <= 90 and -180 <= lon <= 180:
+                return lat, lon, True
+    except Exception:
+        pass
+    return airport_lat, airport_lon, False
+
+
 def load_range():
     """Reception range accumulates over days, so it has to outlive a restart.
 
@@ -391,7 +428,16 @@ def run():
         for a in config.get("aircraft", []) if a.get("icao24")
     }
 
-    log(f"[OK] Location: {center_lat:.4f}, {center_lon:.4f} | Elevation: {field_elevation:.0f}ft MSL")
+    recv_lat, recv_lon, recv_configured = load_receiver_location(center_lat, center_lon)
+
+    log(f"[OK] Airport: {center_lat:.4f}, {center_lon:.4f} | Elevation: {field_elevation:.0f}ft MSL")
+    if recv_configured:
+        gap = haversine_distance(center_lat, center_lon, recv_lat, recv_lon)
+        log(f"[OK] Receiver: {recv_lat:.4f}, {recv_lon:.4f} ({gap:.1f} nm from the airport)")
+    else:
+        log("[WARN] No receiver_lat/receiver_lon in config.json - measuring range "
+            "from the airport instead. If the antenna is somewhere else, the "
+            "range outline will be offset by that distance.")
     log(f"[OK] Tracking {len(tracked)} aircraft: {', '.join(tracked.values()) or 'none configured'}")
 
     t = threading.Thread(target=_sbs_reader_thread, daemon=True)
@@ -462,7 +508,11 @@ def run():
 
         if now - last_range_push >= RANGE_PUSH_INTERVAL and any(v > 0 for v in range_nm):
             try:
-                api_post("/api/ground/range", token, {"range_nm": range_nm})
+                api_post("/api/ground/range", token, {
+                    "range_nm": range_nm,
+                    "receiver_lat": recv_lat,
+                    "receiver_lon": recv_lon,
+                })
                 save_range(range_nm)
                 last_range_push = now
                 log(f"[OK] Range updated (max {max(range_nm):.0f}nm)")
@@ -478,7 +528,7 @@ def run():
 
         # Reception range is a property of the antenna, so it is measured from
         # every aircraft we can hear -- not just the tracked ones.
-        bin_range(range_nm, aircraft_list, center_lat, center_lon)
+        bin_range(range_nm, aircraft_list, recv_lat, recv_lon)
 
         positions = {}
         for ac in aircraft_list:
