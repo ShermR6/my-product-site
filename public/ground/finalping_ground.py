@@ -1,591 +1,427 @@
 #!/usr/bin/env python3
 """
-FinalPing Ground Station v2.9
+FinalPing Ground Station v3.0
 ─────────────────────────────
-Reads live ADS-B data from dump1090's SBS TCP stream (port 30003).
-No HTTP server required — works with any dump1090 build.
+Reads live ADS-B data from dump1090 and pushes positions to the FinalPing cloud.
+Authenticates with a permanent device key (no email/password required).
 
-Requirements:
-  pip install requests
+Data source priority: HTTP JSON API → filesystem aircraft.json → SBS TCP stream (port 30003)
 
-Usage:
-  python3 finalping_ground.py
+Setup:
+  Token is claimed automatically via the FinalPing_Setup hotspot on first boot.
+  Or set manually: echo '{"token": "YOUR_KEY"}' > /home/pi/finalping-ground/config.json
 """
 
-import requests
-import socket
-import threading
-import time
-import math
-import logging
 import json
 import os
+import socket
 import sys
-from datetime import datetime, timedelta
+import threading
+import time
+import requests
+from datetime import datetime
+from math import radians, cos, sin, asin, sqrt, atan2, degrees
 
-VERSION = "2.9"
-PRODUCT_SITE_URL = "https://finalpingapp.com"
+VERSION    = "3.3"
+API_BASE   = "https://aircraft-tracker-backend-production.up.railway.app"
+UPDATE_URL = "https://raw.githubusercontent.com/ShermR6/aircraft-tracker-backend/main"
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  USER CONFIGURATION
-# ══════════════════════════════════════════════════════════════════════════════
+DUMP1090_URL = os.environ.get("DUMP1090_URL", "http://localhost:8080/data/aircraft.json")
+SBS_HOST     = os.environ.get("SBS_HOST", "localhost")
+SBS_PORT     = int(os.environ.get("SBS_PORT", "30003"))
+CONFIG_FILE  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
-FINALPING_EMAIL    = "your@email.com"
-FINALPING_PASSWORD = "yourpassword"
+POLL_INTERVAL      = 5
+HEARTBEAT_INTERVAL = 60
+RANGE_PUSH_INTERVAL = 300
+# Consecutive heartbeat failures before we stop assuming it is the network
+# and go re-check our credentials.
+REVALIDATE_AFTER_FAILURES = 5
 
-# Override with credentials from persistent file if present (survives script updates)
-_creds_file = "/etc/finalping/credentials"
-if os.path.exists(_creds_file):
-    try:
-        _lines = open(_creds_file).read().splitlines()
-        if len(_lines) >= 2:
-            FINALPING_EMAIL    = _lines[0].strip()
-            FINALPING_PASSWORD = _lines[1].strip()
-    except Exception:
-        pass
+DUMP1090_HTTP_URLS = [
+    DUMP1090_URL,
+    "http://localhost:8080/skyaware/data/aircraft.json",
+    "http://localhost/skyaware/data/aircraft.json",
+    "http://localhost:8888/data/aircraft.json",
+    "http://127.0.0.1:8080/data/aircraft.json",
+]
 
-# dump1090 SBS TCP stream (port 30003 is always available with --net)
-DUMP1090_HOST = "localhost"
-DUMP1090_PORT = 30003
+DUMP1090_FILE_PATHS = [
+    "/run/dump1090-fa/aircraft.json",
+    "/run/readsb/aircraft.json",
+    "/run/dump1090/aircraft.json",
+    "/var/run/dump1090-fa/aircraft.json",
+    "/tmp/dump1090-fa/aircraft.json",
+    "/home/pi/dump1090/aircraft.json",
+]
 
-POLL_INTERVAL_SECONDS = 5
-
-# ══════════════════════════════════════════════════════════════════════════════
-BACKEND_URL = "https://aircraft-tracker-backend-production.up.railway.app"
-# ══════════════════════════════════════════════════════════════════════════════
-
-RANGE_FILE    = "/home/pi/finalping-ground/range_data.json"
-RANGE_BUCKETS = 36  # one bucket per 10 degrees of compass bearing
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-log = logging.getLogger("FinalPing Ground")
-
-
-def haversine_nm(lat1, lon1, lat2, lon2):
-    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
-    dlat, dlon = lat2 - lat1, lon2 - lon1
-    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-    return 3440.065 * 2 * math.asin(math.sqrt(a))
+# ── SBS stream state ──────────────────────────────────────────────────────────
+_sbs_aircraft  = {}
+_sbs_lock      = threading.Lock()
+_sbs_connected = False
 
 
-def bearing_deg(lat1, lon1, lat2, lon2):
-    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+def log(msg):
+    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
+
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
     dlon = lon2 - lon1
-    x = math.sin(dlon) * math.cos(lat2)
-    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
-    return (math.degrees(math.atan2(x, y)) + 360) % 360
+    dlat = lat2 - lat1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    return 3440.065 * 2 * asin(sqrt(a))
 
 
-class SBSReader(threading.Thread):
-    """Background thread that keeps a live aircraft dict from dump1090 port 30003."""
+def haversine_bearing(lat1, lon1, lat2, lon2):
+    lat1, lat2 = radians(lat1), radians(lat2)
+    dlon = radians(lon2 - lon1)
+    x = sin(dlon) * cos(lat2)
+    y = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon)
+    return (degrees(atan2(x, y)) + 360) % 360
 
-    def __init__(self):
-        super().__init__(daemon=True)
-        self.aircraft = {}   # icao24 -> state dict
-        self._lock = threading.Lock()
-        self.connected = False
 
-    def get_snapshot(self):
-        with self._lock:
-            now = time.time()
-            # Drop aircraft not seen in 60 seconds
-            return {k: v.copy() for k, v in self.aircraft.items() if now - v["seen"] < 60}
+def load_token():
+    token = os.environ.get("FINALPING_TOKEN")
+    if token:
+        return token
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE) as f:
+            return json.load(f).get("token")
+    return None
 
-    def _parse(self, line):
-        parts = line.split(",")
-        if len(parts) < 10 or parts[0] != "MSG":
-            return
-        try:
-            t = int(parts[1])
-            icao = parts[4].lower().strip()
-            if not icao:
-                return
-        except (ValueError, IndexError):
-            return
 
-        with self._lock:
-            s = self.aircraft.setdefault(icao, {
-                "hex": icao, "lat": None, "lon": None,
-                "altitude": None, "speed": 0, "on_ground": False, "seen": time.time(),
-            })
-            s["seen"] = time.time()
+def api_get(endpoint, token):
+    r = requests.get(f"{API_BASE}{endpoint}", headers={"Authorization": f"Bearer {token}"}, timeout=10)
+    r.raise_for_status()
+    return r.json()
 
-            try:
-                if t == 3 and len(parts) >= 16:   # airborne position
-                    if parts[11]: s["altitude"] = int(parts[11])
-                    if parts[14] and parts[15]:
-                        s["lat"] = float(parts[14])
-                        s["lon"] = float(parts[15])
-                    if len(parts) > 21:
-                        s["on_ground"] = parts[21].strip() == "-1"
-                elif t == 4 and len(parts) >= 14:  # velocity — speed + track/heading
-                    if parts[12]: s["speed"] = float(parts[12])
-                    if parts[13]: s["heading"] = float(parts[13])
-                elif t == 2:                       # surface position = on ground
-                    s["on_ground"] = True
-                    if len(parts) > 12 and parts[12]: s["speed"] = float(parts[12])
-            except (ValueError, IndexError):
-                pass
 
-    def run(self):
-        buf = ""
-        while True:
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(15)
-                sock.connect((DUMP1090_HOST, DUMP1090_PORT))
-                self.connected = True
-                log.info(f"✅ Connected to dump1090 SBS stream on port {DUMP1090_PORT}")
-                while True:
-                    chunk = sock.recv(4096).decode("utf-8", errors="ignore")
-                    if not chunk:
-                        break
-                    buf += chunk
-                    *lines, buf = buf.split("\n")
-                    for line in lines:
-                        self._parse(line.strip())
-            except Exception as e:
-                self.connected = False
-                log.warning(f"dump1090 connection lost: {e} — retrying in 5s")
-            finally:
-                try: sock.close()
-                except: pass
-            time.sleep(5)
+def api_post(endpoint, token, body):
+    r = requests.post(f"{API_BASE}{endpoint}", json=body, headers={"Authorization": f"Bearer {token}"}, timeout=10)
+    r.raise_for_status()
+    return r.json()
 
+
+# ── Auto-updater ──────────────────────────────────────────────────────────────
 
 def check_for_update():
-    """Fetch version.txt from the product site. If newer, download and restart."""
     try:
-        r = requests.get(f"{PRODUCT_SITE_URL}/ground/version.txt", timeout=5)
+        r = requests.get(f"{UPDATE_URL}/version.txt", timeout=5)
         latest = r.text.strip()
         if latest == VERSION:
             return
-        log.info(f"🔄 Update available: v{VERSION} → v{latest}. Downloading...")
-        r2 = requests.get(f"{PRODUCT_SITE_URL}/ground/finalping_ground.py", timeout=30)
+        log(f"[UPDATE] v{VERSION} → v{latest} — downloading...")
+        r2 = requests.get(f"{UPDATE_URL}/finalping_ground.py", timeout=30)
         script_path = os.path.abspath(__file__)
         tmp_path = script_path + ".tmp"
         with open(tmp_path, "w") as f:
             f.write(r2.text)
         os.replace(tmp_path, script_path)
-        log.info(f"✅ Updated to v{latest}. Restarting...")
+        log(f"[UPDATE] Updated to v{latest} — restarting...")
         os.execv(sys.executable, [sys.executable, script_path] + sys.argv[1:])
     except Exception as e:
-        log.warning(f"Update check failed: {e}")
+        log(f"[UPDATE] Check failed: {e}")
 
 
-class GroundStation:
-    def __init__(self):
-        self.token = None
-        self.lat = None
-        self.lon = None
-        self.elevation_ft = None
-        self.icao_map = {}
-        self.tracked_aircraft = []
-        self.alert_distances_nm = [10.0, 5.0, 2.0]
+# ── SBS reader (background thread) ───────────────────────────────────────────
 
-        self.state = {}
-        self.alerts_sent = {}
-        self.last_notify = {}
+def _parse_sbs_line(line):
+    if not line.startswith("MSG"):
+        return
+    parts = line.split(",")
+    if len(parts) < 16:
+        return
+    msg_type = parts[1].strip()
+    hex_id   = parts[4].strip().lower()
+    if not hex_id:
+        return
 
-        # SDR reception range: max distance seen per 10-degree compass bearing
-        self.range_nm = [0.0] * RANGE_BUCKETS
-        self._load_range()
+    def field(i):
+        return parts[i].strip() if i < len(parts) and parts[i].strip() else None
 
-        self.sbs = SBSReader()
+    with _sbs_lock:
+        if hex_id not in _sbs_aircraft:
+            _sbs_aircraft[hex_id] = {"hex": hex_id}
+        ac = _sbs_aircraft[hex_id]
+        ac["last_seen"] = time.time()
 
-    # ── Range tracking ────────────────────────────────────────────────────────
-
-    def _load_range(self):
         try:
-            if os.path.exists(RANGE_FILE):
-                with open(RANGE_FILE) as f:
-                    data = json.load(f)
-                if isinstance(data, list) and len(data) == RANGE_BUCKETS:
-                    self.range_nm = data
-        except Exception:
+            if msg_type == "1":
+                cs = field(10)
+                if cs: ac["flight"] = cs
+
+            elif msg_type == "2":
+                if field(14): ac["lat"] = float(parts[14])
+                if field(15): ac["lon"] = float(parts[15])
+                if field(12): ac["gs"]  = float(parts[12])
+                if field(13): ac["track"] = float(parts[13])
+                ac["alt_baro"] = "ground"
+                ac["on_ground"] = True
+
+            elif msg_type == "3":
+                if field(11): ac["alt_baro"] = int(parts[11])
+                if field(14): ac["lat"] = float(parts[14])
+                if field(15): ac["lon"] = float(parts[15])
+                on_g = field(21) if len(parts) > 21 else None
+                ac["on_ground"] = (on_g == "-1")
+
+            elif msg_type == "4":
+                if field(12): ac["gs"]    = float(parts[12])
+                if field(13): ac["track"] = float(parts[13])
+        except (ValueError, IndexError):
             pass
 
-    def _save_range(self):
+
+def _sbs_reader_thread():
+    global _sbs_connected
+    while True:
         try:
-            os.makedirs(os.path.dirname(RANGE_FILE), exist_ok=True)
-            with open(RANGE_FILE, "w") as f:
-                json.dump(self.range_nm, f)
+            with socket.create_connection((SBS_HOST, SBS_PORT), timeout=10) as sock:
+                _sbs_connected = True
+                log(f"[OK] SBS stream connected on port {SBS_PORT}")
+                sock.settimeout(30)
+                buf = ""
+                while True:
+                    chunk = sock.recv(4096).decode("utf-8", errors="replace")
+                    if not chunk:
+                        break
+                    buf += chunk
+                    while "\n" in buf:
+                        line, buf = buf.split("\n", 1)
+                        _parse_sbs_line(line.strip())
         except Exception:
             pass
+        _sbs_connected = False
+        time.sleep(5)
 
-    def _update_range_from_snapshot(self, snapshot):
-        if self.lat is None or self.lon is None:
-            return
-        updated = False
-        for raw in snapshot.values():
-            lat = raw.get("lat")
-            lon = raw.get("lon")
-            if lat is None or lon is None:
-                continue
-            dist = haversine_nm(self.lat, self.lon, lat, lon)
-            brng = bearing_deg(self.lat, self.lon, lat, lon)
-            bucket = int(brng / 10) % RANGE_BUCKETS
-            if dist > self.range_nm[bucket]:
-                self.range_nm[bucket] = round(dist, 1)
-                updated = True
-        return updated
 
-    def sync_range(self):
-        if all(v == 0 for v in self.range_nm):
-            return
+def fetch_dump1090():
+    for url in DUMP1090_HTTP_URLS:
         try:
-            resp = requests.post(
-                f"{BACKEND_URL}/api/ground/range",
-                json={"range_nm": self.range_nm},
-                headers={"Authorization": f"Bearer {self.token}"},
-                timeout=10,
-            )
-            if resp.status_code == 200:
-                self._save_range()
-                log.info("📡 Range data synced")
-        except Exception as e:
-            log.warning(f"Range sync error: {e}")
-
-    # ── Auth ──────────────────────────────────────────────────────────────────
-
-    def login(self):
-        log.info(f"Logging in as {FINALPING_EMAIL}...")
-        try:
-            resp = requests.post(
-                f"{BACKEND_URL}/api/auth/login",
-                json={"email": FINALPING_EMAIL, "password": FINALPING_PASSWORD},
-                timeout=15,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                self.token = data["access_token"]
-                log.info(f"✅ Logged in — {data.get('license_tier', 'unknown')} license")
-                return True
-            log.error(f"Login failed: {resp.status_code} {resp.text}")
-            return False
-        except Exception as e:
-            log.error(f"Login error: {e}")
-            return False
-
-    def validate_ground_station(self):
-        try:
-            resp = requests.post(
-                f"{BACKEND_URL}/api/ground/validate",
-                headers={"Authorization": f"Bearer {self.token}"},
-                timeout=10,
-            )
-            if resp.status_code == 200:
-                log.info("✅ Ground station access confirmed")
-                return True
-            elif resp.status_code == 403:
-                log.error("❌ Ground Station not enabled — purchase at finalpingapp.com/pricing")
-                return False
-            log.error(f"Validation failed: {resp.status_code}")
-            return False
-        except Exception as e:
-            log.error(f"Validation error: {e}")
-            return False
-
-    def _heartbeat(self):
-        try:
-            requests.post(
-                f"{BACKEND_URL}/api/ground/heartbeat",
-                headers={"Authorization": f"Bearer {self.token}"},
-                timeout=5,
-            )
+            r = requests.get(url, timeout=3)
+            r.raise_for_status()
+            data = r.json()
+            return data.get("aircraft", data.get("ac", []))
         except Exception:
-            pass
+            continue
 
-    def fetch_config(self):
-        try:
-            resp = requests.get(
-                f"{BACKEND_URL}/api/ground/config",
-                headers={"Authorization": f"Bearer {self.token}"},
-                timeout=15,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                self.lat = data["lat"]
-                self.lon = data["lon"]
-                self.elevation_ft = data["elevation_ft"]
-                self.tracked_aircraft = data["aircraft"]
-                self.icao_map = {
-                    a["icao24"].lower(): a["tail"]
-                    for a in self.tracked_aircraft if a.get("icao24")
-                }
-                tails = ", ".join(a["tail"] for a in self.tracked_aircraft) or "none"
-                log.info(f"✅ Config loaded — tracking: {tails}")
-                log.info(f"   Location: {self.lat}, {self.lon} @ {self.elevation_ft}ft MSL")
-                return True
-            elif resp.status_code == 404:
-                log.error("No location configured in FinalPing app — set up your airport location first.")
-                return False
-            log.error(f"Config fetch failed: {resp.status_code}")
-            return False
-        except Exception as e:
-            log.error(f"Config fetch error: {e}")
-            return False
+    for path in DUMP1090_FILE_PATHS:
+        if os.path.exists(path):
+            with open(path) as f:
+                data = json.load(f)
+            return data.get("aircraft", data.get("ac", []))
 
-    # ── Alert logic ───────────────────────────────────────────────────────────
+    if _sbs_connected:
+        cutoff = time.time() - 30
+        with _sbs_lock:
+            return [dict(ac) for ac in _sbs_aircraft.values() if ac.get("last_seen", 0) > cutoff]
 
-    def should_notify(self, icao24, alert_type, cooldown_minutes=2):
-        key = f"{icao24}_{alert_type}"
-        if key in self.last_notify:
-            if datetime.now() - self.last_notify[key] < timedelta(minutes=cooldown_minutes):
-                return False
-        self.last_notify[key] = datetime.now()
-        return True
+    raise RuntimeError("dump1090 not reachable via HTTP, filesystem, or SBS stream")
 
-    def check_disappeared(self, snapshot):
-        """Fire landing alerts for tracked aircraft that vanished while close to the airport."""
-        current = set(snapshot.keys())
-        to_remove = []
-        for icao24, prev in self.state.items():
-            if icao24 in current or icao24 not in self.icao_map:
-                continue
-            tail = self.icao_map[icao24]
-            dist = prev.get("distance")
-            prev_on_ground = prev.get("on_ground", True)
-            sent = self.alerts_sent.get(icao24, set())
-            was_inbound = any(k in sent for k in ["2nm", "5nm", "10nm"])
-            # Home-airport case: aircraft departed from within 2nm so never sent proximity
-            # alerts outbound; still fire landing if signal lost while airborne and very close.
-            home_airport_landing = dist is not None and dist < 2.0
-            # Aircraft disappeared within 5nm while airborne after being inbound, OR within 2nm (home airport)
-            if dist is not None and dist < 5.0 and not prev_on_ground and (was_inbound or home_airport_landing):
-                if self.should_notify(icao24, "landing", cooldown_minutes=10):
-                    log.info(f"🛬 LANDING: {tail} — signal lost at {dist:.1f}nm (landed)")
-                    self.push_alerts([{
-                        "type": "landing", "tail": tail,
-                        "distance": dist,
-                        "altitude": prev.get("alt_ft", self.elevation_ft),
-                        "speed": 0,
-                    }])
-                    self.alerts_sent[icao24] = set()
-            to_remove.append(icao24)
-        for icao24 in to_remove:
-            self.state.pop(icao24, None)
 
-    def process_aircraft(self, icao24, raw):
-        if icao24 not in self.icao_map:
-            return []
+# ── Main ──────────────────────────────────────────────────────────────────────
 
-        tail = self.icao_map[icao24]
-        lat = raw.get("lat")
-        lon = raw.get("lon")
-        alt = raw.get("altitude")
-        speed = raw.get("speed", 0) or 0
+def _is_auth_error(exc):
+    """True when the backend actively rejected our credentials, as opposed to
+    the network being down."""
+    resp = getattr(exc, "response", None)
+    return resp is not None and resp.status_code in (401, 403)
 
-        if lat is None or lon is None:
-            return []
 
-        # On-ground detection: SBS surface flag OR altitude within 150ft of field elevation.
-        # Deliberately tight — a slow final approach at 400ft should NOT be treated as on_ground
-        # or the False→True landing transition will never fire.
-        on_ground = (
-            raw.get("on_ground", False)
-            or (isinstance(alt, (int, float)) and alt <= self.elevation_ft + 150)
-        )
-        alt_ft = self.elevation_ft if on_ground else (float(alt) if alt else self.elevation_ft)
-        distance_nm = haversine_nm(self.lat, self.lon, lat, lon)
+def wait_for_valid_token():
+    """Block until the backend accepts our token, returning it.
 
-        prev = self.state.get(icao24, {})
-        prev_ground = prev.get("on_ground", None)
-        prev_distance = prev.get("distance", None)
-        max_distance = max(prev.get("max_distance", distance_nm), distance_nm)
-
-        alerts = []
-        sent = self.alerts_sent.setdefault(icao24, set())
-
-        # Takeoff: was on ground last poll, now airborne.
-        # Speed may be 0 at the exact liftoff moment (type 4 velocity hasn't arrived yet),
-        # so use altitude > 200ft AGL as a fallback confirmation instead of requiring speed.
-        if prev_ground is True and not on_ground:
-            clearly_airborne = speed > 30 or alt_ft > self.elevation_ft + 200
-            if clearly_airborne and self.should_notify(icao24, "takeoff"):
-                log.info(f"🛫 TAKEOFF: {tail} — {speed}kts")
-                alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
-
-        # Takeoff: first contact — aircraft already airborne (Pi likely not at airport, hears it
-        # once it climbs high enough). Wide window: 20nm, under 8000ft AGL.
-        if prev_ground is None and not on_ground and distance_nm < 20.0 and alt_ft > self.elevation_ft + 200 and alt_ft < self.elevation_ft + 8000:
-            if self.should_notify(icao24, "takeoff"):
-                log.info(f"🛫 TAKEOFF: {tail} — first contact airborne, {speed}kts at {distance_nm:.1f}nm")
-                alerts.append({"type": "takeoff", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
-
-        # Normal landing detection (altitude/flag based)
-        if prev_ground is False and on_ground:
-            if self.should_notify(icao24, "landing"):
-                log.info(f"🛬 LANDING: {tail}")
-                alerts.append({"type": "landing", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
-                sent.clear()
-
-        # Stale-signal landing: dump1090 keeps aircraft in memory ~60s after last message.
-        # If signal hasn't updated in >20s and the aircraft is within 3nm, fire landing now
-        # rather than waiting for dump1090 to purge the entry (~60s later).
-        if not on_ground and not alerts:
-            seen_time = raw.get("seen")
-            stale_secs = (time.time() - seen_time) if seen_time else 0
-            if prev_ground is False and stale_secs > 20 and distance_nm < 3.0:
-                if self.should_notify(icao24, "landing"):
-                    log.info(f"🛬 LANDING: {tail} — stale signal ({stale_secs:.0f}s) at {distance_nm:.1f}nm")
-                    alerts.append({"type": "landing", "tail": tail, "distance": distance_nm, "altitude": alt_ft, "speed": speed})
-                    sent.clear()
-                on_ground = True  # reflect landed state going forward
-
-        if not on_ground and prev_distance is not None:
-            for alert_dist in sorted(self.alert_distances_nm, reverse=True):
-                key = f"{int(alert_dist) if alert_dist == int(alert_dist) else alert_dist}nm"
-                if prev_distance > alert_dist >= distance_nm and max_distance > alert_dist and key not in sent:
-                    eta = int(distance_nm / max(speed / 60, 0.5)) if speed > 10 else int(distance_nm / 1.5)
-                    if self.should_notify(icao24, key):
-                        log.info(f"📍 {key}: {tail} — {distance_nm:.1f}nm, ETA ~{eta}min")
-                        alerts.append({"type": key, "tail": tail, "distance": distance_nm, "altitude": alt_ft, "eta": eta, "speed": speed})
-                        sent.add(key)
-
-        if distance_nm > 12.0:
-            self.alerts_sent[icao24] = set()
-
-        self.state[icao24] = {
-            "on_ground": on_ground, "distance": distance_nm, "max_distance": max_distance,
-            "lat": lat, "lon": lon, "alt_ft": alt_ft, "speed": speed,
-        }
-        return alerts
-
-    def push_positions(self, snapshot):
-        """Push tracked aircraft positions to backend for the live map."""
-        positions = {}
-        for icao24, raw in snapshot.items():
-            if icao24 not in self.icao_map:
-                continue
-            lat = raw.get("lat")
-            lon = raw.get("lon")
-            if lat is None or lon is None:
-                continue
-            positions[icao24] = {
-                "lat": lat,
-                "lon": lon,
-                "altitude": raw.get("altitude"),
-                "speed": raw.get("speed", 0),
-                "heading": raw.get("heading"),
-                "on_ground": raw.get("on_ground", False),
-            }
-        if not positions:
-            return
-        try:
-            requests.post(
-                f"{BACKEND_URL}/api/ground/positions",
-                json={"positions": positions},
-                headers={"Authorization": f"Bearer {self.token}"},
-                timeout=5,
-            )
-        except Exception:
-            pass
-
-    def push_alerts(self, alerts):
-        for alert in alerts:
+    Retries with backoff rather than exiting: exiting made the service manager
+    restart us every few seconds (a log flood on the backend). The token is
+    re-read from disk every attempt, so repairing config.json is enough to
+    recover, and check_for_update() runs each cycle so a fixed agent still
+    lands while we wait.
+    """
+    backoff = 30
+    while True:
+        token = load_token()
+        if token:
             try:
-                resp = requests.post(
-                    f"{BACKEND_URL}/api/ground/ingest",
-                    json=alert,
-                    headers={"Authorization": f"Bearer {self.token}"},
-                    timeout=10,
-                )
-                if resp.status_code == 200:
-                    log.info(f"✅ Alert pushed: {alert['type']} / {alert['tail']}")
-                elif resp.status_code == 401:
-                    log.warning("Token expired — re-logging in...")
-                    self.login()
+                api_post("/api/ground/validate", token, {})
+                log("[OK] Ground station access confirmed")
+                return token
+            except requests.HTTPError as e:
+                code = e.response.status_code if e.response is not None else None
+                if code == 403:
+                    log(f"[ERR] Ground station not enabled for this account. Retrying in {backoff}s...")
                 else:
-                    log.warning(f"Push failed: {resp.status_code}")
+                    log(f"[ERR] Validation failed (HTTP {code}) — check the device token. Retrying in {backoff}s...")
             except Exception as e:
-                log.error(f"Push error: {e}")
-
-    # ── Main loop ─────────────────────────────────────────────────────────────
-
-    def run(self):
+                log(f"[ERR] Could not reach backend: {e}. Retrying in {backoff}s...")
+        else:
+            log(f"[ERR] No token found. Run setup or set FINALPING_TOKEN. Retrying in {backoff}s...")
+        time.sleep(backoff)
+        backoff = min(backoff * 2, 300)
         check_for_update()
-        log.info("=" * 60)
-        log.info(f"  FinalPing Ground Station v{VERSION}")
-        log.info("=" * 60)
 
-        if not self.login():
-            log.error("Login failed — check credentials.")
-            return
-        if not self.validate_ground_station():
-            return
-        if not self.fetch_config():
-            return
 
-        self.sbs.start()
-        log.info(f"  Polling every {POLL_INTERVAL_SECONDS}s")
-        log.info("=" * 60)
+def run():
+    check_for_update()
 
-        last_login          = datetime.now()
-        last_config_refresh = datetime.now()
-        last_heartbeat      = datetime.now() - timedelta(minutes=2)
-        last_range_sync     = datetime.now() - timedelta(minutes=6)
-        last_update_check   = datetime.now()
-        receiver_warned     = False
+    log("=" * 56)
+    log(f"  FinalPing Ground Station v{VERSION}")
+    log("=" * 56)
 
-        while True:
-            try:
-                if datetime.now() - last_update_check > timedelta(hours=1):
-                    check_for_update()
-                    last_update_check = datetime.now()
+    log("Validating ground station access...")
+    token = wait_for_valid_token()
 
-                if datetime.now() - last_login > timedelta(hours=23):
-                    self.login()
-                    last_login = datetime.now()
+    log("Fetching config from backend...")
+    try:
+        config = api_get("/api/ground/config", token)
+    except Exception as e:
+        log(f"[ERR] Failed to fetch config: {e}")
+        sys.exit(1)
 
-                if datetime.now() - last_config_refresh > timedelta(hours=1):
-                    self.fetch_config()
-                    last_config_refresh = datetime.now()
+    center_lat      = float(config["lat"])
+    center_lon      = float(config["lon"])
+    field_elevation = float(config.get("elevation_ft", 0))
+    tracked = {
+        a["icao24"].lower(): a["tail"]
+        for a in config.get("aircraft", []) if a.get("icao24")
+    }
 
-                if datetime.now() - last_heartbeat > timedelta(minutes=1):
-                    self._heartbeat()
-                    last_heartbeat = datetime.now()
+    log(f"[OK] Location: {center_lat:.4f}, {center_lon:.4f} | Elevation: {field_elevation:.0f}ft MSL")
+    log(f"[OK] Tracking {len(tracked)} aircraft: {', '.join(tracked.values()) or 'none configured'}")
 
-                if not self.sbs.connected:
-                    if not receiver_warned:
-                        log.warning("Cannot reach dump1090 — is your receiver running?")
-                        receiver_warned = True
-                else:
-                    receiver_warned = False
-                    snapshot = self.sbs.get_snapshot()
+    t = threading.Thread(target=_sbs_reader_thread, daemon=True)
+    t.start()
 
-                    # Update SDR range from ALL aircraft with positions
-                    self._update_range_from_snapshot(snapshot)
-
-                    # Sync range to backend every 5 minutes
-                    if datetime.now() - last_range_sync > timedelta(minutes=5):
-                        self.sync_range()
-                        last_range_sync = datetime.now()
-
-                    # Check for tracked aircraft that disappeared (likely landed)
-                    self.check_disappeared(snapshot)
-
-                    self.push_positions(snapshot)
-
-                    all_alerts = []
-                    for icao24, raw in snapshot.items():
-                        all_alerts.extend(self.process_aircraft(icao24, raw))
-                    if all_alerts:
-                        self.push_alerts(all_alerts)
-
-            except KeyboardInterrupt:
-                log.info("Stopped.")
+    source_label = None
+    for u in DUMP1090_HTTP_URLS:
+        try:
+            if requests.get(u, timeout=2).status_code == 200:
+                source_label = u
                 break
-            except Exception as e:
-                log.error(f"Loop error: {e}")
+        except Exception:
+            continue
+    if not source_label:
+        source_label = next((p for p in DUMP1090_FILE_PATHS if os.path.exists(p)), None)
+    if not source_label:
+        source_label = f"SBS stream port {SBS_PORT}"
+    log(f"[OK] Dump1090 source: {source_label}")
+    log("Ground station running...")
 
-            time.sleep(POLL_INTERVAL_SECONDS)
+    range_nm          = [0.0] * 36
+    last_heartbeat    = 0.0
+    heartbeat_failures = 0
+    last_range_push   = 0.0
+    last_update_check = time.time()
+    last_config_refresh = time.time()
+
+    while True:
+        now = time.time()
+
+        if now - last_update_check >= 3600:
+            check_for_update()
+            last_update_check = now
+
+        if now - last_config_refresh >= 3600:
+            try:
+                config = api_get("/api/ground/config", token)
+                tracked = {
+                    a["icao24"].lower(): a["tail"]
+                    for a in config.get("aircraft", []) if a.get("icao24")
+                }
+                log(f"[OK] Config refreshed — tracking {len(tracked)} aircraft")
+            except Exception as e:
+                log(f"[WARN] Config refresh failed: {e}")
+            last_config_refresh = now
+
+        if now - last_heartbeat >= HEARTBEAT_INTERVAL:
+            try:
+                api_post("/api/ground/heartbeat", token, {})
+                last_heartbeat = now
+                heartbeat_failures = 0
+            except Exception as e:
+                heartbeat_failures += 1
+                log(f"[WARN] Heartbeat failed ({heartbeat_failures}): {e}")
+                # Validation only ever ran at startup, so a token that expired
+                # or was rotated while we were running produced this warning
+                # once a minute forever: the Pi stayed up, dump1090 kept
+                # streaming, and nothing ever reached the backend again. The
+                # station just went quiet one day and only a reboot brought it
+                # back. A rejected token will go on being rejected, so stop
+                # guessing and re-validate — which also re-reads config.json,
+                # so a repaired key recovers on its own.
+                if _is_auth_error(e) or heartbeat_failures >= REVALIDATE_AFTER_FAILURES:
+                    log("[WARN] Re-validating ground station access...")
+                    token = wait_for_valid_token()
+                    heartbeat_failures = 0
+                    last_heartbeat = 0.0
+
+        if now - last_range_push >= RANGE_PUSH_INTERVAL and any(v > 0 for v in range_nm):
+            try:
+                api_post("/api/ground/range", token, {"range_nm": range_nm})
+                last_range_push = now
+                log(f"[OK] Range updated (max {max(range_nm):.0f}nm)")
+            except Exception as e:
+                log(f"[WARN] Range push failed: {e}")
+
+        try:
+            aircraft_list = fetch_dump1090()
+        except Exception as e:
+            log(f"[WARN] dump1090 read failed: {e}")
+            time.sleep(POLL_INTERVAL)
+            continue
+
+        positions = {}
+        for ac in aircraft_list:
+            icao24 = ac.get("hex", "").lower()
+            if icao24 not in tracked:
+                continue
+            lat = ac.get("lat")
+            lon = ac.get("lon")
+            if lat is None or lon is None:
+                continue
+
+            gs       = ac.get("gs")
+            alt_baro = ac.get("alt_baro")
+            on_ground = ac.get("on_ground", False) or (alt_baro == "ground") or (gs is not None and gs < 50)
+            altitude  = field_elevation if on_ground else (float(alt_baro) if alt_baro and alt_baro != "ground" else field_elevation)
+            speed_kts = float(gs) if gs is not None else 0.0
+            heading   = float(ac.get("track") or 0)
+
+            positions[icao24] = {
+                "lat": lat, "lon": lon,
+                "altitude": altitude,
+                "speed": speed_kts,
+                "heading": heading,
+                "on_ground": on_ground,
+                "updated_at": datetime.utcnow().isoformat(),
+            }
+
+            if not on_ground:
+                dist    = haversine_distance(center_lat, center_lon, lat, lon)
+                bearing = haversine_bearing(center_lat, center_lon, lat, lon)
+                bucket  = int(bearing / 10) % 36
+                if dist > range_nm[bucket]:
+                    range_nm[bucket] = round(dist, 1)
+
+        if positions:
+            try:
+                api_post("/api/ground/positions", token, {"positions": positions})
+                parts = []
+                for icao, p in positions.items():
+                    tail = tracked[icao]
+                    loc  = "GND" if p["on_ground"] else f"{p['altitude']:.0f}ft"
+                    parts.append(f"{tail} {loc}")
+                log(f"[OK] {' | '.join(parts)}")
+            except Exception as e:
+                log(f"[WARN] Position push failed: {e}")
+        else:
+            log("No tracked aircraft in dump1090 feed")
+
+        time.sleep(POLL_INTERVAL)
 
 
 if __name__ == "__main__":
-    station = GroundStation()
-    station.run()
+    try:
+        run()
+    except KeyboardInterrupt:
+        log("Ground station stopped")
