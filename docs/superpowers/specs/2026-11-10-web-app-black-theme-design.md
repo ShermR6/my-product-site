@@ -144,7 +144,8 @@ All schema changes are `ALTER TABLE … ADD COLUMN IF NOT EXISTS` in the existin
 4. **Channel-list bug**
    - `tracker.TIER_CHANNELS` disagrees with `main.TIER_LIMITS[…]["channels"]` and has no `owner` entry, so Pro users' Telegram, webhook and Google Chat integrations are silently never sent, and `owner` falls back to Discord + email.
    - Fix: one source of truth. Move the per-tier channel list to a small module both files import; the tracker allows a channel when either list allowed it before (union), so no plan loses a channel it currently receives.
-5. **Tests**: `tests/test_routing.py`, `tests/test_approach_filter.py`, `tests/test_tier_channels.py`, runnable with `pytest` and no database (pure functions extracted for the routing filter and heading check).
+5. **Tests**: `tests/test_alert_rules.py`, runnable with `pytest` and no database. All routing, heading, channel and stats rules live in one pure module, `alert_rules.py`.
+6. **Safety**: the three new columns are mapped as SQLAlchemy `deferred` and read through a guarded helper, so a database where the migration has not run cannot break existing queries.
 
 Deploy: push to `main` (Railway auto-deploys). After deploy, confirm `/health`, sign in with the desktop app, load Dashboard, Aircraft, Live Map and Ground Station, and check the tracker loop logs for one clean cycle.
 
