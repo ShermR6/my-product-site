@@ -2,7 +2,14 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+/** Where to go after signing in: only this site's own web app or account pages. */
+function destinationFrom(raw: string | null): string {
+  if (!raw) return "/dashboard";
+  const ok = /^\/(app|dashboard)(\/[A-Za-z0-9\-_/]*)?(\?[A-Za-z0-9\-_=&]*)?$/.test(raw);
+  return ok ? raw : "/dashboard";
+}
 
 type Step = "credentials" | "method-select" | "enter-code";
 
@@ -19,6 +26,7 @@ export default function LoginForm() {
   const [rememberFocus, setRememberFocus] = useState(false);
   const [termsFocus, setTermsFocus] = useState(false);
   const router = useRouter();
+  const after = destinationFrom(useSearchParams().get("callbackUrl"));
 
   // 2FA state
   const [step, setStep] = useState<Step>("credentials");
@@ -68,7 +76,7 @@ export default function LoginForm() {
         if (result?.error) {
           setError("Invalid email or password.");
         } else {
-          router.push("/dashboard");
+          router.push(after);
         }
         return;
       }
@@ -148,7 +156,7 @@ export default function LoginForm() {
         if (rememberMe) {
           document.cookie = "next-auth.remember-me=true; max-age=2592000; path=/";
         }
-        router.push("/dashboard");
+        router.push(after);
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -157,7 +165,7 @@ export default function LoginForm() {
   };
 
   const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
+    signIn("google", { callbackUrl: after });
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -182,7 +190,7 @@ export default function LoginForm() {
         setError("Account created. Please sign in.");
         setTab("signin");
       } else {
-        router.push("/dashboard");
+        router.push(after);
       }
     } catch {
       setError("Something went wrong. Please try again.");

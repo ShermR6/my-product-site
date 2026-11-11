@@ -77,9 +77,8 @@ export default function MobileMenu() {
             </nav>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-              <Link href="/download" className="nav-dl-btn" style={{ justifyContent: "center", padding: "12px" }} onClick={() => setOpen(false)}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download Free
+              <Link href="/app" className="nav-dl-btn" style={{ justifyContent: "center", padding: "12px" }} onClick={() => setOpen(false)}>
+                Open app
               </Link>
               {session ? (
                 <Link href="/dashboard" className="nav-signin-btn" style={{ justifyContent: "center", padding: "11px" }} onClick={() => setOpen(false)}>Dashboard</Link>

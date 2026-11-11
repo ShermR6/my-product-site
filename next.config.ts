@@ -2,12 +2,13 @@ import type { NextConfig } from "next";
 
 // CSP applied in production only — dev needs eval/websockets for HMR.
 // 'unsafe-inline' is required for Next's inline bootstrap scripts and the
-// site's inline styles. PostHog (*.i.posthog.com) is the only external host.
+// site's inline styles. PostHog (*.i.posthog.com) is the only external script
+// host. services.arcgisonline.com serves the web app's map tiles (images only).
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://*.i.posthog.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://m.media-amazon.com",
+  "img-src 'self' data: blob: https://m.media-amazon.com https://services.arcgisonline.com",
   "font-src 'self'",
   "connect-src 'self' https://*.i.posthog.com https://api.mapbox.com",
   "object-src 'none'",
@@ -18,6 +19,11 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // The airport search route reads this file at runtime; make sure it ships
+  // with that function on Vercel.
+  outputFileTracingIncludes: {
+    "/api/airports": ["./lib/data/airports.json"],
+  },
   async headers() {
     return [
       {

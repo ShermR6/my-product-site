@@ -1,23 +1,30 @@
 // app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
 // Self-hosted at build time — no runtime requests to Google (GDPR + CSP).
-// Plus Jakarta Sans is a variable font (200–800), so no weight list: asking for
-// six static weights made next/font emit a separate module per weight per
-// unicode subset — 24 of them — and Turbopack intermittently failed to resolve
-// them on Vercel ("next/font/google queries have exactly one entry") while
-// building fine locally. The variable axis covers every weight the site uses.
-const jakarta = Plus_Jakarta_Sans({
+// Both are variable fonts, so no weight list: asking for static weights made
+// next/font emit a separate module per weight per unicode subset, and
+// Turbopack intermittently failed to resolve them on Vercel ("next/font/google
+// queries have exactly one entry") while building fine locally. The variable
+// axis covers every weight the site uses.
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-sans",
+  display: "swap",
+});
+// Tail numbers, coordinates and figures.
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Providers from "./components/Providers";
 import CookieConsent from "./components/CookieConsent";
+import SiteChrome from "./components/SiteChrome";
 
 export const metadata: Metadata = {
   title: {
@@ -53,15 +60,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="light" className={jakarta.variable}>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
       <body>
         <Providers>
-          <Navbar />
-          <main className="page">
-            <div className="container">{children}</div>
-          </main>
-          <Footer />
-          <CookieConsent />
+          {/* Marketing navbar, container and footer everywhere except the web
+              app under /app, which brings its own shell. */}
+          <SiteChrome navbar={<Navbar />} footer={<><Footer /><CookieConsent /></>}>
+            {children}
+          </SiteChrome>
         </Providers>
       </body>
     </html>

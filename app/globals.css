@@ -1,67 +1,48 @@
 /* app/globals.css */
-/* Plus Jakarta Sans is self-hosted via next/font in app/layout.tsx (--font-jakarta) */
+/* Geist and Geist Mono are self-hosted via next/font in app/layout.tsx
+   (--font-sans, --font-mono). */
 
-/* ── LIGHT MODE (default) — matches the landing page ── */
-:root,
-[data-theme="light"] {
-  --bg: #EEF2F7;
-  --panel: #ffffff;
-  --panel-2: #F1F5F9;
-  --text: #0F172A;
-  --muted: #475569;
-  --border: #D5DEE9;
-  --border-strong: #AFBECE;
+/* ── One theme: black, white and grey ─────────────────────────────────────────
+   Color carries meaning only. --accent (sky blue) marks live state and links;
+   --warn and --bad mark problems. Purchase buttons are white (--cta) with
+   --cta-text on them. There is no orange and no green. */
+:root {
+  --bg: #0A0A0A;
+  --panel: #131313;
+  --panel-2: #1A1A1A;
+  --panel-3: #1F1F1F;
+  --text: #FAFAFA;
+  --text-2: #D4D4D4;
+  --muted: #A3A3A3;
+  --faint: #8A8A8A;
+  --border: #232323;
+  --border-strong: #2E2E2E;
   --white: #ffffff;
   --black: #000000;
-  --accent: #0ea5e9;
-  --accent-hover: #0284c7;
-  --cta: #F97316;
-  --cta-hover: #EA6A0F;
-  --good: #15803D;
-  --good-bg: rgba(21, 128, 61, 0.10);
-  --good-border: rgba(21, 128, 61, 0.38);
-  --bad: #DC2626;
-  --bad-bg: rgba(220, 38, 38, 0.08);
-  --bad-border: rgba(220, 38, 38, 0.32);
-  --nav-bg: rgba(255, 255, 255, 0.85);
+  --accent: #38BDF8;
+  --accent-hover: #7DD3FC;
+  --accent-soft: rgba(56, 189, 248, 0.14);
+  --cta: #FAFAFA;
+  --cta-hover: #E5E5E5;
+  --cta-text: #0A0A0A;
+  --good: #FAFAFA;
+  --good-bg: rgba(255, 255, 255, 0.08);
+  --good-border: rgba(255, 255, 255, 0.22);
+  --warn: #FBBF24;
+  --warn-bg: rgba(251, 191, 36, 0.14);
+  --bad: #F87171;
+  --bad-bg: rgba(248, 113, 113, 0.12);
+  --bad-border: rgba(248, 113, 113, 0.40);
+  --nav-bg: rgba(10, 10, 10, 0.80);
   --btn-outline-bg: transparent;
-  --btn-outline-color: #0F172A;
-  --btn-outline-border: #AFBECE;
-  --btn-outline-hover-bg: rgba(15,23,42,0.04);
-  --input-bg: #ffffff;
-  --input-border: #C7D2E0;
-  --input-color: #0F172A;
-}
-
-/* ── DARK MODE ── */
-[data-theme="dark"] {
-  --bg: #0b0b0b;
-  --panel: #111111;
-  --panel-2: #141414;
-  --text: #ffffff;
-  --muted: #bdbdbd;
-  --border: rgba(255, 255, 255, 0.14);
-  --border-strong: rgba(255, 255, 255, 0.22);
-  --white: #ffffff;
-  --black: #000000;
-  --accent: #0ea5e9;
-  --accent-hover: #0284c7;
-  --cta: #F97316;
-  --cta-hover: #EA6A0F;
-  --good: #22d3a3;
-  --good-bg: rgba(35, 199, 107, 0.18);
-  --good-border: rgba(35, 199, 107, 0.45);
-  --bad: #ff4757;
-  --bad-bg: rgba(255, 71, 87, 0.14);
-  --bad-border: rgba(255, 71, 87, 0.45);
-  --nav-bg: rgba(10, 10, 10, 0.75);
-  --btn-outline-bg: transparent;
-  --btn-outline-color: #ffffff;
-  --btn-outline-border: rgba(255,255,255,0.22);
-  --btn-outline-hover-bg: rgba(255,255,255,0.07);
-  --input-bg: #1a1a1a;
-  --input-border: rgba(255,255,255,0.14);
-  --input-color: #ffffff;
+  --btn-outline-color: #FAFAFA;
+  --btn-outline-border: #2E2E2E;
+  --btn-outline-hover-bg: rgba(255, 255, 255, 0.06);
+  --input-bg: #0E0E0E;
+  --input-border: #2E2E2E;
+  --input-color: #FAFAFA;
+  --mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -71,17 +52,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-jakarta), 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-[data-theme="dark"] body {
-  background: var(--bg);
-}
-
-[data-theme="dark"] .page {
-  background: radial-gradient(ellipse 120% 60% at 50% -5%, #1e2a3a 0%, var(--bg) 60%);
-  min-height: 100vh;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .container {
@@ -105,17 +77,17 @@ body {
   width: min(calc(100% - 32px), 1280px);
   height: 56px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(226, 232, 240, 0.7);
+  background: var(--nav-bg);
+  border: 1px solid var(--border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: background 0.35s, border-color 0.35s, box-shadow 0.35s;
 }
 
 .nav-scrolled {
-  background: rgba(255, 255, 255, 0.97);
-  border-color: #E2E8F0;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  background: rgba(10, 10, 10, 0.94);
+  border-color: var(--border-strong);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -139,18 +111,17 @@ body {
   white-space: nowrap;
   gap: 7px;
   background: var(--cta);
-  color: #fff;
+  color: var(--cta-text);
   padding: 9px 18px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 3px 14px rgba(249, 115, 22, 0.3);
+  transition: background 0.18s;
 }
 .nav-dl-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(249, 115, 22, 0.45);
+  background: var(--cta-hover);
+  color: var(--cta-text);
 }
 
 .nav-signin-btn {
@@ -160,16 +131,16 @@ body {
   background: transparent;
   color: var(--text);
   padding: 8px 16px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  border: 1.5px solid var(--border-strong);
-  transition: border-color 0.18s, color 0.18s;
+  border: 1px solid var(--border-strong);
+  transition: border-color 0.18s, background 0.18s;
 }
 .nav-signin-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: #4A4A4A;
+  background: var(--btn-outline-hover-bg);
 }
 
 /* Pricing plan cards — 4-up row breaks out of the 980px container */
@@ -217,7 +188,7 @@ body {
 .fp-drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 10000;
   backdrop-filter: blur(2px);
 }
@@ -233,7 +204,8 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 50px rgba(15, 23, 42, 0.25);
+  border-right: 1px solid var(--border);
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6);
   animation: fp-slide-in 0.22s ease;
 }
 @keyframes fp-slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
@@ -249,8 +221,8 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 .fp-drawer-link:hover, .fp-drawer-link:active {
-  background: rgba(14, 165, 233, 0.08);
-  color: var(--accent);
+  background: var(--btn-outline-hover-bg);
+  color: var(--text);
 }
 
 /* ── Mobile ── */
@@ -379,7 +351,7 @@ p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; font-size: 14px; }
 
 /* ── Legal pages (privacy, terms, refund policy) ── */
 .legal-body p {
-  color: #334155;
+  color: var(--text-2);
   font-size: 15px;
   line-height: 1.8;
   margin-bottom: 16px;
@@ -391,7 +363,7 @@ p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; font-size: 14px; }
   margin: 36px 0 12px 0;
 }
 .legal-body ul {
-  color: #334155;
+  color: var(--text-2);
   font-size: 15px;
   line-height: 1.8;
   padding-left: 24px;
@@ -407,19 +379,12 @@ p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; font-size: 14px; }
 .legal-body strong {
   color: var(--text);
 }
-[data-theme="dark"] .legal-body p,
-[data-theme="dark"] .legal-body ul { color: #d1d5db; }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 18px;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-[data-theme="dark"] .panel {
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
 }
 
 .panel-white {
@@ -460,14 +425,14 @@ p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; font-size: 14px; }
 
 .btn-solid {
   background: var(--cta);
-  color: #fff;
+  color: var(--cta-text);
   border-color: var(--cta);
-  box-shadow: 0 3px 14px rgba(249, 115, 22, 0.25);
 }
 
 .btn-solid:hover {
   background: var(--cta-hover);
   border-color: var(--cta-hover);
+  color: var(--cta-text);
 }
 
 .btn-outline {
@@ -490,12 +455,6 @@ p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; font-size: 14px; }
   background: var(--panel-2);
 }
 
-/* Cards need real lift now that the ground is only slightly darker than them */
-.panel, .panel-white {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05);
-}
-[data-theme="dark"] .panel,
-[data-theme="dark"] .panel-white { box-shadow: none; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 label { font-size: 12px; color: var(--muted); }
@@ -554,9 +513,9 @@ textarea { min-height: 110px; resize: vertical; }
 }
 
 .tab.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+  background: var(--cta);
+  color: var(--cta-text);
+  border-color: var(--cta);
 }
 
 .pricing-table {
@@ -566,14 +525,10 @@ textarea { min-height: 110px; resize: vertical; }
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--panel);
-  transition: background 0.2s, border-color 0.2s;
 }
-
-[data-theme="dark"] .pricing-table { background: rgba(255,255,255,0.03); }
 
 .pt-row { display: grid; grid-template-columns: 260px repeat(3, minmax(0, 1fr)); }
 .pt-header { background: var(--panel-2); }
-[data-theme="dark"] .pt-header { background: rgba(255,255,255,0.02); }
 
 .pt-cell {
   padding: 14px 12px;
@@ -605,16 +560,15 @@ textarea { min-height: 110px; resize: vertical; }
   cursor: pointer;
   border-radius: 999px;
   padding: 10px 14px;
-  font-weight: 900;
+  font-weight: 700;
   font-size: 13px;
-  color: #fff;
+  color: var(--cta-text);
   background: var(--cta);
-  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
-  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .pt-cta:active { transform: translateY(1px); }
-.pt-cta:hover { background: var(--cta-hover); transform: translateY(-1px); box-shadow: 0 6px 26px rgba(249, 115, 22, 0.42); }
+.pt-cta:hover { background: var(--cta-hover); }
 .pt-tagline { font-size: 12px; color: var(--muted); }
 .pt-value { font-size: 13px; color: var(--text); }
 
@@ -665,26 +619,20 @@ textarea { min-height: 110px; resize: vertical; }
 /* ── Dark select dropdowns ── */
 select {
   color-scheme: dark;
-  background: rgba(255,255,255,0.06);
+  background: var(--input-bg);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--input-border);
 }
 
 select option {
-  background: #1a1a2e;
-  color: #f9fafb;
+  background: var(--panel-2);
+  color: var(--text);
 }
 
-[data-theme="light"] select {
-  color-scheme: light;
-  background: #ffffff;
-  color: #111111;
-}
+/* Tail numbers, coordinates and other figures */
+.mono { font-family: var(--mono); }
 
-[data-theme="light"] select option {
-  background: #ffffff;
-  color: #111111;
-}
+a { color: inherit; }
 /* ── LANDING PAGE MODE ── */
 .landing-mode header.nav,
 .landing-mode footer.footer {
