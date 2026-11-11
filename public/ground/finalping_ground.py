@@ -22,7 +22,7 @@ import requests
 from datetime import datetime
 from math import radians, cos, sin, asin, sqrt, atan2, degrees
 
-VERSION    = "3.6"
+VERSION    = "3.7"
 API_BASE   = "https://aircraft-tracker-backend-production.up.railway.app"
 UPDATE_URL = "https://raw.githubusercontent.com/ShermR6/aircraft-tracker-backend/main"
 
@@ -63,6 +63,47 @@ DUMP1090_FILE_PATHS = [
 _sbs_aircraft  = {}
 _sbs_lock      = threading.Lock()
 _sbs_connected = False
+
+# ── Stats reported with the heartbeat ─────────────────────────────────────────
+START_TIME  = time.time()
+_msg_total  = None   # dump1090's running message counter, when the source has one
+_sbs_lines  = 0      # lines read from the SBS stream, the fallback counter
+_rate_mark  = None   # (time, counter) at the previous heartbeat
+
+
+def _note_messages(data):
+    """Remember dump1090's total message count from an aircraft.json payload."""
+    global _msg_total
+    m = data.get("messages") if isinstance(data, dict) else None
+    if isinstance(m, (int, float)) and not isinstance(m, bool):
+        _msg_total = float(m)
+
+
+def message_rate(now):
+    """Messages per second since the previous call, or None when unknown."""
+    global _rate_mark
+    if _msg_total is not None:
+        counter = _msg_total
+    elif _sbs_lines:
+        counter = float(_sbs_lines)
+    else:
+        return None
+    prev, _rate_mark = _rate_mark, (now, counter)
+    if prev is None:
+        return None
+    dt, dn = now - prev[0], counter - prev[1]
+    if dt <= 0 or dn < 0:      # clock step, or dump1090 restarted and reset its counter
+        return None
+    return round(dn / dt, 1)
+
+
+def heartbeat_stats(now, aircraft_count):
+    return {
+        "version": VERSION,
+        "uptime_s": int(now - START_TIME),
+        "msg_rate": message_rate(now),
+        "aircraft_count": aircraft_count,
+    }
 
 
 def log(msg):
@@ -229,7 +270,7 @@ def _parse_sbs_line(line):
 
 
 def _sbs_reader_thread():
-    global _sbs_connected
+    global _sbs_connected, _sbs_lines
     while True:
         try:
             with socket.create_connection((SBS_HOST, SBS_PORT), timeout=10) as sock:
@@ -244,6 +285,7 @@ def _sbs_reader_thread():
                     buf += chunk
                     while "\n" in buf:
                         line, buf = buf.split("\n", 1)
+                        _sbs_lines += 1
                         _parse_sbs_line(line.strip())
         except Exception:
             pass
@@ -257,6 +299,7 @@ def fetch_dump1090():
             r = requests.get(url, timeout=3)
             r.raise_for_status()
             data = r.json()
+            _note_messages(data)
             return data.get("aircraft", data.get("ac", []))
         except Exception:
             continue
@@ -265,6 +308,7 @@ def fetch_dump1090():
         if os.path.exists(path):
             with open(path) as f:
                 data = json.load(f)
+            _note_messages(data)
             return data.get("aircraft", data.get("ac", []))
 
     if _sbs_connected:
@@ -464,6 +508,7 @@ def run():
     last_range_push   = 0.0
     last_update_check = time.time()
     last_config_refresh = time.time()
+    last_aircraft_count = None
 
     while True:
         now = time.time()
@@ -486,7 +531,13 @@ def run():
 
         if now - last_heartbeat >= HEARTBEAT_INTERVAL:
             try:
-                api_post("/api/ground/heartbeat", token, {})
+                # Stats ride along with the heartbeat. They must never be the
+                # reason a heartbeat is not sent.
+                try:
+                    hb_body = heartbeat_stats(now, last_aircraft_count)
+                except Exception:
+                    hb_body = {}
+                api_post("/api/ground/heartbeat", token, hb_body)
                 last_heartbeat = now
                 heartbeat_failures = 0
             except Exception as e:
@@ -529,6 +580,7 @@ def run():
         # Reception range is a property of the antenna, so it is measured from
         # every aircraft we can hear -- not just the tracked ones.
         bin_range(range_nm, aircraft_list, recv_lat, recv_lon)
+        last_aircraft_count = sum(1 for ac in aircraft_list if ac.get("lat") is not None and ac.get("lon") is not None)
 
         positions = {}
         for ac in aircraft_list:
