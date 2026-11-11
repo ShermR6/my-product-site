@@ -68,7 +68,7 @@ export default function LoginForm() {
 
       if (!data.requires2FA) {
         // No 2FA — sign in directly
-        const result = await signIn("credentials", { email, password, redirect: false });
+        const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: after });
         setLoading(false);
         if (rememberMe && !result?.error) {
           document.cookie = "next-auth.remember-me=true; max-age=2592000; path=/";
@@ -148,7 +148,7 @@ export default function LoginForm() {
         return;
       }
 
-      const result = await signIn("credentials", { email, loginToken: data.loginToken, redirect: false });
+      const result = await signIn("credentials", { email, loginToken: data.loginToken, redirect: false, callbackUrl: after });
       setLoading(false);
       if (result?.error) {
         setError("Verification failed. Please try again.");
@@ -184,7 +184,7 @@ export default function LoginForm() {
         setLoading(false);
         return;
       }
-      const result = await signIn("credentials", { email, password, redirect: false });
+      const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: after });
       setLoading(false);
       if (result?.error) {
         setError("Account created. Please sign in.");
