@@ -1,3 +1,5 @@
+import { CircleAlert, CircleCheck } from "lucide-react";
+
 // app/status/page.tsx
 
 const UPTIMEROBOT_API = "https://api.uptimerobot.com/v2/getMonitors";
@@ -88,10 +90,10 @@ export default async function StatusPage() {
           gap: 14,
           padding: "20px 24px",
           marginBottom: 24,
-          borderLeft: `4px solid ${allGood ? "#22c55e" : "#ef4444"}`,
+          borderLeft: `4px solid ${allGood ? "var(--good)" : "var(--bad)"}`,
         }}
       >
-        <span style={{ fontSize: 24 }}>{allGood ? "✅" : "🔴"}</span>
+        {allGood ? <CircleCheck size={24} aria-hidden="true" /> : <CircleAlert size={24} color="var(--bad)" aria-hidden="true" />}
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>
             {allGood ? "All systems operational" : "Service disruption detected"}
@@ -148,7 +150,7 @@ export default async function StatusPage() {
 
       <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 20, textAlign: "center" }}>
         Experiencing issues?{" "}
-        <a href="/contact" style={{ color: "var(--accent)" }}>Contact support</a>
+        <a href="/contact" style={{ color: "var(--text)" }}>Contact support</a>
       </p>
     </>
   );
@@ -199,8 +201,8 @@ function StatusRow({
             fontWeight: 600,
             padding: "3px 10px",
             borderRadius: 999,
-            background: ok ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
-            color: ok ? "#22c55e" : "#ef4444",
+            background: ok ? "rgba(255,255,255,0.06)" : "rgba(239,68,68,0.12)",
+            color: ok ? "var(--good)" : "var(--bad)",
           }}
         >
           {ok ? "Operational" : "Degraded"}
@@ -213,7 +215,7 @@ function StatusRow({
 function UptimeStat({ label, value }: { label: string; value?: string }) {
   const pct = value ? parseFloat(value).toFixed(2) : null;
   const color = pct
-    ? parseFloat(pct) >= 99.5 ? "#22c55e" : parseFloat(pct) >= 95 ? "#f59e0b" : "#ef4444"
+    ? parseFloat(pct) >= 99.5 ? "var(--good)" : parseFloat(pct) >= 95 ? "var(--warn)" : "var(--bad)"
     : "var(--muted)";
   return (
     <div>

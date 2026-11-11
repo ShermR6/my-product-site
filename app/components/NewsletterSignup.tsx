@@ -38,7 +38,7 @@ export default function NewsletterSignup({ dark = false }: { dark?: boolean }) {
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         fontSize: 13, fontWeight: 600,
-        color: dark ? "#4ADE80" : "var(--good)",
+        color: dark ? "var(--good)" : "var(--good)",
       }}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
         You&apos;re subscribed — check your inbox.
@@ -69,7 +69,7 @@ export default function NewsletterSignup({ dark = false }: { dark?: boolean }) {
         style={{
           position: "absolute", right: 5, top: 5,
           width: 32, height: 32, borderRadius: "50%",
-          border: "none", background: "#0EA5E9", color: "#fff",
+          border: "none", background: "var(--cta)", color: "var(--cta-text)",
           display: "flex", alignItems: "center", justifyContent: "center",
           cursor: status === "loading" ? "wait" : "pointer",
           opacity: status === "loading" ? 0.6 : 1,
@@ -81,7 +81,7 @@ export default function NewsletterSignup({ dark = false }: { dark?: boolean }) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
       </button>
       {status === "error" && (
-        <div style={{ fontSize: 12, color: dark ? "#F87171" : "var(--bad)", marginTop: 8 }}>{error}</div>
+        <div style={{ fontSize: 12, color: dark ? "var(--bad)" : "var(--bad)", marginTop: 8 }}>{error}</div>
       )}
     </form>
   );

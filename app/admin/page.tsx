@@ -1,4 +1,5 @@
 "use client";
+import { Ban, ClipboardList, KeyRound, LayoutDashboard, Package, Plus, Radio, Users } from "lucide-react";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -33,19 +34,19 @@ type License = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: "#23c76b",
-  inactive: "#f59e0b",
-  expired: "#ef4444",
+  active: "var(--good)",
+  inactive: "var(--warn)",
+  expired: "var(--bad)",
   revoked: "var(--muted)",
 };
 
 const TIER_COLORS: Record<string, string> = {
-  starter: "#0ea5e9",
-  premium: "#a855f7",
-  pro: "#f5b400",
-  "team-starter": "#22d3a3",
-  "team-premium": "#818cf8",
-  "team-pro": "#fb923c",
+  starter: "var(--text)",
+  premium: "var(--text-2)",
+  pro: "var(--warn)",
+  "team-starter": "var(--good)",
+  "team-premium": "var(--text-2)",
+  "team-pro": "var(--warn)",
 };
 
 function statusBadge(status: string) {
@@ -84,18 +85,18 @@ const s = {
   shell: { display: "flex", minHeight: "100vh" } as React.CSSProperties,
   sidebar: { width: 220, minWidth: 220, borderRight: "1px solid var(--border)", padding: "32px 0", display: "flex", flexDirection: "column" as const, gap: 2, background: "var(--panel-2)" } as React.CSSProperties,
   sidebarLabel: { fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--muted)", padding: "8px 20px 4px" } as React.CSSProperties,
-  navItem: (active: boolean): React.CSSProperties => ({ display: "flex", alignItems: "center", gap: 10, padding: "9px 20px", fontSize: 13, fontWeight: active ? 600 : 500, color: active ? "var(--text)" : "var(--muted)", background: active ? "rgba(14,165,233,0.08)" : "transparent", borderRight: active ? "2px solid #0ea5e9" : "2px solid transparent", cursor: "pointer", transition: "all 0.15s", border: "none", width: "100%", textAlign: "left" as const }),
+  navItem: (active: boolean): React.CSSProperties => ({ display: "flex", alignItems: "center", gap: 10, padding: "9px 20px", fontSize: 13, fontWeight: active ? 600 : 500, color: active ? "var(--text)" : "var(--muted)", background: active ? "rgba(255,255,255,0.04)" : "transparent", borderRight: active ? "2px solid var(--muted)" : "2px solid transparent", cursor: "pointer", transition: "all 0.15s", border: "none", width: "100%", textAlign: "left" as const }),
   main: { flex: 1, padding: "40px 48px", maxWidth: 1100 } as React.CSSProperties,
   tabHeader: { marginBottom: 24 } as React.CSSProperties,
   tabTitle: { fontSize: 22, fontWeight: 700, margin: "0 0 4px", color: "var(--text)" } as React.CSSProperties,
   tabSub: { fontSize: 14, color: "var(--muted)", margin: 0 } as React.CSSProperties,
-  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" } as React.CSSProperties,
-  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "20px 24px", boxShadow: "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" } as React.CSSProperties,
+  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 2px rgba(0,0,0,0.11), 0 4px 14px rgba(0,0,0,0.11)" } as React.CSSProperties,
+  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "20px 24px", boxShadow: "0 1px 2px rgba(0,0,0,0.11), 0 4px 14px rgba(0,0,0,0.11)" } as React.CSSProperties,
   statValue: { fontSize: 36, fontWeight: 800, color: "var(--text)", lineHeight: 1 } as React.CSSProperties,
   statLabel: { fontSize: 13, color: "var(--muted)", marginTop: 6 } as React.CSSProperties,
   input: { width: "100%", padding: "9px 14px", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 8, color: "var(--input-color)", fontSize: 13, outline: "none", boxSizing: "border-box" as const } as React.CSSProperties,
   select: { padding: "9px 14px", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 8, color: "var(--input-color)", fontSize: 13, outline: "none", cursor: "pointer" } as React.CSSProperties,
-  primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "#0ea5e9", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" } as React.CSSProperties,
+  primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "var(--cta)", color: "var(--cta-text)", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" } as React.CSSProperties,
   dangerBtn: { padding: "5px 12px", borderRadius: 6, background: "var(--bad-bg)", color: "var(--bad)", fontSize: 12, fontWeight: 600, border: "1px solid var(--bad-border)", cursor: "pointer" } as React.CSSProperties,
   tableHeader: (cols: string): React.CSSProperties => ({ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "10px 20px", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }),
   tableRow: (cols: string): React.CSSProperties => ({ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "12px 20px", fontSize: 13, alignItems: "center", color: "var(--text)" }),
@@ -103,13 +104,13 @@ const s = {
 };
 
 const NAV_ITEMS = [
-  { id: "overview", label: "Overview", icon: "📊" },
-  { id: "users", label: "Users", icon: "👥" },
-  { id: "licenses", label: "Licenses", icon: "🔑" },
-  { id: "create", label: "Create License", icon: "➕" },
-  { id: "waitlist", label: "Waitlist", icon: "📋" },
-  { id: "orders", label: "Orders", icon: "📦" },
-  { id: "ground-stations", label: "Ground Stations", icon: "📡" },
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "users", label: "Users", icon: Users },
+  { id: "licenses", label: "Licenses", icon: KeyRound },
+  { id: "create", label: "Create License", icon: Plus },
+  { id: "waitlist", label: "Waitlist", icon: ClipboardList },
+  { id: "orders", label: "Orders", icon: Package },
+  { id: "ground-stations", label: "Ground Stations", icon: Radio },
 ];
 
 // ── Overview Tab ─────────────────────────────────────────────────────────────
@@ -164,7 +165,7 @@ function OverviewTab({ stats }: { stats: Stats }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {revenueCards.map((c) => (
             <div key={c.label} style={s.statCard}>
-              <div style={{ ...s.statValue, color: typeof c.value === "string" ? "#f5b400" : "var(--text)" }}>{c.value}</div>
+              <div style={{ ...s.statValue, color: typeof c.value === "string" ? "#FBBF24" : "var(--text)" }}>{c.value}</div>
               <div style={s.statLabel}>{c.label}</div>
               {c.sub && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>{c.sub}</div>}
             </div>
@@ -246,18 +247,18 @@ function UsersTab() {
                   ...s.tableRow(cols),
                   borderBottom: expandedUser === user.id ? "none" : i < users.length - 1 ? "1px solid var(--border)" : "none",
                   cursor: "pointer",
-                  background: expandedUser === user.id ? "rgba(14,165,233,0.05)" : i % 2 === 0 ? "transparent" : "var(--panel-2)",
+                  background: expandedUser === user.id ? "rgba(255,255,255,0.7)" : i % 2 === 0 ? "transparent" : "var(--panel-2)",
                 }}
                 onClick={() => toggleUser(user)}
               >
                 <div style={{ fontWeight: 500 }}>{user.email}</div>
                 <div style={{ color: "var(--muted)", fontSize: 12 }}>{formatDate(user.createdAt)}</div>
                 <div>{user.licenseCount}</div>
-                <div style={{ color: "#23c76b" }}>{user.activeLicenseCount}</div>
+                <div style={{ color: "var(--good)" }}>{user.activeLicenseCount}</div>
                 <div style={{ color: "var(--muted)", fontSize: 12 }}>{expandedUser === user.id ? "▲" : "▼"}</div>
               </div>
               {expandedUser === user.id && (
-                <div style={{ padding: "12px 20px 16px", borderBottom: i < users.length - 1 ? "1px solid var(--border)" : "none", background: "rgba(14,165,233,0.03)" }}>
+                <div style={{ padding: "12px 20px 16px", borderBottom: i < users.length - 1 ? "1px solid var(--border)" : "none", background: "rgba(255,255,255,0.015)" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>Licenses</div>
                   {!userLicenses[user.id] ? (
                     <div style={{ color: "var(--muted)", fontSize: 13 }}>Loading...</div>
@@ -458,22 +459,22 @@ function CreateLicenseTab() {
             type="submit"
             disabled={loading}
             style={{ ...s.primaryBtn, opacity: loading ? 0.6 : 1 }}
-            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#0284c7"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "#0ea5e9"; }}
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#FAFAFA"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFA"; }}
           >
             {loading ? "Generating..." : "Generate License"}
           </button>
         </form>
 
         {error && (
-          <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
+          <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "rgba(239,68,68,0.1)", color: "var(--bad)", border: "1px solid rgba(239,68,68,0.3)" }}>
             {error}
           </div>
         )}
 
         {result && (
-          <div style={{ marginTop: 20, padding: "16px 20px", borderRadius: 10, background: "rgba(35,199,107,0.07)", border: "1px solid rgba(35,199,107,0.25)" }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#23c76b", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>License Created</div>
+          <div style={{ marginTop: 20, padding: "16px 20px", borderRadius: 10, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--good)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>License Created</div>
             <div style={{ fontFamily: "monospace", fontSize: 20, fontWeight: 900, letterSpacing: "0.08em", color: "var(--text)", marginBottom: 8 }}>{result.licenseKey}</div>
             <div style={{ fontSize: 12, color: "var(--muted)" }}>
               {result.tier} &bull; {result.purchaseEmail} &bull; {result.status}
@@ -578,7 +579,7 @@ export default function AdminPage() {
   if (accessDenied) {
     return (
       <div style={{ padding: 80, textAlign: "center", color: "var(--muted)" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🚫</div>
+        <div style={{ marginBottom: 16, lineHeight: 0, color: "var(--text-2)" }}><Ban size={48} strokeWidth={1.5} aria-hidden="true" /></div>
         <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>Access Denied</div>
         <div style={{ fontSize: 14 }}>You do not have permission to view this page.</div>
       </div>
@@ -633,9 +634,9 @@ export default function AdminPage() {
     };
 
     const statusColor: Record<string, string> = {
-      pending: "#f59e0b",
-      shipped: "#0ea5e9",
-      completed: "#22d3a3",
+      pending: "var(--warn)",
+      shipped: "var(--text)",
+      completed: "var(--good)",
     };
 
     const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
@@ -654,9 +655,9 @@ export default function AdminPage() {
             <button key={f} onClick={() => setFilter(f)} style={{
               padding: "6px 14px", borderRadius: 8, border: "1px solid",
               fontSize: 12, fontWeight: 600, cursor: "pointer",
-              background: filter === f ? "#0ea5e920" : "transparent",
-              borderColor: filter === f ? "#0ea5e9" : "var(--border)",
-              color: filter === f ? "#0ea5e9" : "var(--muted)",
+              background: filter === f ? "rgba(255,255,255,0.08)" : "transparent",
+              borderColor: filter === f ? "#FAFAFA" : "var(--border)",
+              color: filter === f ? "#FAFAFA" : "var(--muted)",
             }}>
               {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
             </button>
@@ -695,7 +696,7 @@ export default function AdminPage() {
                   {/* Items */}
                   <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 8, padding: "10px 14px", marginBottom: 14 }}>
                     {items.map((item: any, i: number) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#d1d5db", padding: "3px 0", borderBottom: i < items.length - 1 ? "1px solid var(--border)40" : "none" }}>
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-2)", padding: "3px 0", borderBottom: i < items.length - 1 ? "1px solid var(--border)40" : "none" }}>
                         <span>{item.quantity > 1 ? `${item.quantity}× ` : ""}{item.description}</span>
                         <span>{item.amount}</span>
                       </div>
@@ -711,8 +712,8 @@ export default function AdminPage() {
                     const carrierLabel = order.carrier || "UPS";
                     const trackUrl = (carrierUrls[carrierLabel] ?? carrierUrls["UPS"]) + order.trackingNumber;
                     return (
-                      <div style={{ fontSize: 12, color: "#0ea5e9", marginBottom: 12 }}>
-                        📦 {carrierLabel}: <a href={trackUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>{order.trackingNumber}</a>
+                      <div style={{ fontSize: 12, color: "var(--text)", marginBottom: 12 }}>
+                        {carrierLabel}: <a href={trackUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--text)" }}>{order.trackingNumber}</a>
                         {order.shippedAt && <span style={{ color: "var(--muted)", marginLeft: 8 }}>· Shipped {new Date(order.shippedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
                       </div>
                     );
@@ -752,7 +753,7 @@ export default function AdminPage() {
                       <button
                         onClick={() => doAction(order.id, "complete")}
                         disabled={!!isActing}
-                        style={{ padding: "7px 16px", borderRadius: 8, background: "#22d3a320", color: "#22d3a3", border: "1px solid #22d3a350", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                        style={{ padding: "7px 16px", borderRadius: 8, background: "rgba(255,255,255,0.08)", color: "var(--good)", border: "1px solid rgba(255,255,255,0.22)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
                       >
                         ✓ Mark Completed
                       </button>
@@ -767,13 +768,13 @@ export default function AdminPage() {
                   )}
 
                   {order.status === "completed" && (
-                    <div style={{ fontSize: 12, color: "#22d3a3" }}>
+                    <div style={{ fontSize: 12, color: "var(--good)" }}>
                       ✓ Completed {order.completedAt ? new Date(order.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
                     </div>
                   )}
 
                   {msg?.msg && (
-                    <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: msg.ok ? "#22d3a3" : "var(--bad)" }}>
+                    <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: msg.ok ? "var(--good)" : "var(--bad)" }}>
                       {msg.ok ? "✓" : "✕"} {msg.msg}
                     </div>
                   )}
@@ -846,7 +847,7 @@ export default function AdminPage() {
             {loading ? "Sending..." : "Send Shipping Email"}
           </button>
           {result && (
-            <div style={{ fontSize: 12, fontWeight: 600, color: result.ok ? "#22d3a3" : "var(--bad)" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: result.ok ? "var(--good)" : "var(--bad)" }}>
               {result.ok ? "✓" : "✕"} {result.msg}
             </div>
           )}
@@ -900,16 +901,16 @@ export default function AdminPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "right" }}>
                     <div>Last seen</div>
-                    <div style={{ color: "#d1d5db", fontWeight: 600 }}>{fmtLastSeen(d.last_seen)}</div>
+                    <div style={{ color: "var(--text-2)", fontWeight: 600 }}>{fmtLastSeen(d.last_seen)}</div>
                   </div>
                   <div style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "5px 12px",
                     borderRadius: 999, fontSize: 12, fontWeight: 700,
-                    background: d.online ? "rgba(34,211,163,0.1)" : "rgba(107,114,128,0.1)",
-                    border: `1px solid ${d.online ? "rgba(34,211,163,0.3)" : "rgba(107,114,128,0.3)"}`,
-                    color: d.online ? "#22d3a3" : "var(--muted)",
+                    background: d.online ? "rgba(255,255,255,0.05)" : "rgba(107,114,128,0.1)",
+                    border: `1px solid ${d.online ? "rgba(255,255,255,0.7)" : "rgba(107,114,128,0.3)"}`,
+                    color: d.online ? "var(--good)" : "var(--muted)",
                   }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: d.online ? "#22d3a3" : "var(--muted)" }} />
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: d.online ? "var(--good)" : "var(--muted)" }} />
                     {d.online ? "Online" : "Offline"}
                   </div>
                 </div>
@@ -947,7 +948,7 @@ export default function AdminPage() {
               }
             }}
           >
-            <span style={{ fontSize: 14 }}>{item.icon}</span>
+            <item.icon size={14} aria-hidden="true" />
             {item.label}
           </button>
         ))}

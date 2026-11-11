@@ -173,7 +173,7 @@ export default function DocsPage() {
       <p style={{ color: "var(--muted)", marginBottom: 40 }}>
         Setup guides, troubleshooting, and answers to common questions.
         Can&apos;t find what you need?{" "}
-        <Link href="/contact" style={{ color: "var(--accent)" }}>Contact support</Link>.
+        <Link href="/contact" style={{ color: "var(--text)" }}>Contact support</Link>.
       </p>
 
       {/* Jump links */}
@@ -182,7 +182,7 @@ export default function DocsPage() {
           <a
             key={s.id}
             href={`#${s.id}`}
-            style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}
+            style={{ fontSize: 13, color: "var(--text)", textDecoration: "none" }}
           >
             {s.title}
           </a>

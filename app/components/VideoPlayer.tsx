@@ -38,11 +38,11 @@ export default function VideoPlayer({ src }: { src: string }) {
         }}>
           <div style={{
             width: 64, height: 64, borderRadius: "50%",
-            background: "#0ea5e9",
+            background: "var(--cta)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 40px rgba(14,165,233,0.5)",
+            boxShadow: "0 0 40px rgba(0,0,0,0)",
           }}>
-            <svg width="22" height="22" fill="white" viewBox="0 0 24 24" style={{ marginLeft: 4 }}>
+            <svg width="22" height="22" fill="#0A0A0A" viewBox="0 0 24 24" style={{ marginLeft: 4 }}>
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>

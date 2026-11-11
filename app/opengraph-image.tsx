@@ -17,7 +17,7 @@ export default async function Image() {
     (
       <div
         style={{
-          background: "#0a0e17",
+          background: "#0A0A0A",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -36,7 +36,7 @@ export default async function Image() {
           width: 500,
           height: 500,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)",
           display: "flex",
           transform: "translateY(-50%)",
         }} />
@@ -50,7 +50,7 @@ export default async function Image() {
             fontWeight: 700,
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color: "#0ea5e9",
+            color: "#A3A3A3",
             marginBottom: 16,
           }}>
             Aircraft Alerts
@@ -77,7 +77,7 @@ export default async function Image() {
             width: 340,
             height: 4,
             borderRadius: 999,
-            background: "linear-gradient(90deg, #0ea5e9, transparent)",
+            background: "linear-gradient(90deg, #FAFAFA, transparent)",
             marginBottom: 28,
           }} />
 
@@ -85,7 +85,7 @@ export default async function Image() {
           <div style={{
             display: "flex",
             fontSize: 26,
-            color: "#94a3b8",
+            color: "#A3A3A3",
             lineHeight: 1.4,
             maxWidth: 480,
             marginBottom: 40,
@@ -99,11 +99,11 @@ export default async function Image() {
             alignItems: "center",
             gap: 10,
             fontSize: 20,
-            color: "#38bdf8",
+            color: "#FAFAFA",
             padding: "10px 24px",
             borderRadius: 999,
-            border: "1px solid rgba(56,189,248,0.25)",
-            background: "rgba(56,189,248,0.07)",
+            border: "1px solid #2E2E2E",
+            background: "#131313",
           }}>
             finalpingapp.com
           </div>

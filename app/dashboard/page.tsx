@@ -1,4 +1,5 @@
 "use client";
+import { CircleCheck, Inbox, Search } from "lucide-react";
 // app/dashboard/page.tsx
 
 import Link from "next/link";
@@ -21,18 +22,18 @@ const tierLabels: Record<string, string> = {
   starter: "Starter", premium: "Premium", pro: "Pro",
   "team-starter": "Team Starter", "team-premium": "Team Premium", "team-pro": "Team Pro",
 };
-const CHANNEL_COLORS: Record<string, string> = { discord: "#5865f2", slack: "#4a154b", teams: "#6264a7", email: "#0ea5e9", sms: "#10b981", whatsapp: "#25d366" };
+const CHANNEL_COLORS: Record<string, string> = { discord: "var(--text-2)", slack: "var(--text-2)", teams: "var(--text-2)", email: "var(--text)", sms: "var(--good)", whatsapp: "var(--text-2)" };
 
 function getExpiryLabel(expiresAt: string | null, status: string, activatedAt: string | null): { label: string; color: string } {
-  if (status === "expired") return { label: "Expired", color: "#DC2626" };
-  if (status === "inactive" || !activatedAt) return { label: "Not Activated", color: "#f59e0b" };
-  if (!expiresAt) return { label: "Active", color: "#15803D" };
+  if (status === "expired") return { label: "Expired", color: "var(--bad)" };
+  if (status === "inactive" || !activatedAt) return { label: "Not Activated", color: "var(--warn)" };
+  if (!expiresAt) return { label: "Active", color: "var(--good)" };
 
   const now = new Date();
   const expires = new Date(expiresAt);
   const msLeft = expires.getTime() - now.getTime();
 
-  if (msLeft <= 0) return { label: "Expired", color: "#DC2626" };
+  if (msLeft <= 0) return { label: "Expired", color: "var(--bad)" };
 
   const totalMinutes = Math.floor(msLeft / (1000 * 60));
   const totalHours = Math.floor(msLeft / (1000 * 60 * 60));
@@ -41,17 +42,17 @@ function getExpiryLabel(expiresAt: string | null, status: string, activatedAt: s
   // Last 60 minutes — count down by minute
   if (totalMinutes < 60) {
     const mins = totalMinutes;
-    return { label: `Expires in ${mins} minute${mins !== 1 ? "s" : ""}`, color: "#DC2626" };
+    return { label: `Expires in ${mins} minute${mins !== 1 ? "s" : ""}`, color: "var(--bad)" };
   }
 
   // Last 24 hours — show hours
   if (totalHours < 24) {
-    return { label: `Expires in ${totalHours} hour${totalHours !== 1 ? "s" : ""}`, color: "#f59e0b" };
+    return { label: `Expires in ${totalHours} hour${totalHours !== 1 ? "s" : ""}`, color: "var(--warn)" };
   }
 
   // More than 24 hours — show days
-  if (totalDays <= 7) return { label: `Expiring in ${totalDays} day${totalDays !== 1 ? "s" : ""}`, color: "#f59e0b" };
-  return { label: `Active — ${totalDays} days left`, color: "#15803D" };
+  if (totalDays <= 7) return { label: `Expiring in ${totalDays} day${totalDays !== 1 ? "s" : ""}`, color: "var(--warn)" };
+  return { label: `Active — ${totalDays} days left`, color: "var(--good)" };
 }
 
 function useLicenseCountdown(expiresAt: string | null, status: string, activatedAt: string | null) {
@@ -74,7 +75,7 @@ function useLicenseCountdown(expiresAt: string | null, status: string, activated
 
   return label;
 }
-function formatAlertType(type: string) { return type === "landing" ? "🛬 Landing" : `📍 ${type} out`; }
+function formatAlertType(type: string) { return type === "landing" ? "Landing" : `${type} out`; }
 function formatDate(iso: string, timeZone?: string) {
   try {
     return new Intl.DateTimeFormat("en-US", {
@@ -118,9 +119,9 @@ function StatusMsg({ msg }: { msg: { text: string; type: "success" | "error" } |
   if (!msg) return null;
   return (
     <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, fontSize: 13,
-      background: msg.type === "success" ? "rgba(35,199,107,0.1)" : "rgba(239,68,68,0.1)",
-      color: msg.type === "success" ? "#15803D" : "#DC2626",
-      border: `1px solid ${msg.type === "success" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>
+      background: msg.type === "success" ? "rgba(255,255,255,0.7)" : "rgba(239,68,68,0.1)",
+      color: msg.type === "success" ? "#FAFAFA" : "#F87171",
+      border: `1px solid ${msg.type === "success" ? "rgba(255,255,255,0.7)" : "rgba(239,68,68,0.3)"}` }}>
       {msg.text}
     </div>
   );
@@ -133,7 +134,7 @@ function CodeInput({ value, onChange, onSubmit }: { value: string; onChange: (v:
       onKeyDown={e => { if (e.key === "Enter" && onSubmit) onSubmit(); }}
       placeholder="000000"
       style={{ ...styles.input, letterSpacing: "0.3em", fontSize: 20, fontWeight: 700, textAlign: "center" as const }}
-      onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+      onFocus={e => { e.currentTarget.style.borderColor = "#A3A3A3"; }}
       onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
   );
 }
@@ -397,8 +398,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" as const }}>
         {profileStep === "idle" && (
           <button onClick={() => startEditProfile()} disabled={profileLoading} style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1 }}
-            onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#EA6A0F"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
+            onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#FAFAFA"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>
             {profileLoading ? "Sending code..." : "Edit Profile"}
           </button>
         )}
@@ -422,9 +423,9 @@ function AccountTab({ email, session }: { email: string; session: any }) {
                 {profileMethods.map(m => (
                   <button key={m.id} onClick={() => startEditProfile(m.id)} disabled={profileLoading}
                     style={{ ...styles.methodBtn, opacity: profileLoading ? 0.6 : 1 }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#A3A3A3"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
-                    {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
+                    {m.label}
                   </button>
                 ))}
               </div>
@@ -450,8 +451,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
                 <button onClick={confirmProfileVerify} disabled={profileLoading}
                   style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
-                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#EA6A0F"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#FAFAFA"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>
                   {profileLoading ? "Verifying..." : "Verify →"}
                 </button>
                 {profileStep !== "totp-code" && (
@@ -473,14 +474,14 @@ function AccountTab({ email, session }: { email: string; session: any }) {
                   <label style={styles.inputLabel}>Display Name</label>
                   <input type="text" value={profileName} onChange={e => setProfileName(e.target.value)}
                     placeholder="Your display name" style={styles.input}
-                    onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "#A3A3A3"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
                 </div>
                 <div>
                   <label style={styles.inputLabel}>Email Address</label>
                   <input type="email" value={profileEmail} onChange={e => setProfileEmail(e.target.value)}
                     placeholder="your@email.com" style={styles.input}
-                    onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "#A3A3A3"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
                 </div>
               </div>
@@ -488,8 +489,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={saveProfile} disabled={profileLoading}
                   style={{ ...styles.primaryBtn, opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? "not-allowed" : "pointer" }}
-                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#EA6A0F"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
+                  onMouseEnter={e => { if (!profileLoading) e.currentTarget.style.background = "#FAFAFA"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>
                   {profileLoading ? "Saving..." : "Save Changes"}
                 </button>
                 <button onClick={resetProfile} style={styles.ghostBtn}>Cancel</button>
@@ -499,14 +500,14 @@ function AccountTab({ email, session }: { email: string; session: any }) {
 
           {profileStep === "done" && (
             <div style={{ textAlign: "center" as const, padding: "20px 0" }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+              <div style={{ marginBottom: 12, lineHeight: 0, color: "var(--text-2)" }}><CircleCheck size={36} strokeWidth={1.5} aria-hidden="true" /></div>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Profile updated</div>
               <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>
                 Your email address was changed. Please sign in again with your new email.
               </div>
               <button onClick={() => signOut({ callbackUrl: "/" })} style={styles.primaryBtn}
-                onMouseEnter={e => { e.currentTarget.style.background = "#EA6A0F"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
+                onMouseEnter={e => { e.currentTarget.style.background = "#FAFAFA"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>
                 Sign Out & Sign In Again
               </button>
             </div>
@@ -515,7 +516,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
       )}
 
       <div style={{ marginTop: 32, padding: "20px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, background: "rgba(239,68,68,0.04)" }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#DC2626", margin: "0 0 6px" }}>Delete Account</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--bad)", margin: "0 0 6px" }}>Delete Account</h3>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>Permanently delete your account and cancel any active subscriptions. This cannot be undone.</p>
 
         {deleteStep === "idle" && (
@@ -526,16 +527,16 @@ function AccountTab({ email, session }: { email: string; session: any }) {
 
         {deleteStep === "confirm" && (
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" as const }}>
-            <span style={{ fontSize: 13, color: "#DC2626" }}>Are you sure? This is permanent.</span>
+            <span style={{ fontSize: 13, color: "var(--bad)" }}>Are you sure? This is permanent.</span>
             <button onClick={handleDeleteNoTwoFA} disabled={deleting}
-              style={{ padding: "8px 16px", background: "#DC2626", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+              style={{ padding: "8px 16px", background: "var(--bad)", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
               {deleting ? "Deleting..." : "Yes, delete"}
             </button>
             <button onClick={resetDelete}
               style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--muted)", fontSize: 13, cursor: "pointer" }}>
               Cancel
             </button>
-            {deleteMsg && <span style={{ fontSize: 13, color: "#DC2626", width: "100%" }}>{deleteMsg}</span>}
+            {deleteMsg && <span style={{ fontSize: 13, color: "var(--bad)", width: "100%" }}>{deleteMsg}</span>}
           </div>
         )}
 
@@ -547,14 +548,14 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               {activeMethods.map(m => (
                 <button key={m.id} onClick={() => sendDeletionCode(m.id)} disabled={sendingCode}
                   style={{ ...styles.methodBtn, opacity: sendingCode ? 0.6 : 1 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#DC2626"; e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#F87171"; e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
-                  {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
+                  {m.label}
                 </button>
               ))}
             </div>
             <button onClick={resetDelete} style={{ ...styles.ghostBtn, marginTop: 10 }}>Cancel</button>
-            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>{deleteMsg}</div>}
+            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "var(--bad)" }}>{deleteMsg}</div>}
           </div>
         )}
 
@@ -571,7 +572,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
             <CodeInput value={deleteCode} onChange={setDeleteCode} onSubmit={handleVerifyAndDelete} />
             <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
               <button onClick={handleVerifyAndDelete} disabled={deleting}
-                style={{ padding: "9px 18px", borderRadius: 8, background: "#DC2626", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+                style={{ padding: "9px 18px", borderRadius: 8, background: "var(--bad)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
                 {deleting ? "Deleting..." : "Confirm Deletion"}
               </button>
               {deleteStep !== "totp-code" && (
@@ -581,7 +582,7 @@ function AccountTab({ email, session }: { email: string; session: any }) {
               )}
               <button onClick={resetDelete} style={styles.ghostBtn}>Cancel</button>
             </div>
-            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>{deleteMsg}</div>}
+            {deleteMsg && <div style={{ marginTop: 10, fontSize: 13, color: "var(--bad)" }}>{deleteMsg}</div>}
           </div>
         )}
       </div>
@@ -650,9 +651,9 @@ function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
 
   const btnStyle: React.CSSProperties = {
     padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-    background: selected.length > 0 ? "rgba(14,165,233,0.12)" : "var(--panel-2)",
-    border: selected.length > 0 ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
-    color: selected.length > 0 ? "#0ea5e9" : "var(--text)",
+    background: selected.length > 0 ? "rgba(255,255,255,0.06)" : "var(--panel-2)",
+    border: selected.length > 0 ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
+    color: selected.length > 0 ? "var(--text)" : "var(--text)",
     cursor: "pointer", outline: "none", display: "flex", alignItems: "center", gap: 6,
   };
 
@@ -664,15 +665,15 @@ function CheckboxDropdown({ label, options, selected, onChange, formatLabel }: {
       {open && (
         <div style={{
           position: "absolute" as const, top: "calc(100% + 6px)", left: 0, zIndex: 100,
-          background: "var(--panel)", border: "1px solid var(--border-strong)", borderRadius: 10, boxShadow: "0 8px 28px rgba(15,23,42,0.14)",
+          background: "var(--panel)", border: "1px solid var(--border-strong)", borderRadius: 10, boxShadow: "0 8px 28px rgba(0,0,0,0.31)",
           padding: "8px 0", minWidth: 180,
         }}>
           {options.map(opt => (
             <label key={opt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: selected.includes(opt) ? "var(--text)" : "var(--muted)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(15,23,42,0.04)"; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
               <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)}
-                style={{ accentColor: "#0ea5e9", width: 14, height: 14, flexShrink: 0 }} />
+                style={{ accentColor: "var(--text)", width: 14, height: 14, flexShrink: 0 }} />
               {formatLabel ? formatLabel(opt) : opt}
             </label>
           ))}
@@ -734,7 +735,7 @@ function AlertsTab({ email }: { email: string }) {
   );
 
   const hasFilters = selectedAircraft.length > 0 || selectedTypes.length > 0 || selectedChannels.length > 0;
-  const formatType = (t: string) => t === "landing" ? "🛬 Landing" : `📍 ${t} out`;
+  const formatType = (t: string) => t === "landing" ? "Landing" : `${t} out`;
   const formatChannel = (c: string) => c.charAt(0).toUpperCase() + c.slice(1);
 
   if (loading) return <div style={styles.loadingText}>Loading alert history...</div>;
@@ -745,7 +746,7 @@ function AlertsTab({ email }: { email: string }) {
         <div><h2 style={styles.tabTitle}>Alert History</h2><p style={styles.tabSub}>All notifications sent by the cloud tracker</p></div>
         {logs.length > 0 && (
           <button onClick={() => exportToTxt(filtered)} style={styles.exportBtn}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(15,23,42,0.06)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "var(--panel-2)"; }}>
             ⬇ Export .txt
           </button>
@@ -766,13 +767,13 @@ function AlertsTab({ email }: { email: string }) {
       {/* Filters */}
       {logs.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" as const, alignItems: "center" }}>
-          <span style={{ fontSize: 12, color: "var(--muted)" }}>🔽 Filter:</span>
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>Filter:</span>
           <CheckboxDropdown label="Aircraft" options={aircraftOptions} selected={selectedAircraft} onChange={setSelectedAircraft} />
           <CheckboxDropdown label="Alert Types" options={typeOptions} selected={selectedTypes} onChange={setSelectedTypes} formatLabel={formatType} />
           <CheckboxDropdown label="Channels" options={channelOptions} selected={selectedChannels} onChange={setSelectedChannels} formatLabel={formatChannel} />
           {hasFilters && (
             <button onClick={() => { setSelectedAircraft([]); setSelectedTypes([]); setSelectedChannels([]); }}
-              style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", color: "#DC2626", cursor: "pointer" }}>
+              style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", color: "var(--bad)", cursor: "pointer" }}>
               ✕ Clear
             </button>
           )}
@@ -785,13 +786,13 @@ function AlertsTab({ email }: { email: string }) {
       {error
         ? <div style={{ ...styles.card, textAlign: "center" as const, color: "var(--muted)" }}>Could not load alert history.</div>
         : logs.length === 0
-          ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ fontSize: 32, marginBottom: 12 }}>📭</div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts yet.</p></div>
+          ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ marginBottom: 12, lineHeight: 0, color: "var(--text-2)" }}><Inbox size={32} strokeWidth={1.5} aria-hidden="true" /></div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts yet.</p></div>
           : filtered.length === 0
-            ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts match your filters.</p></div>
+            ? <div style={{ ...styles.card, textAlign: "center" as const, padding: "40px 24px" }}><div style={{ marginBottom: 12, lineHeight: 0, color: "var(--text-2)" }}><Search size={32} strokeWidth={1.5} aria-hidden="true" /></div><p style={{ color: "var(--muted)", margin: 0 }}>No alerts match your filters.</p></div>
             : <div style={styles.card}>
                 <div style={styles.tableHeader}><div>Aircraft</div><div>Message</div><div>Type</div><div>Channel</div><div>Status</div><div>Time</div></div>
                 {filtered.map((log, i) => (
-                  <div key={log.id} style={{ ...styles.tableRow, borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(15,23,42,0.02)" }}>
+                  <div key={log.id} style={{ ...styles.tableRow, borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
                     <div style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 13 }}>{log.aircraft_tail}</div>
                     <div style={{ color: "var(--muted)", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{log.message}</div>
                     <div style={{ fontSize: 12, fontWeight: 600 }}>{formatAlertType(log.alert_type)}</div>
@@ -799,7 +800,7 @@ function AlertsTab({ email }: { email: string }) {
                       <span style={{ width: 8, height: 8, borderRadius: "50%", background: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", display: "inline-block", flexShrink: 0 }} />
                       <span style={{ fontSize: 11, fontWeight: 700, color: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)", textTransform: "capitalize" as const }}>{log.integration_type}</span>
                     </div>
-                    <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#15803D" : "#DC2626", border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
+                    <div><span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: log.status === "sent" ? "rgba(255,255,255,0.7)" : "rgba(239,68,68,0.15)", color: log.status === "sent" ? "#FAFAFA" : "#F87171", border: `1px solid ${log.status === "sent" ? "rgba(255,255,255,0.7)" : "rgba(239,68,68,0.3)"}` }}>{log.status === "sent" ? "Sent" : "Failed"}</span></div>
                     <div style={{ fontSize: 12, color: "var(--muted)" }}><LocalDate iso={log.sent_at} /></div>
                   </div>
                 ))}
@@ -859,7 +860,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
 
       {upgraded && (
         <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-          background: "rgba(35,199,107,0.1)", color: "#15803D", border: "1px solid rgba(35,199,107,0.3)" }}>
+          background: "rgba(255,255,255,0.05)", color: "var(--good)", border: "1px solid rgba(255,255,255,0.18)" }}>
           ✓ Your plan has been upgraded successfully. Your new limits are active immediately.
         </div>
       )}
@@ -867,9 +868,9 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
       <div style={styles.card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 16 }}>
           <div><div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Stripe Billing Portal</div><div style={{ fontSize: 13, color: "var(--muted)" }}>Update payment methods, download invoices, or cancel your subscription.</div></div>
-          <button onClick={onManageBilling} disabled={portalLoading} style={{ ...styles.primaryBtn, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer" }} onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.background = "#EA6A0F"; }} onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>{portalLoading ? "Opening..." : "Manage Subscription →"}</button>
+          <button onClick={onManageBilling} disabled={portalLoading} style={{ ...styles.primaryBtn, opacity: portalLoading ? 0.6 : 1, cursor: portalLoading ? "not-allowed" : "pointer" }} onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.background = "#FAFAFA"; }} onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>{portalLoading ? "Opening..." : "Manage Subscription →"}</button>
         </div>
-        {portalError && <p style={{ fontSize: 13, color: "#DC2626", margin: "12px 0 0" }}>{portalError}</p>}
+        {portalError && <p style={{ fontSize: 13, color: "var(--bad)", margin: "12px 0 0" }}>{portalError}</p>}
       </div>
 
       {upgradeableLicenses.length > 0 && (
@@ -886,8 +887,8 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
                 {upgradeableLicenses.map(l => (
                   <button key={l.licenseKey} onClick={() => { setSelectedLicenseKey(l.licenseKey); resetUpgrade(); }}
                     style={{ padding: "10px 14px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
-                      background: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "rgba(14,165,233,0.1)" : "var(--panel)",
-                      border: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
+                      background: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "rgba(255,255,255,0.05)" : "var(--panel)",
+                      border: (selectedLicenseKey ?? upgradeableLicenses[0].licenseKey) === l.licenseKey ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
                       color: "var(--text)", fontSize: 13, fontWeight: 600 }}>
                     {tierLabels[l.tier]} — {l.licenseKey}
                   </button>
@@ -908,8 +909,8 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
                     <button key={tier} onClick={() => setSelectedTier(tier)} style={{
                       padding: "14px 16px", borderRadius: 8, cursor: "pointer", textAlign: "left" as const,
                       display: "flex", justifyContent: "space-between", alignItems: "center",
-                      background: selected ? "rgba(14,165,233,0.1)" : "var(--panel)",
-                      border: selected ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
+                      background: selected ? "rgba(255,255,255,0.05)" : "var(--panel)",
+                      border: selected ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
                       color: "var(--text)",
                     }}>
                       <div>
@@ -918,7 +919,7 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
                           Monthly: +${monthlyDiff} today &nbsp;·&nbsp; Yearly: +${yearlyDiff} today
                         </div>
                       </div>
-                      {selected && <span style={{ color: "#0ea5e9", fontSize: 18, fontWeight: 700 }}>✓</span>}
+                      {selected && <span style={{ color: "var(--text)", fontSize: 18, fontWeight: 700 }}>✓</span>}
                     </button>
                   );
                 })}
@@ -926,8 +927,8 @@ function BillingTab({ onManageBilling, portalLoading, portalError, licenses, onR
               <StatusMsg msg={upgradeMsg} />
               <button onClick={handleUpgrade} disabled={!selectedTier || upgrading}
                 style={{ ...styles.primaryBtn, marginTop: 4, opacity: !selectedTier || upgrading ? 0.6 : 1, cursor: !selectedTier || upgrading ? "not-allowed" : "pointer" }}
-                onMouseEnter={e => { if (selectedTier && !upgrading) e.currentTarget.style.background = "#EA6A0F"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>
+                onMouseEnter={e => { if (selectedTier && !upgrading) e.currentTarget.style.background = "#FAFAFA"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>
                 {upgrading ? "Processing..." : "Confirm Upgrade →"}
               </button>
             </>
@@ -951,7 +952,7 @@ function TwoFAMethodRow({ label, enabled, onDisable }: { label: string; enabled:
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: enabled ? "#15803D" : "var(--border-strong)", boxShadow: enabled ? "0 0 6px #15803D" : "none" }} />
+        <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: enabled ? "var(--good)" : "var(--border-strong)", boxShadow: enabled ? "0 0 6px transparent" : "none" }} />
         <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
       </div>
       {enabled ? (
@@ -1088,7 +1089,7 @@ function SecurityTab({ email }: { email: string }) {
             <TwoFAMethodRow label={`SMS${twoFA?.phone ? ` (${twoFA.phone})` : ""}`} enabled={twoFA?.sms ?? false} onDisable={() => disable2FA("sms")} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: twoFA?.totp ? "#15803D" : "var(--border-strong)", boxShadow: twoFA?.totp ? "0 0 6px #15803D" : "none" }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", display: "inline-block", background: twoFA?.totp ? "var(--good)" : "var(--border-strong)", boxShadow: twoFA?.totp ? "0 0 6px transparent" : "none" }} />
                 <span style={{ fontSize: 13, fontWeight: 600 }}>Authenticator App (Google / Microsoft)</span>
               </div>
               {twoFA?.totp ? <button onClick={() => disable2FA("totp")} style={styles.smallDangerBtn} onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}>Disable</button>
@@ -1100,9 +1101,9 @@ function SecurityTab({ email }: { email: string }) {
             <div>
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>Add a new 2FA method:</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-                {!twoFA?.email && <button onClick={() => startSetup("email")} style={styles.smallBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.color = "#0ea5e9"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>+ Email</button>}
-                {!twoFA?.sms && <button onClick={() => { setSetupMethod("sms"); setSetupStep("enter-phone"); }} style={styles.smallBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.color = "#0ea5e9"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>+ SMS</button>}
-                {!twoFA?.totp && <button onClick={() => startSetup("totp")} style={styles.smallBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.color = "#0ea5e9"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>+ Authenticator</button>}
+                {!twoFA?.email && <button onClick={() => startSetup("email")} style={styles.smallBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#A3A3A3"; e.currentTarget.style.color = "#FAFAFA"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>+ Email</button>}
+                {!twoFA?.sms && <button onClick={() => { setSetupMethod("sms"); setSetupStep("enter-phone"); }} style={styles.smallBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#A3A3A3"; e.currentTarget.style.color = "#FAFAFA"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>+ SMS</button>}
+                {!twoFA?.totp && <button onClick={() => startSetup("totp")} style={styles.smallBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#A3A3A3"; e.currentTarget.style.color = "#FAFAFA"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>+ Authenticator</button>}
               </div>
               <StatusMsg msg={setupMsg} />
             </div>
@@ -1110,7 +1111,7 @@ function SecurityTab({ email }: { email: string }) {
           {setupStep === "enter-phone" && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Enter your phone number</div>
-              <input type="tel" value={setupPhone} onChange={e => setSetupPhone(e.target.value)} placeholder="+1 (555) 000-0000" style={{ ...styles.input, marginBottom: 8 }} onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
+              <input type="tel" value={setupPhone} onChange={e => setSetupPhone(e.target.value)} placeholder="+1 (555) 000-0000" style={{ ...styles.input, marginBottom: 8 }} onFocus={e => { e.currentTarget.style.borderColor = "#A3A3A3"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} />
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={submitPhone} disabled={setupLoading} style={{ ...styles.primaryBtn, opacity: setupLoading ? 0.6 : 1 }}>{setupLoading ? "Sending..." : "Send Code"}</button>
                 <button onClick={() => setSetupStep("idle")} style={styles.ghostBtn}>Cancel</button>
@@ -1135,7 +1136,7 @@ function SecurityTab({ email }: { email: string }) {
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Scan with your authenticator app</div>
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Open Google Authenticator or Microsoft Authenticator and scan this QR code, or enter the key manually.</div>
-              {totpQr && <img src={totpQr} alt="TOTP QR Code" style={{ borderRadius: 8, marginBottom: 12, display: "block", background: "#fff", padding: 8 }} />}
+              {totpQr && <img src={totpQr} alt="TOTP QR Code" style={{ borderRadius: 8, marginBottom: 12, display: "block", background: "var(--panel)", padding: 8 }} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>Manual entry key:</div>
               <div style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.15em", background: "var(--panel-2)", padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", display: "inline-block", marginBottom: 16 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -1165,11 +1166,11 @@ function SecurityTab({ email }: { email: string }) {
           <div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>A verification code will be sent to confirm the change. {twoFA && activeMethods.length > 0 ? "You can choose your preferred 2FA method." : "A code will be sent to your account email."}</div>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-              <div><label style={styles.inputLabel}>New Password</label><input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
-              <div><label style={styles.inputLabel}>Confirm New Password</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#0ea5e9"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
+              <div><label style={styles.inputLabel}>New Password</label><input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#A3A3A3"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
+              <div><label style={styles.inputLabel}>Confirm New Password</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" style={styles.input} onFocus={e => { e.currentTarget.style.borderColor = "#A3A3A3"; }} onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; }} /></div>
             </div>
             <StatusMsg msg={pwMsg} />
-            <button onClick={initiatePasswordChange} disabled={pwLoading} style={{ ...styles.primaryBtn, marginTop: 16, opacity: pwLoading ? 0.6 : 1 }} onMouseEnter={e => { if (!pwLoading) e.currentTarget.style.background = "#EA6A0F"; }} onMouseLeave={e => { e.currentTarget.style.background = "#F97316"; }}>{pwLoading ? "Please wait..." : "Continue →"}</button>
+            <button onClick={initiatePasswordChange} disabled={pwLoading} style={{ ...styles.primaryBtn, marginTop: 16, opacity: pwLoading ? 0.6 : 1 }} onMouseEnter={e => { if (!pwLoading) e.currentTarget.style.background = "#FAFAFA"; }} onMouseLeave={e => { e.currentTarget.style.background = "#FAFAFA"; }}>{pwLoading ? "Please wait..." : "Continue →"}</button>
           </div>
         )}
         {pwStep === "choose-method" && (
@@ -1178,8 +1179,8 @@ function SecurityTab({ email }: { email: string }) {
             <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>Select how you'd like to verify this password change:</div>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
               {activeMethods.map(m => (
-                <button key={m.id} onClick={() => sendPwCode(m.id)} style={styles.methodBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "rgba(14,165,233,0.08)"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
-                  {m.id === "email" ? "✉️" : m.id === "sms" ? "📲" : "🔐"} {m.label}
+                <button key={m.id} onClick={() => sendPwCode(m.id)} style={styles.methodBtn} onMouseEnter={e => { e.currentTarget.style.borderColor = "#A3A3A3"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--panel)"; }}>
+                  {m.label}
                 </button>
               ))}
             </div>
@@ -1202,7 +1203,7 @@ function SecurityTab({ email }: { email: string }) {
         )}
         {pwStep === "done" && (
           <div style={{ textAlign: "center" as const, padding: "20px 0" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+            <div style={{ marginBottom: 12, lineHeight: 0, color: "var(--text-2)" }}><CircleCheck size={36} strokeWidth={1.5} aria-hidden="true" /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Password changed successfully</div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>Your new password is now active.</div>
             <button onClick={resetPw} style={styles.primaryBtn}>Done</button>
@@ -1217,13 +1218,13 @@ const styles = {
   shell: { display: "flex", minHeight: "100vh" } as React.CSSProperties,
   sidebar: { width: 220, minWidth: 220, borderRight: "1px solid var(--border)", padding: "32px 20px 32px 0", display: "flex", flexDirection: "column" as const, gap: 4 } as React.CSSProperties,
   sidebarLabel: { fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--muted)", padding: "0 14px 8px" } as React.CSSProperties,
-  navItem: (active: boolean) => ({ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "var(--accent-hover)" : "var(--muted)", background: active ? "rgba(14,165,233,0.1)" : "transparent", cursor: "pointer", transition: "all 0.15s", border: "none", width: "100%", textAlign: "left" as const }),
+  navItem: (active: boolean) => ({ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "var(--text)" : "var(--muted)", background: active ? "rgba(255,255,255,0.05)" : "transparent", cursor: "pointer", transition: "all 0.15s", border: "none", width: "100%", textAlign: "left" as const }),
   main: { flex: 1, padding: "32px 0 64px 40px", maxWidth: 900 } as React.CSSProperties,
   tabHeader: { marginBottom: 24 } as React.CSSProperties,
   tabTitle: { fontSize: 22, fontWeight: 700, margin: "0 0 4px" } as React.CSSProperties,
   tabSub: { fontSize: 14, color: "var(--muted)", margin: 0 } as React.CSSProperties,
   sectionLabel: { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: 8 } as React.CSSProperties,
-  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" } as React.CSSProperties,
+  card: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 2px rgba(0,0,0,0.11), 0 4px 14px rgba(0,0,0,0.11)" } as React.CSSProperties,
   infoRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--border)" } as React.CSSProperties,
   infoRowLast: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } as React.CSSProperties,
   infoLabel: { fontSize: 13, color: "var(--muted)" } as React.CSSProperties,
@@ -1232,12 +1233,12 @@ const styles = {
   licenseKey: { fontFamily: "monospace", fontSize: 14, fontWeight: 700, background: "var(--panel-2)", padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", letterSpacing: "0.05em", display: "inline-block" } as React.CSSProperties,
   metaLabel: { fontSize: 12, color: "var(--muted)", marginBottom: 4 } as React.CSSProperties,
   metaValue: { fontSize: 14 } as React.CSSProperties,
-  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px", boxShadow: "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" } as React.CSSProperties,
+  statCard: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px", boxShadow: "0 1px 2px rgba(0,0,0,0.11), 0 4px 14px rgba(0,0,0,0.11)" } as React.CSSProperties,
   statLabel: { fontSize: 12, color: "var(--muted)", marginBottom: 4 } as React.CSSProperties,
   statValue: { fontSize: 28, fontWeight: 800 } as React.CSSProperties,
   tableHeader: { display: "grid", gridTemplateColumns: "90px 1fr 120px 100px 80px 160px", gap: 12, padding: "12px 20px", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" } as React.CSSProperties,
   tableRow: { display: "grid", gridTemplateColumns: "90px 1fr 120px 100px 80px 160px", gap: 12, padding: "13px 20px", fontSize: 13, alignItems: "center" } as React.CSSProperties,
-  primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "#F97316", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", transition: "background 0.15s", display: "inline-block", boxShadow: "0 3px 12px rgba(249,115,22,0.25)" } as React.CSSProperties,
+  primaryBtn: { padding: "9px 18px", borderRadius: 8, background: "var(--cta)", color: "var(--cta-text)", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", transition: "background 0.15s", display: "inline-block", boxShadow: "0 3px 12px rgba(0,0,0,0)" } as React.CSSProperties,
   outlineBtn: { padding: "9px 18px", borderRadius: 8, background: "transparent", color: "var(--text)", fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", cursor: "pointer", textDecoration: "none", display: "inline-block" } as React.CSSProperties,
   ghostBtn: { padding: "9px 14px", borderRadius: 8, background: "transparent", color: "var(--muted)", fontSize: 13, fontWeight: 500, border: "1px solid var(--border)", cursor: "pointer" } as React.CSSProperties,
   dangerBtn: { padding: "9px 18px", borderRadius: 8, background: "var(--bad-bg)", color: "var(--bad)", fontSize: 13, fontWeight: 600, border: "1px solid var(--bad-border)", cursor: "pointer", transition: "background 0.15s" } as React.CSSProperties,
@@ -1325,7 +1326,7 @@ function DashboardContent() {
         <div className="dash-sidebar-label" style={styles.sidebarLabel}>Dashboard</div>
         {NAV_ITEMS.map(item => (
           <button key={item.id} style={styles.navItem(activeTab === item.id)} onClick={() => setActiveTab(item.id)}
-            onMouseEnter={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "rgba(15,23,42,0.04)"; } }}
+            onMouseEnter={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; } }}
             onMouseLeave={e => { if (activeTab !== item.id) { e.currentTarget.style.color = "var(--muted)"; e.currentTarget.style.background = "transparent"; } }}>
             <span style={{ display: "inline-flex", alignItems: "center" }}>{TAB_ICONS[item.id]}</span>{item.label}
           </button>
@@ -1335,9 +1336,9 @@ function DashboardContent() {
         {show2FABanner && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 16px", marginBottom: 24, borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               <span style={{ color: "var(--text)" }}>Secure your account with two-factor authentication.</span>
-              <button onClick={() => setActiveTab("security")} style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(245,158,11,0.15)", color: "#B45309", border: "1px solid rgba(245,158,11,0.35)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={() => setActiveTab("security")} style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(245,158,11,0.15)", color: "var(--warn)", border: "1px solid rgba(245,158,11,0.35)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                 Enable 2FA →
               </button>
             </div>

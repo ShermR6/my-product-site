@@ -1,7 +1,9 @@
+import { Package } from "lucide-react";
+
 export default function KitSuccessPage() {
   return (
     <div className="panel" style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: 40 }}>
-      <div style={{ fontSize: 44, marginBottom: 16 }}>📦</div>
+      <div style={{ marginBottom: 16, lineHeight: 0, color: "var(--text-2)" }}><Package size={44} strokeWidth={1.5} aria-hidden="true" /></div>
       <h1 style={{ marginBottom: 8 }}>Order received!</h1>
       <p style={{ lineHeight: 1.7 }}>
         Thanks for your order. We&apos;ll email you within 1 business day to confirm your shipping details and estimated delivery.

@@ -14,7 +14,7 @@ export default function NotFound() {
       <div style={{
         fontSize: 72,
         fontWeight: 800,
-        color: "#0ea5e9",
+        color: "var(--text)",
         lineHeight: 1,
         marginBottom: 16,
         letterSpacing: "-0.04em",

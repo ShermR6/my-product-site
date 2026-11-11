@@ -12,27 +12,18 @@ type NotificationLog = {
   sent_at: string;
 };
 
-const CHANNEL_ICONS: Record<string, string> = {
-  discord: "💬",
-  slack: "📱",
-  teams: "👥",
-  email: "✉️",
-  sms: "📲",
-  whatsapp: "🟢",
-};
-
 const CHANNEL_COLORS: Record<string, string> = {
-  discord: "#5865f2",
-  slack: "#4a154b",
-  teams: "#6264a7",
-  email: "#0ea5e9",
-  sms: "#10b981",
-  whatsapp: "#25d366",
+  discord: "var(--text-2)",
+  slack: "var(--text-2)",
+  teams: "var(--text-2)",
+  email: "var(--text)",
+  sms: "var(--good)",
+  whatsapp: "var(--text-2)",
 };
 
 function formatAlertType(type: string) {
-  if (type === "landing") return "🛬 Landing";
-  return `📍 ${type} out`;
+  if (type === "landing") return "Landing";
+  return `${type} out`;
 }
 
 function formatDate(iso: string, timeZone?: string) {
@@ -152,7 +143,6 @@ export default function AlertsTable({ logs }: { logs: NotificationLog[] }) {
               {formatAlertType(log.alert_type)}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span>{CHANNEL_ICONS[log.integration_type] ?? "🔔"}</span>
               <span style={{
                 fontSize: 11, fontWeight: 700,
                 color: CHANNEL_COLORS[log.integration_type] ?? "var(--muted)",
@@ -165,9 +155,9 @@ export default function AlertsTable({ logs }: { logs: NotificationLog[] }) {
               <span style={{
                 fontSize: 11, fontWeight: 700,
                 padding: "3px 8px", borderRadius: 999,
-                background: log.status === "sent" ? "rgba(35,199,107,0.15)" : "rgba(239,68,68,0.15)",
-                color: log.status === "sent" ? "#23c76b" : "#ef4444",
-                border: `1px solid ${log.status === "sent" ? "rgba(35,199,107,0.3)" : "rgba(239,68,68,0.3)"}`,
+                background: log.status === "sent" ? "rgba(255,255,255,0.7)" : "rgba(239,68,68,0.15)",
+                color: log.status === "sent" ? "#FAFAFA" : "#F87171",
+                border: `1px solid ${log.status === "sent" ? "rgba(255,255,255,0.7)" : "rgba(239,68,68,0.3)"}`,
               }}>
                 {log.status === "sent" ? "Sent" : "Failed"}
               </span>

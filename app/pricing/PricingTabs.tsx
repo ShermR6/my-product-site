@@ -313,7 +313,7 @@ export default function PricingTabs() {
         <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
           <div style={{
             display: "inline-flex", padding: 4, borderRadius: 999,
-            background: "var(--panel-2, #F1F5F9)", border: "1px solid var(--border)",
+            background: "var(--panel-2, var(--panel-2))", border: "1px solid var(--border)",
           }}>
             {(["monthly", "yearly"] as const).map((freq) => {
               const selected = billing === freq;
@@ -338,7 +338,7 @@ export default function PricingTabs() {
                       style={{
                         position: "absolute", inset: 0, borderRadius: 999,
                         background: "var(--panel)", border: "1px solid var(--border)",
-                        boxShadow: "0 2px 8px rgba(15,23,42,0.08)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
                       }}
                     />
                   )}
@@ -364,12 +364,12 @@ export default function PricingTabs() {
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             marginTop: 16, padding: "8px 16px", borderRadius: 999,
-            background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)",
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
             fontSize: 13, color: "var(--muted)",
           }}>
-            <span style={{ color: "var(--accent)", fontWeight: 700 }}>FinalPing Teams</span>
+            <span style={{ color: "var(--text)", fontWeight: 700 }}>FinalPing Teams</span>
             — multi-seat aircraft tracking for FBOs, fuel services & flight schools ·{" "}
-            <span style={{ color: "var(--accent)", fontWeight: 700 }}>Coming soon</span>
+            <span style={{ color: "var(--text)", fontWeight: 700 }}>Coming soon</span>
           </div>
         )}
       </div>
@@ -383,15 +383,15 @@ export default function PricingTabs() {
               key={p.name}
               style={{
                 background: "var(--panel)",
-                border: isPopular ? "2px solid rgba(14,165,233,0.5)" : "1px solid var(--border)",
+                border: isPopular ? "2px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
                 borderRadius: 20,
                 padding: "24px",
                 position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 boxShadow: isPopular
-                  ? "0 0 40px rgba(14,165,233,0.1), 0 12px 40px rgba(15,23,42,0.08)"
-                  : "0 4px 24px rgba(15,23,42,0.05)",
+                  ? "0 0 40px rgba(255,255,255,0.7), 0 12px 40px rgba(255,255,255,0.08)"
+                  : "0 4px 24px rgba(255,255,255,0.05)",
                 zIndex: isPopular ? 1 : 0,
               }}
             >
@@ -400,7 +400,7 @@ export default function PricingTabs() {
                   position: "absolute", top: 14, right: 14,
                   fontSize: 10, fontWeight: 800, letterSpacing: "0.06em",
                   textTransform: "uppercase", padding: "3px 10px",
-                  borderRadius: 999, background: "var(--accent)", color: "#fff",
+                  borderRadius: 999, background: "var(--cta)", color: "var(--cta-text)",
                 }}>
                   Most Popular
                 </span>
@@ -409,7 +409,7 @@ export default function PricingTabs() {
               <div style={{
                 fontSize: 12, fontWeight: 800, letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                color: isPopular ? "var(--accent)" : "var(--muted)",
+                color: isPopular ? "var(--text)" : "var(--muted)",
                 marginBottom: 10,
               }}>
                 {mode === "team" ? "Teams · " : ""}{p.name}
@@ -494,7 +494,7 @@ export default function PricingTabs() {
                       cursor: trialLoading ? "default" : "pointer",
                       background: "transparent",
                       border: "1px solid var(--border-strong)",
-                      color: "var(--accent)",
+                      color: "var(--text)",
                       opacity: trialLoading ? 0.6 : 1,
                       transition: "border-color 0.15s, background 0.15s",
                     }}
@@ -502,7 +502,7 @@ export default function PricingTabs() {
                     {trialLoading ? "Loading..." : "Try free for 7 days"}
                   </button>
                   {trialError && (
-                    <div style={{ fontSize: 12, color: "#f87171", textAlign: "center", maxWidth: 200 }}>
+                    <div style={{ fontSize: 12, color: "var(--bad)", textAlign: "center", maxWidth: 200 }}>
                       {trialError}
                     </div>
                   )}
@@ -523,7 +523,7 @@ export default function PricingTabs() {
           position: "relative",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "0 4px 24px rgba(15,23,42,0.05)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.11)",
         }}>
           <div style={{
             fontSize: 12, fontWeight: 800, letterSpacing: "0.1em",
@@ -583,8 +583,8 @@ export default function PricingTabs() {
             style={{
               display: "block", textAlign: "center", width: "100%",
               fontSize: 14, padding: "12px 14px", borderRadius: 999, fontWeight: 700,
-              background: "#0F172A", color: "#fff", textDecoration: "none",
-              boxShadow: "0 4px 20px rgba(15,23,42,0.25)",
+              background: "var(--panel)", color: "#fff", textDecoration: "none",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.55)",
             }}
           >
             Contact Us
@@ -704,8 +704,8 @@ export default function PricingTabs() {
           <div style={{
             maxWidth: 620, margin: "0 auto",
             background: "var(--panel)",
-            border: "1px solid rgba(14,165,233,0.4)", borderRadius: 16, padding: "32px 36px",
-            boxShadow: "0 0 22px rgba(14,165,233,0.22), 0 8px 30px rgba(15,23,42,0.05)",
+            border: "1px solid rgba(255,255,255,0.24)", borderRadius: 16, padding: "32px 36px",
+            boxShadow: "0 0 22px rgba(0,0,0,0), 0 8px 30px rgba(0,0,0,0.11)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 24, flexWrap: "wrap" as const,
           }}>
@@ -755,8 +755,8 @@ export default function PricingTabs() {
                 <span style={{ color: "var(--good)" }}>Included free on Pro</span>
               </div>
               <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                <a href="/groundstationsetup" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "underline" }}>Setup guide</a>
-                <a href="/groundstationdevices" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "underline" }}>Buy a receiver</a>
+                <a href="/groundstationsetup" style={{ fontSize: 11, color: "var(--text)", textDecoration: "underline" }}>Setup guide</a>
+                <a href="/groundstationdevices" style={{ fontSize: 11, color: "var(--text)", textDecoration: "underline" }}>Buy a receiver</a>
               </div>
             </div>
           </div>
@@ -811,7 +811,7 @@ export default function PricingTabs() {
       </section>
 
       {buyError && (
-        <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#f87171" }}>{buyError}</div>
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "var(--bad)" }}>{buyError}</div>
       )}
     </div>
   );

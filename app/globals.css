@@ -3,7 +3,7 @@
    (--font-sans, --font-mono). */
 
 /* ── One theme: black, white and grey ─────────────────────────────────────────
-   Color carries meaning only. --accent (sky blue) marks live state and links;
+   Color carries meaning only. --accent (sky blue) marks live state only;
    --warn and --bad mark problems. Purchase buttons are white (--cta) with
    --cta-text on them. There is no orange and no green. */
 :root {
@@ -277,7 +277,7 @@ html, body { overflow-x: clip; }
   display: block;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
+  background: linear-gradient(90deg, var(--border-strong), transparent);
   border-radius: 999px;
   margin-top: 2px;
 }
@@ -373,7 +373,7 @@ p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; font-size: 14px; }
   margin-bottom: 6px;
 }
 .legal-body a {
-  color: var(--accent);
+  color: var(--text);
   text-decoration: underline;
 }
 .legal-body strong {
@@ -471,7 +471,7 @@ input, textarea {
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-input:focus, textarea:focus { border-color: var(--accent); }
+input:focus, textarea:focus { border-color: #5C5C5C; }
 textarea { min-height: 110px; resize: vertical; }
 .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
 .section-title { margin-bottom: 6px; }

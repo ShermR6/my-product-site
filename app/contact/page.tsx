@@ -1,5 +1,6 @@
 // app/contact/page.tsx
 "use client";
+import { CircleCheck } from "lucide-react";
 
 import { useState } from "react";
 
@@ -42,7 +43,7 @@ export default function ContactPage() {
 
           {status === "sent" ? (
             <div style={{ textAlign: "center", padding: "24px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+              <div style={{ marginBottom: 12, lineHeight: 0, color: "var(--text-2)" }}><CircleCheck size={32} strokeWidth={1.5} aria-hidden="true" /></div>
               <h3 style={{ marginBottom: 8 }}>Message sent!</h3>
               <p style={{ color: "#555", fontSize: 14 }}>
                 We'll get back to you within 1 business day.
@@ -111,7 +112,7 @@ export default function ContactPage() {
                   background: "rgba(239,68,68,0.1)",
                   border: "1px solid rgba(239,68,68,0.3)",
                   borderRadius: 8,
-                  color: "#dc2626",
+                  color: "var(--bad)",
                   fontSize: 13,
                   marginBottom: 14,
                 }}>
@@ -125,7 +126,7 @@ export default function ContactPage() {
                   background: "rgba(245,158,11,0.1)",
                   border: "1px solid rgba(245,158,11,0.3)",
                   borderRadius: 8,
-                  color: "#b45309",
+                  color: "var(--warn)",
                   fontSize: 13,
                   marginBottom: 14,
                 }}>

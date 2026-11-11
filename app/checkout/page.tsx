@@ -1,7 +1,9 @@
+import { PartyPopper } from "lucide-react";
+
 export default function CheckoutSuccessPage() {
   return (
     <div className="panel" style={{ maxWidth: 520, margin: "40px auto", textAlign: "center", padding: 36 }}>
-      <div style={{ fontSize: 40, marginBottom: 16 }}>🎉</div>
+      <div style={{ marginBottom: 16, lineHeight: 0, color: "var(--text-2)" }}><PartyPopper size={40} strokeWidth={1.5} aria-hidden="true" /></div>
       <h1 style={{ marginBottom: 8 }}>Purchase successful!</h1>
       <p>Your license key is on its way to your email. Check your inbox (and spam folder just in case).</p>
       <p>Once you have your key, download the app and activate it.</p>

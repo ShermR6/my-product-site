@@ -6,7 +6,7 @@ const devices = [
     tier: "Recommended",
     price: "~$45",
     badge: "Most recommended",
-    badgeColor: "#0ea5e9",
+    badgeColor: "var(--text)",
     popular: true,
     name: "FlightAware Pro Stick Plus",
     description:
@@ -20,7 +20,7 @@ const devices = [
     tier: "Budget",
     price: "~$40",
     badge: "Budget option",
-    badgeColor: "#22d3a3",
+    badgeColor: "var(--good)",
     name: "RTL-SDR Blog V4 + Antenna Kit",
     description:
       "A solid entry-level ADS-B receiver. Comes with everything you need to get started — dongle, antenna, and cables. Works on Windows, Mac, Linux, and Raspberry Pi.",
@@ -33,7 +33,7 @@ const devices = [
     tier: "Best performance",
     price: "~$50",
     badge: "Premium quality",
-    badgeColor: "#a78bfa",
+    badgeColor: "var(--text-2)",
     name: "Nooelec NESDR SMArt v4 Bundle",
     description:
       "Nooelec's premium RTL-SDR bundle with an aluminum enclosure, 0.5PPM TCXO for maximum frequency accuracy, and a complete antenna kit. Well-built and significantly more stable than generic dongles in high-RF airport environments.",
@@ -46,7 +46,7 @@ const devices = [
     tier: "Complete kit",
     price: "~$80–100",
     badge: "Everything included",
-    badgeColor: "#f59e0b",
+    badgeColor: "var(--warn)",
     name: "CanaKit Raspberry Pi 4 Starter Kit",
     description:
       "If you don't have a Raspberry Pi yet, this CanaKit comes with everything — Pi 4 board, case, power supply, SD card, and cables. Pair it with any of the receivers above.",
@@ -64,8 +64,8 @@ export default function GroundStationDevicesPage() {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 10 }}>
-            📡 HARDWARE GUIDE
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text)", marginBottom: 10 }}>
+            HARDWARE GUIDE
           </div>
           <h1 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 12px" }}>
             Recommended ADS-B Receivers
@@ -81,13 +81,13 @@ export default function GroundStationDevicesPage() {
               color: "var(--muted)", fontSize: 13, fontWeight: 600, textDecoration: "none",
               transition: "all 0.15s",
             }}>
-              📖 Setup Guide →
+              Setup Guide →
             </Link>
             <Link href="/groundstationkit" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "9px 18px", borderRadius: 999,
-              background: "var(--accent)", border: "1px solid var(--accent)",
-              color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none",
+              background: "var(--cta)", border: "1px solid var(--muted)",
+              color: "var(--cta-text)", fontSize: 13, fontWeight: 600, textDecoration: "none",
             }}>
               Buy Ground Station →
             </Link>
@@ -96,26 +96,26 @@ export default function GroundStationDevicesPage() {
 
         {/* What you need section */}
         <div style={{
-          background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)",
+          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.12)",
           borderRadius: 14, padding: "20px 24px", marginBottom: 48,
           display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20,
         }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>What you need</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text)", marginBottom: 6 }}>What you need</div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
               To use FinalPing Ground Station you need a computer or Raspberry Pi, an ADS-B receiver dongle, and an antenna.
               Your local receiver delivers actual landing and takeoff detection — with 2–5 second latency vs 30–60+ seconds from adsb.lol.
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>Recommended setup</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text)", marginBottom: 6 }}>Recommended setup</div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
               Any Windows, Mac, or Linux computer + FlightAware Pro Stick Plus. Total cost around $45.
               A Raspberry Pi makes a better dedicated setup that runs 24/7.
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>Already have gear?</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text)", marginBottom: 6 }}>Already have gear?</div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
               Any RTL-SDR dongle running dump1090, dump1090-fa, readsb, or PiAware will work.
               FinalPing reads the standard JSON feed at port 8080.
@@ -127,16 +127,16 @@ export default function GroundStationDevicesPage() {
         <Link href="/groundstationkit" style={{ textDecoration: "none", display: "block", marginBottom: 48 }}>
           <div style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, rgba(14,165,233,0.09), rgba(14,165,233,0.02))",
-            border: "1px solid rgba(14,165,233,0.3)",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,255,255,0.01))",
+            border: "1px solid rgba(255,255,255,0.18)",
             padding: "20px 24px",
             display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
             cursor: "pointer",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ fontSize: 28 }}>📦</div>
+              <div style={{ fontSize: 28 }}></div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 2 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text)", marginBottom: 2 }}>
                   FinalPing Official Bundle
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>Ground Station Kit — from $200</div>
@@ -145,7 +145,7 @@ export default function GroundStationDevicesPage() {
             </div>
             <div style={{
               padding: "10px 20px", borderRadius: 10,
-              background: "#0ea5e9", color: "#fff",
+              background: "var(--cta)", color: "var(--cta-text)",
               fontSize: 13, fontWeight: 700, whiteSpace: "nowrap",
             }}>
               View Kit →
@@ -164,8 +164,8 @@ export default function GroundStationDevicesPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {devices.map((d) => (
             <div key={d.name} style={{
-              background: d.popular ? "linear-gradient(135deg, rgba(14,165,233,0.07), rgba(14,165,233,0.02))" : "rgba(255,255,255,0.02)",
-              border: d.popular ? "1px solid rgba(14,165,233,0.25)" : "1px solid var(--border)",
+              background: d.popular ? "linear-gradient(135deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01))" : "rgba(255,255,255,0.02)",
+              border: d.popular ? "1px solid rgba(255,255,255,0.15)" : "1px solid var(--border)",
               borderRadius: 16, padding: "28px 32px",
               display: "grid", gridTemplateColumns: "140px 1fr auto", gap: 28, alignItems: "start",
             }}>
@@ -207,7 +207,7 @@ export default function GroundStationDevicesPage() {
                 </div>
                 {d.note && (
                   <p style={{ fontSize: 12, color: "var(--muted)", margin: "12px 0 0", fontStyle: "italic" }}>
-                    ⚠️ {d.note}
+                    {d.note}
                   </p>
                 )}
               </div>
@@ -222,7 +222,7 @@ export default function GroundStationDevicesPage() {
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
                     padding: "10px 20px", borderRadius: 999,
-                    background: "#f59e0b", color: "#000",
+                    background: "var(--warn)", color: "#000",
                     fontSize: 13, fontWeight: 700, textDecoration: "none",
                     whiteSpace: "nowrap",
                   }}
@@ -243,7 +243,7 @@ export default function GroundStationDevicesPage() {
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
             <Link href="/groundstationsetup" style={{
               padding: "11px 24px", borderRadius: 999,
-              background: "var(--accent)", color: "#fff",
+              background: "var(--cta)", color: "var(--cta-text)",
               fontSize: 14, fontWeight: 700, textDecoration: "none",
             }}>
               View Setup Guide →

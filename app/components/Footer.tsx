@@ -45,9 +45,9 @@ export default function Footer() {
         @media(max-width:900px){ .fp-footer-grid { grid-template-columns:1fr 1fr; } }
         @media(max-width:560px){ .fp-footer-grid { grid-template-columns:1fr; } }
         .fp-footer-link { display:block; color:var(--muted); text-decoration:none; font-size:13px; padding:4px 0; transition:color .18s; }
-        .fp-footer-link:hover { color:var(--accent); }
+        .fp-footer-link:hover { color:var(--text); }
         .fp-social-btn { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; border:1px solid var(--border); color:var(--muted); background:transparent; transition:color .18s, border-color .18s, transform .18s; }
-        .fp-social-btn:hover { color:var(--accent); border-color:var(--accent); transform:translateY(-2px); }
+        .fp-social-btn:hover { color:var(--text); border-color:var(--muted); transform:translateY(-2px); }
       `}</style>
       <div className="container">
         <div className="fp-footer-grid">
@@ -55,13 +55,13 @@ export default function Footer() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
               <svg width="26" height="26" viewBox="0 0 120 120" style={{ flexShrink: 0 }} aria-hidden="true">
-                <circle cx="60" cy="60" r="40" fill="none" stroke="var(--text)" strokeWidth="7.5"
+                <circle cx="60" cy="60" r="40" fill="none" stroke="#0EA5E9" strokeWidth="7.5"
                         strokeDasharray="195.4 48.9" strokeLinecap="round" />
-                <path fill="var(--accent)" transform="translate(87.5,32.5) rotate(225) scale(1.28)"
+                <path fill="#FAFAFA" transform="translate(87.5,32.5) rotate(225) scale(1.28)"
                       d="M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z" />
               </svg>
               <span style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", letterSpacing: -0.4 }}>
-                Final<span style={{ color: "var(--accent)" }}>Ping</span>
+                Final<span style={{ color: "var(--text)" }}>Ping</span>
               </span>
             </div>
             <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 18px", maxWidth: 300 }}>

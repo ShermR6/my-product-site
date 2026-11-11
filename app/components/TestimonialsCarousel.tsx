@@ -9,42 +9,42 @@ const testimonials = [
     name: "James M.",
     role: "Flight School Owner · Texas",
     initials: "JM",
-    color: "#0ea5e9",
+    color: "var(--text)",
   },
   {
     text: "The alerts are instant. I get the 10nm ping, grab my fuel truck, and I'm ready at the ramp when they touch down. Saves me 10 minutes every arrival.",
     name: "Ryan K.",
     role: "FBO Line Tech · Colorado",
     initials: "RK",
-    color: "#22d3a3",
+    color: "var(--good)",
   },
   {
     text: "Set it up in 5 minutes. Now my whole team gets notified the moment our company plane is inbound. No more calling the airport to check.",
     name: "Amanda T.",
     role: "Operations Manager · Ohio",
     initials: "AT",
-    color: "#f59e0b",
+    color: "var(--warn)",
   },
   {
     text: "As a plane spotter I used to miss half the interesting traffic. Now I get a ping every time something unusual is approaching. It's become part of my daily routine.",
     name: "Derek L.",
     role: "Aviation Enthusiast · Washington",
     initials: "DL",
-    color: "#a78bfa",
+    color: "var(--text-2)",
   },
   {
     text: "We run a charter operation with 6 aircraft. FinalPing lets our ground team prep without anyone having to constantly watch a radar screen. Worth every penny.",
     name: "Sarah P.",
     role: "Charter Ops Director · Florida",
     initials: "SP",
-    color: "#f87171",
+    color: "var(--bad)",
   },
   {
     text: "The quiet hours feature alone sold me. I was getting 3am alerts before I found FinalPing. Now it just works exactly when I need it to.",
     name: "Marcus W.",
     role: "Private Pilot · Georgia",
     initials: "MW",
-    color: "#34d399",
+    color: "var(--good)",
   },
 ];
 
@@ -53,13 +53,13 @@ const ArrowBtn = ({ onClick, children }: { onClick: () => void; children: React.
     onClick={onClick}
     style={{
       flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
-      background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)",
-      color: "#0ea5e9", fontSize: 20, cursor: "pointer",
+      background: "rgba(255,255,255,0.075)", border: "1px solid rgba(255,255,255,0.18)",
+      color: "var(--text)", fontSize: 20, cursor: "pointer",
       display: "flex", alignItems: "center", justifyContent: "center",
       transition: "background 0.15s",
     }}
-    onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.3)"; }}
-    onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.15)"; }}
+    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.075)"; }}
   >{children}</button>
 );
 
@@ -77,7 +77,7 @@ export default function TestimonialsCarousel() {
       borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
     }}>
       <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--accent)" }}>TESTIMONIALS</div>
+        <div className="small" style={{ letterSpacing: "0.1em", marginBottom: 8, color: "var(--text)" }}>TESTIMONIALS</div>
         <h2 style={{ fontSize: 32, letterSpacing: "-0.02em" }}>Trusted by pilots & operators</h2>
         <p style={{ maxWidth: 480, margin: "10px auto 0", fontSize: 15 }}>See what FinalPing users are saying.</p>
       </div>
@@ -105,12 +105,12 @@ export default function TestimonialsCarousel() {
             }}>
               <div style={{
                 position: "absolute", top: 16, right: 20,
-                fontSize: 56, color: "rgba(14,165,233,0.12)",
+                fontSize: 56, color: "rgba(255,255,255,0.7)",
                 fontFamily: "Georgia, serif", lineHeight: 1, userSelect: "none",
               }}>&ldquo;</div>
               <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} style={{ color: "#f59e0b", fontSize: 13 }}>★</span>
+                  <span key={i} style={{ color: "var(--warn)", fontSize: 13 }}>★</span>
                 ))}
               </div>
               <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginBottom: 20, flex: 1 }}>

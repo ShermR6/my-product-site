@@ -145,9 +145,9 @@ const entries: Entry[] = [
 ];
 
 const TAG_COLORS = {
-  new: { bg: "rgba(14,165,233,0.1)", color: "#0ea5e9", label: "New" },
-  fix: { bg: "rgba(239,68,68,0.1)", color: "#f87171", label: "Fix" },
-  improved: { bg: "rgba(168,85,247,0.1)", color: "#a855f7", label: "Improved" },
+  new: { bg: "rgba(255,255,255,0.05)", color: "var(--text)", label: "New" },
+  fix: { bg: "rgba(239,68,68,0.1)", color: "var(--bad)", label: "Fix" },
+  improved: { bg: "rgba(255,255,255,0.05)", color: "var(--text-2)", label: "Improved" },
 };
 
 export default function ChangelogPage() {
@@ -170,8 +170,8 @@ export default function ChangelogPage() {
                     fontWeight: 700,
                     padding: "2px 8px",
                     borderRadius: 999,
-                    background: "rgba(34,197,94,0.12)",
-                    color: "#22c55e",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "var(--good)",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                   }}

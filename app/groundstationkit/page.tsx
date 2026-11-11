@@ -327,7 +327,7 @@ function CartSidebar({
                               padding: "9px 12px", fontSize: 12, color: "var(--text)", cursor: "pointer",
                               borderBottom: "1px solid var(--border)",
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(14,165,233,0.1)")}
+                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
                             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                           >
                             {s.place_name}
@@ -361,8 +361,8 @@ function CartSidebar({
                       disabled={ratesLoading || !canGetRates}
                       style={{
                         padding: "9px 14px", borderRadius: 8, border: "none",
-                        background: ratesLoading || !canGetRates ? "rgba(14,165,233,0.3)" : "#0ea5e9",
-                        color: "#fff", fontSize: 12, fontWeight: 700,
+                        background: ratesLoading || !canGetRates ? "rgba(255,255,255,0.08)" : "var(--cta)",
+                        color: ratesLoading || !canGetRates ? "var(--muted)" : "var(--cta-text)", fontSize: 12, fontWeight: 700,
                         cursor: ratesLoading || !canGetRates ? "default" : "pointer",
                         whiteSpace: "nowrap",
                       }}
@@ -373,11 +373,11 @@ function CartSidebar({
                 </div>
 
                 {addressError && (
-                  <div style={{ fontSize: 11, color: "#f87171", marginTop: 8 }}>{addressError}</div>
+                  <div style={{ fontSize: 11, color: "var(--bad)", marginTop: 8 }}>{addressError}</div>
                 )}
 
                 {ratesError && (
-                  <div style={{ fontSize: 11, color: "#f87171", marginTop: 8 }}>{ratesError}</div>
+                  <div style={{ fontSize: 11, color: "var(--bad)", marginTop: 8 }}>{ratesError}</div>
                 )}
 
                 {rates.length > 0 && (
@@ -390,10 +390,10 @@ function CartSidebar({
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           padding: "10px 12px", borderRadius: 8, cursor: "pointer",
                           border: selectedRate?.token === rate.token
-                            ? "1px solid rgba(14,165,233,0.6)"
+                            ? "1px solid rgba(255,255,255,0.7)"
                             : "1px solid var(--border)",
                           background: selectedRate?.token === rate.token
-                            ? "rgba(14,165,233,0.08)"
+                            ? "rgba(255,255,255,0.7)"
                             : "rgba(255,255,255,0.02)",
                           textAlign: "left",
                         }}
@@ -408,7 +408,7 @@ function CartSidebar({
                         </div>
                         <div style={{
                           fontSize: 13, fontWeight: 800,
-                          color: selectedRate?.token === rate.token ? "var(--accent)" : "var(--text)",
+                          color: selectedRate?.token === rate.token ? "#FAFAFA" : "var(--text)",
                         }}>
                           ${rate.amount.toFixed(2)}
                         </div>
@@ -440,14 +440,14 @@ function CartSidebar({
               style={{
                 display: "block", width: "100%", padding: "13px",
                 borderRadius: 10, border: "none",
-                background: loading || !selectedRate ? "rgba(249,115,22,0.4)" : "#F97316",
-                color: "#fff", fontSize: 14, fontWeight: 800,
+                background: loading || !selectedRate ? "rgba(255,255,255,0.08)" : "var(--cta)",
+                color: loading || !selectedRate ? "var(--muted)" : "var(--cta-text)", fontSize: 14, fontWeight: 800,
                 cursor: loading || !selectedRate ? "default" : "pointer",
               }}
             >
               {loading ? "Loading..." : selectedRate ? `Checkout — $${total.toFixed(2)}` : "Select Shipping to Continue"}
             </button>
-            {error && <div style={{ fontSize: 11, color: "#f87171", marginTop: 8, textAlign: "center" }}>{error}</div>}
+            {error && <div style={{ fontSize: 11, color: "var(--bad)", marginTop: 8, textAlign: "center" }}>{error}</div>}
           </div>
         )}
       </div>
@@ -462,7 +462,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
   return (
     <div style={{
       borderRadius: 16, overflow: "hidden",
-      border: kit.popular ? "1px solid rgba(14,165,233,0.4)" : "1px solid var(--border)",
+      border: kit.popular ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
       background: "rgba(255,255,255,0.02)",
       display: "flex", flexDirection: "column", position: "relative",
     }}>
@@ -471,7 +471,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           position: "absolute", top: 14, right: 14, zIndex: 1,
           fontSize: 9, fontWeight: 800, letterSpacing: "0.08em",
           textTransform: "uppercase", padding: "3px 10px", borderRadius: 999,
-          background: "var(--accent)", color: "#fff",
+          background: "var(--cta)", color: "var(--cta-text)",
         }}>Popular</div>
       )}
 
@@ -493,7 +493,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
       {/* Info */}
       <div style={{ padding: "20px 20px 0", flex: 1 }}>
         <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", marginBottom: 4 }}>{kit.name}</div>
-        <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>{kit.subtitle}</div>
+        <div style={{ fontSize: 11, color: "var(--text)", fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>{kit.subtitle}</div>
         <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, marginBottom: 16 }}>{kit.description}</div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
@@ -510,21 +510,21 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           style={{
             display: "flex", alignItems: "flex-start", gap: 10,
             padding: "12px", borderRadius: 10, marginBottom: 10, cursor: "pointer",
-            border: built ? "1px solid rgba(14,165,233,0.5)" : "1px solid var(--border)",
-            background: built ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.02)",
+            border: built ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
+            background: built ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)",
             transition: "all 0.15s",
           }}
         >
           <div style={{
             width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 1,
-            border: built ? "2px solid #0ea5e9" : "2px solid rgba(255,255,255,0.25)",
-            background: built ? "#0ea5e9" : "transparent",
+            border: built ? "2px solid var(--muted)" : "2px solid rgba(255,255,255,0.25)",
+            background: built ? "var(--cta)" : "transparent",
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.15s",
           }}>
             {built && (
               <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 6l3 3 5-5" stroke="#0A0A0A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
           </div>
@@ -533,7 +533,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
               Pre-built &amp; Pre-flashed
               <span style={{
                 marginLeft: 6, fontSize: 11, fontWeight: 800, padding: "3px 9px", borderRadius: 999,
-                background: "rgba(14,165,233,0.15)", color: "#0369A1", border: "1px solid rgba(14,165,233,0.45)",
+                background: "rgba(255,255,255,0.075)", color: "var(--text)", border: "1px solid rgba(255,255,255,0.24)",
                 display: "inline-flex", alignItems: "center", gap: 2, lineHeight: 1, verticalAlign: "middle",
               }}>
                 <span style={{ fontSize: 12, transform: "translateY(-0.5px)" }}>+</span>
@@ -561,8 +561,8 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           )}
           style={{
             display: "block", width: "100%", padding: "12px", borderRadius: 10, border: "none",
-            background: "#F97316", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer",
-            boxShadow: "0 3px 14px rgba(249,115,22,0.3)",
+            background: "var(--cta)", color: "var(--cta-text)", fontSize: 14, fontWeight: 800, cursor: "pointer",
+            boxShadow: "0 3px 14px rgba(0,0,0,0)",
           }}
         >
           Add to Cart →
@@ -605,9 +605,9 @@ function PartCard({ part, onAdd }: { part: typeof PARTS[0]; onAdd: (tier: string
           onClick={handleAdd}
           style={{
             padding: "8px 16px", borderRadius: 8,
-            border: added ? "1px solid var(--good-border)" : "1px solid rgba(249,115,22,0.35)",
-            background: added ? "var(--good-bg)" : "rgba(249,115,22,0.09)",
-            color: added ? "var(--good)" : "#EA6A0F",
+            border: added ? "1px solid var(--good-border)" : "1px solid rgba(255,255,255,0.21)",
+            background: added ? "var(--good-bg)" : "rgba(255,255,255,0.045)",
+            color: added ? "var(--good)" : "var(--text)",
             fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
           }}
         >
@@ -658,11 +658,11 @@ export default function GroundStationKitPage() {
               color: "var(--text)", fontSize: 13, fontWeight: 600,
             }}
           >
-            🛒 Cart
+            Cart
             {cartCount > 0 && (
               <span style={{
                 fontSize: 11, fontWeight: 800, minWidth: 20, height: 20,
-                borderRadius: 999, background: "#F97316", color: "#fff",
+                borderRadius: 999, background: "var(--cta)", color: "var(--cta-text)",
                 display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
               }}>{cartCount}</span>
             )}
@@ -674,7 +674,7 @@ export default function GroundStationKitPage() {
           <div style={{
             display: "inline-block", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
             textTransform: "uppercase", padding: "3px 12px", borderRadius: 999, marginBottom: 14,
-            background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", color: "var(--accent)",
+            background: "rgba(255,255,255,0.075)", border: "1px solid rgba(255,255,255,0.18)", color: "var(--text)",
           }}>
             FinalPing Official Store
           </div>
@@ -694,10 +694,10 @@ export default function GroundStationKitPage() {
           </div>
           <div style={{
             padding: "14px 18px", borderRadius: 12, marginBottom: 20,
-            background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)",
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.12)",
             fontSize: 13, color: "var(--muted)", lineHeight: 1.7,
           }}>
-            💡 <strong style={{ color: "var(--text)" }}>Perfect if your computer isn&apos;t on 24/7.</strong>{" "}
+            <strong style={{ color: "var(--text)" }}>Perfect if your computer isn&apos;t on 24/7.</strong>{" "}
             The Raspberry Pi runs silently in the background on its own power — no PC required, no interruptions to your tracking.
             Set it up once and forget it; the ground station software updates automatically in the background.
           </div>
@@ -730,7 +730,7 @@ export default function GroundStationKitPage() {
           <div style={{ fontSize: 13, color: "var(--muted)" }}>
             All orders ship within 3–5 business days. UPS shipping calculated at checkout.
           </div>
-          <Link href="/groundstationsetup" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Setup guide →</Link>
+          <Link href="/groundstationsetup" style={{ fontSize: 13, color: "var(--text)", textDecoration: "none" }}>Setup guide →</Link>
         </div>
 
       </div>

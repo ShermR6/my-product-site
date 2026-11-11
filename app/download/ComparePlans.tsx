@@ -17,10 +17,10 @@ const rows = [
 ];
 
 function Check() {
-  return <span style={{ color: "#22c55e", fontWeight: 700 }}>✓</span>;
+  return <span style={{ color: "var(--good)", fontWeight: 700 }}>✓</span>;
 }
 function Cross() {
-  return <span style={{ color: "#4b5563", fontWeight: 700 }}>✕</span>;
+  return <span style={{ color: "var(--muted)", fontWeight: 700 }}>✕</span>;
 }
 
 export default function ComparePlans() {
@@ -32,7 +32,7 @@ export default function ComparePlans() {
         onClick={() => setOpen(o => !o)}
         style={{
           background: "none", border: "none", padding: 0,
-          color: "var(--accent)", fontSize: 13, fontWeight: 600,
+          color: "var(--text)", fontSize: 13, fontWeight: 600,
           cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3,
         }}
       >
@@ -84,8 +84,8 @@ export default function ComparePlans() {
                   href="/pricing"
                   style={{
                     display: "inline-block", padding: "7px 16px", borderRadius: 8,
-                    background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)",
-                    color: "var(--accent)", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                    background: "rgba(255,255,255,0.075)", border: "1px solid rgba(255,255,255,0.18)",
+                    color: "var(--text)", fontSize: 12, fontWeight: 700, textDecoration: "none",
                   }}
                 >
                   Buy {p.name} →

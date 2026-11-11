@@ -1,4 +1,5 @@
 "use client";
+import { MailCheck } from "lucide-react";
 
 import { useState } from "react";
 
@@ -33,10 +34,10 @@ export default function ForgotPasswordPage() {
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "11px 14px",
-    background: "#111827",
-    border: "1px solid #374151",
+    background: "var(--panel)",
+    border: "1px solid var(--border-strong)",
     borderRadius: "10px",
-    color: "#f9fafb",
+    color: "var(--text)",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box",
@@ -47,19 +48,19 @@ export default function ForgotPasswordPage() {
     return (
       <div style={{
         maxWidth: 460, margin: "48px auto",
-        background: "#0f1117", border: "1px solid #1f2937",
+        background: "var(--panel)", border: "1px solid var(--border)",
         borderRadius: "16px", padding: "32px 28px 24px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.4)", textAlign: "center",
       }}>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>📬</div>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#f9fafb", margin: "0 0 8px 0" }}>Check your email</h2>
-        <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 24px 0" }}>
-          If an account exists for <strong style={{ color: "#9ca3af" }}>{email}</strong>, we sent a password reset link. Check your spam folder if you don't see it.
+        <div style={{ marginBottom: 16, lineHeight: 0, color: "var(--text-2)" }}><MailCheck size={40} strokeWidth={1.5} aria-hidden="true" /></div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: "var(--text)", margin: "0 0 8px 0" }}>Check your email</h2>
+        <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 24px 0" }}>
+          If an account exists for <strong style={{ color: "var(--muted)" }}>{email}</strong>, we sent a password reset link. Check your spam folder if you don't see it.
         </p>
         <a href="/login" style={{
           display: "inline-block", padding: "11px 24px",
-          background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-          color: "#fff", borderRadius: "10px", fontSize: "14px",
+          background: "var(--cta)",
+          color: "var(--cta-text)", borderRadius: "10px", fontSize: "14px",
           fontWeight: 600, textDecoration: "none",
         }}>
           Back to Sign In
@@ -71,20 +72,20 @@ export default function ForgotPasswordPage() {
   return (
     <div style={{
       maxWidth: 460, margin: "48px auto",
-      background: "#0f1117", border: "1px solid #1f2937",
+      background: "var(--panel)", border: "1px solid var(--border)",
       borderRadius: "16px", padding: "32px 28px 24px",
       boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
     }}>
-      <a href="/login" style={{ fontSize: 13, color: "#6b7280", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 20 }}>
+      <a href="/login" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 20 }}>
         ← Back to Sign In
       </a>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: "#f9fafb", margin: "0 0 4px 0" }}>Reset your password</h2>
-      <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 24px 0" }}>Enter your email and we'll send you a reset link.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: "var(--text)", margin: "0 0 4px 0" }}>Reset your password</h2>
+      <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 24px 0" }}>Enter your email and we'll send you a reset link.</p>
 
       {error && (
         <div style={{
           padding: "10px 14px", background: "#ef444420", border: "1px solid #ef444440",
-          borderRadius: "8px", color: "#fca5a5", fontSize: "13px", marginBottom: "16px",
+          borderRadius: "8px", color: "var(--bad)", fontSize: "13px", marginBottom: "16px",
         }}>
           {error}
         </div>
@@ -92,7 +93,7 @@ export default function ForgotPasswordPage() {
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "20px" }}>
-          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
             Email
           </label>
           <input
@@ -103,8 +104,8 @@ export default function ForgotPasswordPage() {
             onChange={e => setEmail(e.target.value)}
             required
             autoFocus
-            onFocus={e => e.target.style.borderColor = "#3b82f6"}
-            onBlur={e => e.target.style.borderColor = "#374151"}
+            onFocus={e => e.target.style.borderColor = "#A3A3A3"}
+            onBlur={e => e.target.style.borderColor = "#2E2E2E"}
           />
         </div>
         <button
@@ -112,10 +113,10 @@ export default function ForgotPasswordPage() {
           disabled={loading}
           style={{
             width: "100%", padding: "13px", borderRadius: "10px", border: "none",
-            background: loading ? "#1f2937" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
-            color: loading ? "#6b7280" : "#fff", fontSize: "15px", fontWeight: 600,
+            background: loading ? "var(--panel)" : "var(--cta)",
+            color: loading ? "var(--muted)" : "var(--cta-text)", fontSize: "15px", fontWeight: 600,
             cursor: loading ? "not-allowed" : "pointer",
-            boxShadow: loading ? "none" : "0 4px 20px rgba(14,165,233,0.3)",
+            boxShadow: loading ? "none" : "0 4px 20px rgba(0,0,0,0)",
           }}
         >
           {loading ? "Sending..." : "Send Reset Link"}

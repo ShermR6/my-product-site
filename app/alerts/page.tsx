@@ -1,3 +1,4 @@
+import { Inbox } from "lucide-react";
 import { getServerSession } from "next-auth";
 import AlertsTable from "./AlertsTable";
 import { authOptions } from "@/lib/auth";
@@ -16,23 +17,16 @@ type NotificationLog = {
   sent_at: string;
 };
 
-const CHANNEL_ICONS: Record<string, string> = {
-  discord: "💬",
-  slack: "📱",
-  teams: "👥",
-  email: "✉️",
-};
-
 const CHANNEL_COLORS: Record<string, string> = {
-  discord: "#5865f2",
-  slack: "#4a154b",
-  teams: "#6264a7",
-  email: "#0ea5e9",
+  discord: "var(--text-2)",
+  slack: "var(--text-2)",
+  teams: "var(--text-2)",
+  email: "var(--text)",
 };
 
 function formatAlertType(type: string) {
-  if (type === "landing") return "🛬 Landing";
-  return `📍 ${type} out`;
+  if (type === "landing") return "Landing";
+  return `${type} out`;
 }
 
 function formatDate(iso: string) {
@@ -106,7 +100,7 @@ export default async function AlertHistoryPage() {
         </div>
       ) : logs.length === 0 ? (
         <div className="panel" style={{ padding: 40, textAlign: "center" }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+          <div style={{ marginBottom: 12, lineHeight: 0, color: "var(--text-2)" }}><Inbox size={32} strokeWidth={1.5} aria-hidden="true" /></div>
           <h2 style={{ marginBottom: 8 }}>No alerts yet</h2>
           <p style={{ color: "var(--muted)", margin: 0 }}>
             Alerts will appear here once the cloud tracker sends notifications for your aircraft.

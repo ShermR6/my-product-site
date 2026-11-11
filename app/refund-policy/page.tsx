@@ -13,7 +13,7 @@ export default function RefundPolicyPage() {
 
       <div className="legal-body">
 
-        <p>This policy covers returns and refunds for FinalPing ground station hardware purchased through finalpingapp.com. For questions, contact us at <a href="mailto:support@finalpingapp.com" style={{ color: "var(--accent)" }}>support@finalpingapp.com</a>.</p>
+        <p>This policy covers returns and refunds for FinalPing ground station hardware purchased through finalpingapp.com. For questions, contact us at <a href="mailto:support@finalpingapp.com" style={{ color: "var(--text)" }}>support@finalpingapp.com</a>.</p>
 
         <h2>1. Hardware Returns</h2>
         <p>We accept returns on ground station kits and individual parts within <strong>30 days of the delivery date</strong> as confirmed by your UPS tracking number. Items must be returned in their original condition. We do not accept returns on items that show signs of physical damage not caused by shipping.</p>
@@ -39,11 +39,11 @@ export default function RefundPolicyPage() {
           <li>Items returned after 30 days of the delivery date</li>
           <li>Items not in original condition or packaging</li>
           <li>Items that show signs of physical damage not caused by shipping</li>
-          <li>Software license keys (see our <a href="/terms" style={{ color: "var(--accent)" }}>Terms of Service</a> for license refund terms)</li>
+          <li>Software license keys (see our <a href="/terms" style={{ color: "var(--text)" }}>Terms of Service</a> for license refund terms)</li>
         </ul>
 
         <h2>6. Contact Us</h2>
-        <p>To initiate a return or report a defective item, email us at <a href="mailto:support@finalpingapp.com" style={{ color: "var(--accent)" }}>support@finalpingapp.com</a> with your order number and reason for return. We typically respond within 1–2 business days.</p>
+        <p>To initiate a return or report a defective item, email us at <a href="mailto:support@finalpingapp.com" style={{ color: "var(--text)" }}>support@finalpingapp.com</a> with your order number and reason for return. We typically respond within 1–2 business days.</p>
 
       </div>
     </div>

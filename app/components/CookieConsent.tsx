@@ -40,11 +40,11 @@ export default function CookieConsent() {
       padding: "14px 20px",
       display: "flex", alignItems: "center", flexWrap: "wrap", gap: "12px 20px",
       maxWidth: 680, width: "calc(100vw - 32px)",
-      boxShadow: "0 8px 32px rgba(15,23,42,0.18)",
+      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
     }}>
       <p style={{ margin: 0, fontSize: 13, color: "var(--text)", flex: 1, minWidth: 200, lineHeight: 1.6 }}>
         We use cookies and analytics to improve your experience. See our{" "}
-        <Link href="/privacy" style={{ color: "var(--accent, #0ea5e9)" }}>Privacy Policy</Link>.
+        <Link href="/privacy" style={{ color: "var(--text)" }}>Privacy Policy</Link>.
       </p>
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
         <button
@@ -61,7 +61,7 @@ export default function CookieConsent() {
           onClick={accept}
           style={{
             padding: "7px 16px", borderRadius: 8, fontSize: 13, cursor: "pointer",
-            background: "#0ea5e9", border: "none", color: "#fff", fontWeight: 600,
+            background: "var(--cta)", border: "none", color: "var(--cta-text)", fontWeight: 600,
           }}
         >
           Accept

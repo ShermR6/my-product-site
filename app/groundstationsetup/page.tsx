@@ -1,4 +1,5 @@
 "use client";
+import { Lightbulb, TriangleAlert } from "lucide-react";
 // app/groundstationsetup/page.tsx
 import Link from "next/link";
 import React, { useState } from "react";
@@ -16,7 +17,7 @@ function CodeBlock({ code }: { code: string }) {
       <pre style={{
         background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 10, padding: "16px 56px 16px 20px", overflow: "auto",
-        fontSize: 13, lineHeight: 1.7, color: "#e2e8f0",
+        fontSize: 13, lineHeight: 1.7, color: "var(--text-2)",
         fontFamily: "'Fira Code', 'Cascadia Code', 'Consolas', monospace",
         margin: 0,
       }}>
@@ -26,10 +27,10 @@ function CodeBlock({ code }: { code: string }) {
         onClick={copy}
         style={{
           position: "absolute", top: 10, right: 10,
-          background: copied ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.07)",
-          border: `1px solid ${copied ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.12)"}`,
+          background: copied ? "rgba(255,255,255,0.075)" : "rgba(255,255,255,0.07)",
+          border: `1px solid ${copied ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.12)"}`,
           borderRadius: 6, padding: "4px 10px",
-          color: copied ? "#22c55e" : "#9ca3af",
+          color: copied ? "var(--good)" : "var(--muted)",
           fontSize: 11, fontWeight: 600, cursor: "pointer",
           transition: "all 0.15s",
         }}
@@ -47,27 +48,27 @@ export default function GroundStationSetupPage() {
     <div style={{
       padding: "12px 16px", borderRadius: 10, margin: "12px 0",
       background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
-      fontSize: 13, color: "#fcd34d", lineHeight: 1.7,
+      fontSize: 13, color: "var(--warn)", lineHeight: 1.7,
     }}>
-      ⚠️ {text}
+      <TriangleAlert size={14} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: 7 }} />{text}
     </div>
   );
 
   const tip = (text: string) => (
     <div style={{
       padding: "12px 16px", borderRadius: 10, margin: "12px 0",
-      background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)",
-      fontSize: 13, color: "#7dd3fc", lineHeight: 1.7,
+      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
+      fontSize: 13, color: "var(--text)", lineHeight: 1.7,
     }}>
-      💡 {text}
+      <Lightbulb size={14} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: 7 }} />{text}
     </div>
   );
 
   const success = (text: string) => (
     <div style={{
       padding: "12px 16px", borderRadius: 10, margin: "12px 0",
-      background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
-      fontSize: 13, color: "#86efac", lineHeight: 1.7,
+      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
+      fontSize: 13, color: "var(--text)", lineHeight: 1.7,
     }}>
       ✓ {text}
     </div>
@@ -106,8 +107,8 @@ export default function GroundStationSetupPage() {
 
         {/* Header */}
         <div style={{ marginBottom: 52 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--accent)", marginBottom: 10 }}>
-            📖 SETUP GUIDE
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--text)", marginBottom: 10 }}>
+            SETUP GUIDE
           </div>
           <h1 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 14px" }}>
             FinalPing Ground Station Setup
@@ -122,12 +123,12 @@ export default function GroundStationSetupPage() {
               background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
               color: "var(--muted)", fontSize: 13, fontWeight: 600, textDecoration: "none",
             }}>
-              🛒 Buy a receiver →
+              Buy a receiver →
             </Link>
             <Link href="/pricing" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "9px 18px", borderRadius: 999,
-              background: "var(--accent)", color: "#fff",
+              background: "var(--cta)", color: "var(--cta-text)",
               fontSize: 13, fontWeight: 600, textDecoration: "none",
             }}>
               Buy Ground Station →
@@ -142,22 +143,22 @@ export default function GroundStationSetupPage() {
           display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
         }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 8 }}>Before you start</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>Before you start</div>
             {[
               "Active FinalPing account with Ground Station add-on",
               "Aircraft and location set up in the FinalPing app",
               "FlightAware Pro Stick Plus + 1090MHz antenna",
             ].map(i => (
               <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4, display: "flex", gap: 8 }}>
-                <span style={{ color: "#22d3a3" }}>✓</span> {i}
+                <span style={{ color: "var(--good)" }}>✓</span> {i}
               </div>
             ))}
-            <div style={{ fontSize: 13, color: "#fcd34d", marginTop: 10, display: "flex", gap: 8 }}>
-              <span>💡</span> Place the antenna near a window for best range — the Pi can sit anywhere nearby.
+            <div style={{ fontSize: 13, color: "var(--warn)", marginTop: 10, display: "flex", gap: 8 }}>
+              <Lightbulb size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 3 }} /> Place the antenna near a window for best range — the Pi can sit anywhere nearby.
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 8 }}>What happens automatically</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>What happens automatically</div>
             {[
               "Pulls your location from your account",
               "Pulls your tracked aircraft from your account",
@@ -165,7 +166,7 @@ export default function GroundStationSetupPage() {
               "Starts on every boot or login",
             ].map(i => (
               <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4, display: "flex", gap: 8 }}>
-                <span style={{ color: "#22d3a3" }}>✓</span> {i}
+                <span style={{ color: "var(--good)" }}>✓</span> {i}
               </div>
             ))}
           </div>
@@ -173,7 +174,7 @@ export default function GroundStationSetupPage() {
 
         {/* ── Pre-flashed Pi Kit ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("📦 Raspberry Pi Kit — Pre-flashed", "rgba(14,165,233,0.1)", "rgba(14,165,233,0.3)", "var(--accent)")}
+          {sectionTag("Raspberry Pi Kit — Pre-flashed", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
           <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
             Your kit arrives with the SD card already flashed. No computer setup needed — just plug in and go through setup on your phone.
           </p>
@@ -185,21 +186,21 @@ export default function GroundStationSetupPage() {
             "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
             "The Pi connects to your home WiFi and automatically claims your account credentials from FinalPing. Your location and aircraft are pulled from your account — no manual config needed.",
             "The Pi reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online within 60 seconds.",
-          ], "#0ea5e9")}
+          ], "var(--text)")}
           {note("Use your phone — not a laptop or desktop. iPhones and Android phones open the setup page automatically when joining FinalPing-Setup. Laptops typically do not.")}
           {success("That's it. The Pi runs silently in the background on every boot. No further setup needed.")}
         </div>
 
         {/* ── DIY Pi Kit ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("🍓 Raspberry Pi Kit — Self-Setup (No Pre-flash)", "rgba(34,211,163,0.08)", "rgba(34,211,163,0.25)", "#22d3a3")}
+          {sectionTag("Raspberry Pi Kit — Self-Setup (No Pre-flash)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
           <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
             If your kit did not come pre-flashed, you'll need to image the SD card yourself. You'll need a Windows PC or Mac, your microSD card, and a card reader.
           </p>
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "24px 0 8px" }}>Step 1 — Flash the SD card</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
-            Download and install <strong style={{ color: "var(--text)" }}>Raspberry Pi Imager</strong> from <a href="https://www.raspberrypi.com/software/" target="_blank" style={{ color: "var(--accent)" }}>raspberrypi.com/software</a>. Insert your microSD card, then open the Imager and configure:
+            Download and install <strong style={{ color: "var(--text)" }}>Raspberry Pi Imager</strong> from <a href="https://www.raspberrypi.com/software/" target="_blank" style={{ color: "var(--text)" }}>raspberrypi.com/software</a>. Insert your microSD card, then open the Imager and configure:
           </p>
           <div style={{
             background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
@@ -211,7 +212,7 @@ export default function GroundStationSetupPage() {
               { label: "Storage", value: "Your microSD card" },
             ].map(row => (
               <div key={row.label} style={{ display: "flex", gap: 16, marginBottom: 8, fontSize: 13 }}>
-                <span style={{ color: "var(--accent)", fontWeight: 700, minWidth: 160 }}>{row.label}</span>
+                <span style={{ color: "var(--text)", fontWeight: 700, minWidth: 160 }}>{row.label}</span>
                 <span style={{ color: "var(--muted)" }}>{row.value}</span>
               </div>
             ))}
@@ -233,7 +234,7 @@ export default function GroundStationSetupPage() {
               { label: "Pi Connect", value: "Leave this off" },
             ].map(row => (
               <div key={row.label} style={{ display: "flex", gap: 16, marginBottom: 8, fontSize: 13 }}>
-                <span style={{ color: "#22d3a3", fontWeight: 700, minWidth: 160 }}>{row.label}</span>
+                <span style={{ color: "var(--good)", fontWeight: 700, minWidth: 160 }}>{row.label}</span>
                 <span style={{ color: "var(--muted)" }}>{row.value}</span>
               </div>
             ))}
@@ -256,13 +257,13 @@ export default function GroundStationSetupPage() {
             display: "flex", flexDirection: "column" as const, gap: 12,
           }}>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router app</span> — If your router has an app (Eero, Google Home, Orbi, Netgear, etc.) open it and look at the connected devices list. Find the device named <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP address.
+              <span style={{ color: "var(--good)", fontWeight: 700 }}>Router app</span> — If your router has an app (Eero, Google Home, Orbi, Netgear, etc.) open it and look at the connected devices list. Find the device named <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP address.
             </div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Router admin page</span> — Check the sticker on the back or bottom of your router for the admin login address and credentials. Open that address in a browser, log in, and find the connected devices list. Look for <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP.
+              <span style={{ color: "var(--good)", fontWeight: 700 }}>Router admin page</span> — Check the sticker on the back or bottom of your router for the admin login address and credentials. Open that address in a browser, log in, and find the connected devices list. Look for <strong style={{ color: "var(--text)" }}>raspberrypi</strong> and note its IP.
             </div>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7 }}>
-              <span style={{ color: "#22d3a3", fontWeight: 700 }}>Windows (find your router address)</span> — Open PowerShell and run <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>ipconfig</code> — look for <strong style={{ color: "var(--text)" }}>Default Gateway</strong>. Type that address into a browser to open your router admin page, then find raspberrypi in the connected devices list.
+              <span style={{ color: "var(--good)", fontWeight: 700 }}>Windows (find your router address)</span> — Open PowerShell and run <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>ipconfig</code> — look for <strong style={{ color: "var(--text)" }}>Default Gateway</strong>. Type that address into a browser to open your router admin page, then find raspberrypi in the connected devices list.
             </div>
           </div>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
@@ -289,12 +290,12 @@ export default function GroundStationSetupPage() {
             "A setup page opens automatically. If it doesn't, open a browser and go to 192.168.4.1",
             "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
             "The Pi connects to your WiFi and automatically claims your account credentials from FinalPing. It reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online.",
-          ], "#22d3a3")}
+          ], "var(--good)")}
           {note("Use your phone for this step — not your laptop. Phones auto-open the setup page when joining FinalPing-Setup. Laptops do not.")}
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Optional — Contribute to the adsb.lol network</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            Your Pi can anonymously feed ADS-B data to <a href="https://adsb.lol" target="_blank" style={{ color: "var(--accent)" }}>adsb.lol</a>, a community-run network that improves coverage for all FinalPing users in your area. It runs alongside FinalPing and won't interfere with anything.
+            Your Pi can anonymously feed ADS-B data to <a href="https://adsb.lol" target="_blank" style={{ color: "var(--text)" }}>adsb.lol</a>, a community-run network that improves coverage for all FinalPing users in your area. It runs alongside FinalPing and won't interfere with anything.
           </p>
           {codeBlock(`curl -L -o /tmp/lol-feed.sh https://adsb.lol/feed.sh\nsudo bash /tmp/lol-feed.sh`)}
           {tip("Use your receiver's physical location coordinates, not necessarily your airport. When done, check adsb.lol to confirm you're showing as a feeder.")}
@@ -302,27 +303,27 @@ export default function GroundStationSetupPage() {
 
         {/* ── Windows ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("🪟 Windows PC", "rgba(14,165,233,0.1)", "rgba(14,165,233,0.25)", "#7dd3fc")}
+          {sectionTag("Windows PC", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
           <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
             Run the ground station directly on your Windows PC with the Pro Stick Plus plugged in. No Pi required.
           </p>
           {stepList([
             "Plug your Pro Stick Plus into any USB port on this PC.",
             "Right-click Start → Windows PowerShell (Admin) or Terminal (Admin) and run the installer:",
-          ], "#7dd3fc")}
+          ], "var(--text)")}
           {codeBlock(`irm https://finalpingapp.com/install.ps1 | iex`)}
           {stepList([
             "The installer verifies your FinalPing account and Ground Station access.",
             "When Zadig opens: Options → List All Devices → select RTL2832U → choose WinUSB → click Install Driver. Return to PowerShell when done.",
             "The installer sets up auto-start via Task Scheduler. Restart your PC.",
             "After reboot FinalPing Ground Station starts silently in the background on every login. Open the FinalPing app — Dashboard → Ground Station: Online.",
-          ].map((s, i) => `${s}`), "#7dd3fc")}
+          ].map((s, i) => `${s}`), "var(--text)")}
           {note("The Zadig driver step is required the first time. If you skip it, dump1090 won't see the receiver.")}
         </div>
 
         {/* ── Mac ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("🍎 macOS", "rgba(167,139,250,0.1)", "rgba(167,139,250,0.25)", "#c4b5fd")}
+          {sectionTag("macOS", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
           <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
             Run the ground station directly on your Mac with the Pro Stick Plus plugged in. No Pi required.
           </p>
@@ -390,18 +391,18 @@ export default function GroundStationSetupPage() {
             background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
             color: "var(--text)", fontSize: 14, fontWeight: 600, textDecoration: "none",
           }}>
-            🛒 Buy a Receiver
+            Buy a Receiver
           </Link>
           <Link href="/groundstationkit" style={{
             padding: "11px 24px", borderRadius: 999,
             background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
             color: "var(--text)", fontSize: 14, fontWeight: 600, textDecoration: "none",
           }}>
-            📦 Buy a Pi Kit
+            Buy a Pi Kit
           </Link>
           <Link href="/pricing" style={{
             padding: "11px 24px", borderRadius: 999,
-            background: "var(--accent)", color: "#fff",
+            background: "var(--cta)", color: "var(--cta-text)",
             fontSize: 14, fontWeight: 700, textDecoration: "none",
           }}>
             Buy Ground Station →
