@@ -1,4 +1,4 @@
-import LandingPageV3 from "./components/LandingPageV3";
+import HomePage from "./components/HomePage";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -18,7 +18,7 @@ const appJsonLd = {
   "@type": "SoftwareApplication",
   name: "FinalPing",
   applicationCategory: "BusinessApplication",
-  operatingSystem: "Windows",
+  operatingSystem: "Web, Windows, macOS",
   url: "https://finalpingapp.com",
   description:
     "Real-time aircraft tracking and alert platform. Get proximity, landing, and takeoff alerts for your aircraft via Discord, Slack, SMS, and email.",
@@ -42,7 +42,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
       />
-      <LandingPageV3 />
+      <HomePage />
     </>
   );
 }

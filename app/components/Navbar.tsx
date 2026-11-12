@@ -46,7 +46,7 @@ export default function Navbar() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {/* The web app is the main way in. Download stays in the link row. */}
             <Link href="/app" className="nav-dl-btn">
-              Open<span className="nav-dl-long">&nbsp;app</span>
+              <span>Open<span className="nav-dl-long">&nbsp;app</span></span>
             </Link>
             {session ? (
               <Link href="/dashboard" className="nav-signin-btn">Dashboard</Link>
