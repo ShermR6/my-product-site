@@ -7,6 +7,8 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { PLANE_PATH } from "./kit";
+import { familyOf } from "../_lib/paint";
+import { sprite } from "../_lib/fleet3d";
 
 export type MapPlane = {
   tail: string;
@@ -16,6 +18,10 @@ export type MapPlane = {
   /** Inbound: drawn with the blue halo. */
   live: boolean;
   dim?: boolean;
+  /** Aircraft type, which picks the 3D shape. */
+  type?: string | null;
+  /** Paint colour. */
+  color?: string;
 };
 
 export type MapCoverage = { lat: number; lon: number; rangeNm: number[] };
@@ -43,6 +49,20 @@ function esc(s: string) {
 }
 
 function planeIcon(p: MapPlane, selected: boolean) {
+  const color = p.color && /^#[0-9a-fA-F]{6}$/.test(p.color) ? p.color : "#FAFAFA";
+  const img = sprite(familyOf(p.type), color, p.heading);
+  if (img) {
+    // The 3D model seen from above, already turned to the heading.
+    return L.divIcon({
+      className: "",
+      iconSize: [56, 56],
+      iconAnchor: [28, 28],
+      html:
+        `<div class="fa-plane fa-plane-3d${p.live ? " live" : ""}${selected ? " selected" : ""}" style="opacity:${p.dim ? 0.55 : 1};--paint:${color}">` +
+        `<img src="${img}" width="56" height="56" alt="" draggable="false"/>` +
+        `<span class="fa-plane-label${p.live ? " live" : ""}">${esc(p.tail)}</span></div>`,
+    });
+  }
   const halo = p.live ? `<circle r="17" fill="rgba(56,189,248,0.16)"/>` : "";
   const ring = selected ? `<circle r="18" fill="none" stroke="#FAFAFA" stroke-width="1.2"/>` : "";
   return L.divIcon({
@@ -52,7 +72,7 @@ function planeIcon(p: MapPlane, selected: boolean) {
     html:
       `<div class="fa-plane" style="opacity:${p.dim ? 0.55 : 1}">` +
       `<svg width="40" height="40" viewBox="-20 -20 40 40" aria-hidden="true">${halo}${ring}` +
-      `<path fill="#FAFAFA" transform="rotate(${Math.round(p.heading ?? 0)}) scale(0.82)" d="${PLANE_PATH}"/></svg>` +
+      `<path fill="${color}" transform="rotate(${Math.round(p.heading ?? 0)}) scale(0.82)" d="${PLANE_PATH}"/></svg>` +
       `<span class="fa-plane-label${p.live ? " live" : ""}">${esc(p.tail)}</span></div>`,
   });
 }
@@ -169,7 +189,7 @@ export default function LeafletMap({
   }, [lat, lon, ringsKey, fitSeq]);
 
   // Aircraft.
-  const planesKey = planes.map((p) => `${p.tail}:${p.lat.toFixed(4)}:${p.lon.toFixed(4)}:${Math.round(p.heading ?? 0)}:${p.live}:${p.dim}`).join("|");
+  const planesKey = planes.map((p) => `${p.tail}:${p.lat.toFixed(4)}:${p.lon.toFixed(4)}:${Math.round(p.heading ?? 0)}:${p.live}:${p.dim}:${p.type ?? ""}:${p.color ?? ""}`).join("|");
   useEffect(() => {
     const layer = planeLayer.current;
     if (!layer) return;

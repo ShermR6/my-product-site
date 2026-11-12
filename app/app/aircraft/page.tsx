@@ -13,6 +13,9 @@ import {
 import type { Aircraft } from "../_lib/types";
 import { Btn, Card, Empty, Field, Modal, PageHead, Tail, Toggle } from "../_components/kit";
 import RingEditor from "../_components/RingEditor";
+import Plane3D from "../_components/Plane3D";
+import PaintSwatches from "../_components/PaintSwatches";
+import { paintOf, setPaint, usePaints } from "../_lib/paint";
 
 type Draft = {
   id: string | null;
@@ -22,6 +25,8 @@ type Draft = {
   name: string;
   ownRings: boolean;
   rings: number[];
+  /** Empty until the user picks one; the default for the tail number applies. */
+  paint: string;
 };
 
 type Lookup = { found: boolean; tail_number?: string; icao24?: string; aircraft_type?: string };
@@ -30,7 +35,7 @@ const cleanTail = (s: string) => s.toUpperCase().replace(/[^A-Z0-9-]/g, "").slic
 const cleanHex = (s: string) => s.toLowerCase().replace(/[^0-9a-f]/g, "").slice(0, 6);
 
 function blank(tail = ""): Draft {
-  return { id: null, tail, icao24: "", type: "", name: "", ownRings: false, rings: [] };
+  return { id: null, tail, icao24: "", type: "", name: "", ownRings: false, rings: [], paint: "" };
 }
 
 async function lookup(q: string): Promise<Lookup> {
@@ -52,6 +57,7 @@ export default function AircraftPage() {
     typeof window !== "undefined" && new URLSearchParams(window.location.search).has("add") ? blank() : null
   );
   const [lookupNote, setLookupNote] = useState("");
+  const paints = usePaints();
 
   const slotsLeft = plan.aircraft == null ? null : Math.max(0, plan.aircraft - t.aircraft.length);
   const atLimit = slotsLeft === 0;
@@ -68,7 +74,7 @@ export default function AircraftPage() {
     setLookupNote("");
     setDraft({
       id: a.id, tail: a.tail_number, icao24: a.icao24 ?? "", type: a.aircraft_type ?? "", name: a.friendly_name ?? "",
-      ownRings: own.length > 0, rings: own.length ? own : defaultRings,
+      ownRings: own.length > 0, rings: own.length ? own : defaultRings, paint: paints[a.tail_number] ?? "",
     });
   }
 
@@ -113,7 +119,8 @@ export default function AircraftPage() {
         <Card><Empty title="No match">Nothing tracked matches “{query}”.</Empty></Card>
       ) : (
         <div className="fa-grid fa-cols-3">
-          {shown.map((a) => {
+          {shown.map((a, i) => {
+            const paint = paintOf(a.tail_number, paints);
             const lv = t.live.find((x) => x.tail_number === a.tail_number);
             const rings = ringsFor(a.tail_number, t.aircraft, t.airport);
             const stage = lv ? stageOf(lv, rings) : null;
@@ -123,6 +130,7 @@ export default function AircraftPage() {
             const lastAt = parseUtc(last?.sent_at);
             return (
               <section key={a.id} className="fa-card" style={hot ? { borderColor: "rgba(56,189,248,0.45)" } : undefined}>
+                <Plane3D className="bleed" tail={a.tail_number} type={a.aircraft_type} color={paint} start={-0.6 - i * 0.45} />
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
                     <Tail size={22}>{a.tail_number}</Tail>
@@ -162,7 +170,8 @@ export default function AircraftPage() {
                   <span>Sends to</span>
                   <span style={{ textAlign: "right" }}>{sendsTo.length ? sendsTo.join(" · ") : <a className="fa-link" href="/app/integrations">Connect a channel</a>}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 12, borderTop: "1px solid #1E1E1E" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, paddingTop: 12, borderTop: "1px solid #1E1E1E" }}>
+                  <PaintSwatches small tail={a.tail_number} value={paint} onPick={(hex) => setPaint(a.tail_number, hex)} />
                   <Btn small onClick={() => edit(a)}>Edit</Btn>
                 </div>
               </section>
@@ -231,6 +240,8 @@ function AircraftModal({
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isNew = d.id === null;
+  const paints = usePaints();
+  const paint = d.paint || paintOf(d.tail || "N", paints);
 
   async function fill() {
     const q = d.tail.length >= 3 ? d.tail : d.icao24;
@@ -259,6 +270,7 @@ function AircraftModal({
     try {
       if (isNew) await api("aircraft", { method: "POST", body });
       else await api(`aircraft/${d.id}`, { method: "PUT", body });
+      if (d.paint) setPaint(d.tail, d.paint);
       await onSaved();
     } catch (e) {
       setErr(errorText(e));
@@ -292,6 +304,7 @@ function AircraftModal({
   return (
     <Modal title={isNew ? "Add aircraft" : `Edit ${draft.tail}`} onClose={onClose}>
       <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ marginTop: 14 }}>
+        <Plane3D className="inset" tail={d.tail || "the new aircraft"} type={d.type} color={paint} height={150} />
         <Field label="Tail number">
           <div style={{ display: "flex", gap: 8 }}>
             <input className="fa-input mono" value={d.tail} placeholder="N12345" autoFocus={isNew && !d.tail}
@@ -308,6 +321,9 @@ function AircraftModal({
         </Field>
         <Field label="Nickname (optional)">
           <input className="fa-input" value={d.name} placeholder="Club Skyhawk" maxLength={60} onChange={(e) => setD({ ...d, name: e.target.value })} />
+        </Field>
+        <Field label="Paint colour" hint="Shown on its model and its map marker. Saved in this browser.">
+          <PaintSwatches tail={d.tail} value={paint} onPick={(hex) => setD({ ...d, paint: hex })} />
         </Field>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 0 10px", borderTop: "1px solid var(--border)" }}>

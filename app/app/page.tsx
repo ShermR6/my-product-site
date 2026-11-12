@@ -11,6 +11,8 @@ import {
 import { Card, PageHead, Tail } from "./_components/kit";
 import ApproachLadder, { ladderSteps } from "./_components/ApproachLadder";
 import RingMap from "./_components/RingMap";
+import Plane3D from "./_components/Plane3D";
+import { paintOf, usePaints } from "./_lib/paint";
 
 function plural(n: number, one: string, many = one + "s") {
   return `${n} ${n === 1 ? one : many}`;
@@ -18,6 +20,8 @@ function plural(n: number, one: string, many = one + "s") {
 
 export default function DashboardPage() {
   const t = useTracker();
+  const saved = usePaints();
+  const paints = Object.fromEntries(t.aircraft.map((a) => [a.tail_number, paintOf(a.tail_number, saved)]));
   const inbound = inboundOf(t.live, t.aircraft, t.airport);
   const lead = inbound[0] ?? null;
   const airborne = t.live.filter((a) => !a.on_ground);
@@ -74,6 +78,16 @@ export default function DashboardPage() {
   }
 
   const plan = planOf(t.me?.license_tier);
+
+  // The hangar strip: whatever is flying first, then the rest, four across.
+  const hangar = t.aircraft
+    .map((ac) => {
+      const lv = t.live.find((x) => x.tail_number === ac.tail_number);
+      const stage = lv ? stageOf(lv, ringsFor(ac.tail_number, t.aircraft, t.airport)) : null;
+      return { ac, lv, stage, hot: stage === "final" || stage === "inbound" };
+    })
+    .sort((a, b) => Number(b.hot) - Number(a.hot) || Number(!!b.lv && !b.lv.on_ground) - Number(!!a.lv && !a.lv.on_ground))
+    .slice(0, 4);
   const leadAge = lead ? Math.max(0, (t.now - (parseUtc(lead.last_seen)?.getTime() ?? t.now)) / 1000) : null;
 
   return (
@@ -92,7 +106,7 @@ export default function DashboardPage() {
       <div className="fa-split">
         <div className={`fa-mapcard ${t.hasAirport && leadRings.length > 0 ? "has-ladder" : ""}`}>
           <div className="fa-mapcard-art">
-            <RingMap airport={t.airport} rings={leadRings} live={t.live} focusTail={lead?.tail_number ?? airborne[0]?.tail_number} bottomPad={t.hasAirport && leadRings.length > 0 ? 84 : 0} />
+            <RingMap airport={t.airport} rings={leadRings} live={t.live} focusTail={lead?.tail_number ?? airborne[0]?.tail_number} paints={paints} bottomPad={t.hasAirport && leadRings.length > 0 ? 84 : 0} />
           </div>
           <div className="fa-map-chip" style={{ position: "absolute", left: 16, top: 16 }}>
             <span className={`fa-dot ${lead ? "live" : "hollow"}`} style={{ width: 6, height: 6 }} />
@@ -113,7 +127,7 @@ export default function DashboardPage() {
             <div key={e.key} className="fa-row" style={{ alignItems: "flex-start", gap: 14, padding: "9px 0" }}>
               <span className="mono" style={{ width: 42, fontSize: 12, paddingTop: 1, color: i === 0 && lead?.tail_number === e.tail ? "var(--accent)" : "var(--faint)" }}>{clock(e.time)}</span>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13.5 }}><Tail>{e.tail}</Tail> {eventLabel(e.alertType).toLowerCase()}</div>
+                <div style={{ fontSize: 13.5 }}><span className="fa-paint-dot" style={{ background: paints[e.tail] ?? "var(--faint)", marginRight: 8 }} /><Tail>{e.tail}</Tail> {eventLabel(e.alertType).toLowerCase()}</div>
                 <div style={{ fontSize: 12, color: "var(--faint)" }}>
                   {e.channels.join(" · ")}
                   {e.failed.length > 0 && <span style={{ color: "var(--warn)" }}>{e.channels.length ? " · " : ""}{e.failed.join(", ")} failed</span>}
@@ -128,6 +142,22 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {hangar.length > 0 && (
+        <div className="fa-hangar" style={{ marginTop: 16 }}>
+          {hangar.map(({ ac, lv, stage, hot }, i) => (
+            <div key={ac.id} className="fa-hangar-item" style={hot ? { borderColor: "rgba(56,189,248,0.45)" } : undefined}>
+              <Plane3D tail={ac.tail_number} type={ac.aircraft_type} color={paints[ac.tail_number]} height={132} start={-0.6 - i * 0.5} tag={false} />
+              <Link href="/app/aircraft" className="fa-hangar-meta">
+                <Tail>{ac.tail_number}</Tail>
+                <span className="fa-note" style={{ color: hot ? "var(--accent)" : undefined }}>
+                  {lv && !lv.on_ground ? `${nm(lv.distance_nm)} · ${STAGE_LABEL[stage!].toLowerCase()}` : stage ? STAGE_LABEL[stage] : ac.aircraft_type || "Not in view"}
+                </span>
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="fa-grid fa-cols-3" style={{ marginTop: 16 }}>
         <Card title="Aircraft" note={plan.aircraft ? `${t.aircraft.length} of ${plan.aircraft}` : `${t.aircraft.length}`}>
           {t.aircraft.length === 0 && (
@@ -139,7 +169,7 @@ export default function DashboardPage() {
             const hot = stage === "final" || stage === "inbound";
             return (
               <Link key={ac.id} href="/app/aircraft" className="fa-row">
-                <span className={`fa-dot ${hot ? "live" : stage === "airborne" ? "" : "hollow"}`} style={{ width: 8, height: 8 }} />
+                <span className="fa-paint-dot" style={{ background: paints[ac.tail_number] }} />
                 <span className="mono" style={{ width: 76, fontWeight: 600 }}>{ac.tail_number}</span>
                 <span style={{ flex: 1, fontSize: 13, color: hot ? "var(--accent)" : "var(--muted)" }}>{stage ? STAGE_LABEL[stage] : "Not in view"}</span>
                 <span className="mono" style={{ fontSize: 13, color: lv && !lv.on_ground ? "var(--text)" : "var(--muted)" }}>{lv && !lv.on_ground ? nm(lv.distance_nm) : ""}</span>

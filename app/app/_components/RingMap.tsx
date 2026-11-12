@@ -12,7 +12,7 @@ const W = 804;
 const H = 392;
 
 export default function RingMap({
-  airport, rings, live, focusTail, height, bottomPad = 0,
+  airport, rings, live, focusTail, height, bottomPad = 0, paints,
 }: {
   airport: AirportConfig | null;
   rings: number[];           // widest first
@@ -21,6 +21,8 @@ export default function RingMap({
   height?: number | string;
   /** Space (in drawing units) kept clear at the bottom for an overlay. */
   bottomPad?: number;
+  /** Paint colour by tail number. */
+  paints?: Record<string, string>;
 }) {
   const lat0 = Number(airport?.latitude);
   const lon0 = Number(airport?.longitude);
@@ -67,7 +69,10 @@ export default function RingMap({
         return (
           <g key={r}>
             <circle cx={cx} cy={cy} r={r * scale} fill="none" stroke={inner ? "#4A4A4A" : i === 0 ? "#2A2A2A" : "#333333"} strokeWidth="1" strokeDasharray={inner ? "3 4" : undefined} />
-            <text x={cx - r * scale + 6} y={cy - 5} fontFamily="var(--mono)" fontSize="10.5" fill="#8A8A8A">{r} nm</text>
+            {/* Labels sit just inside the top of each ring, clear of the runway and the airport code. */}
+            {r * scale >= 26 && (i === 0 || (rings[i - 1] - r) * scale >= 14) && (
+              <text x={cx + 7} y={cy - r * scale + 14} fontFamily="var(--mono)" fontSize="10.5" fill="#8A8A8A">{r} nm</text>
+            )}
           </g>
         );
       })}
@@ -88,7 +93,7 @@ export default function RingMap({
           <g key={a.tail_number} opacity={a.on_ground ? 0.55 : 1}>
             {hot && <line x1={x} y1={y} x2={cx} y2={cy} stroke="#38BDF8" strokeWidth="1" strokeDasharray="2 5" opacity="0.6" />}
             {hot && <circle cx={x} cy={y} r="17" fill="rgba(56,189,248,0.14)" />}
-            <path fill="#FAFAFA" transform={`translate(${x},${y}) rotate(${a.heading ?? 0}) scale(0.8)`} d={PLANE_PATH} />
+            <path fill={paints?.[a.tail_number] ?? "#FAFAFA"} transform={`translate(${x},${y}) rotate(${a.heading ?? 0}) scale(0.8)`} d={PLANE_PATH} />
             <rect x={lx} y={y - 22} width="148" height="44" rx="9" fill="#0A0A0A" stroke={hot ? "#38BDF8" : "#2E2E2E"} strokeOpacity={hot ? 0.6 : 1} />
             <text x={lx + 12} y={y - 4} fontFamily="var(--mono)" fontSize="13" fontWeight="600" fill="#FAFAFA">{a.tail_number}</text>
             <text x={lx + 12} y={y + 12} fontFamily="var(--mono)" fontSize="10.5" fill="#A3A3A3">

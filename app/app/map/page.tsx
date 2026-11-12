@@ -16,6 +16,8 @@ import type { GroundRange } from "../_lib/types";
 import { Tail } from "../_components/kit";
 import ApproachLadder, { ladderSteps } from "../_components/ApproachLadder";
 import type { MapCoverage, MapPlane } from "../_components/LeafletMap";
+import Plane3D from "../_components/Plane3D";
+import { paintOf, usePaints } from "../_lib/paint";
 
 const LeafletMap = dynamic(() => import("../_components/LeafletMap"), {
   ssr: false,
@@ -29,6 +31,7 @@ export default function LiveMapPage() {
   const [showRange, setShowRange] = useState(false);
   const [range, setRange] = useState<GroundRange | null>(null);
   const [fitSeq, setFitSeq] = useState(0);
+  const paints = usePaints();
 
   const inbound = inboundOf(t.live, t.aircraft, t.airport);
 
@@ -50,6 +53,7 @@ export default function LiveMapPage() {
     .map((a) => ({
       tail: a.tail_number, lat: a.latitude as number, lon: a.longitude as number, heading: a.heading,
       live: inboundTails.has(a.tail_number), dim: !!a.on_ground,
+      type: t.aircraft.find((x) => x.tail_number === a.tail_number)?.aircraft_type, color: paintOf(a.tail_number, paints),
     }));
 
   const coverage: MapCoverage | null =
@@ -105,6 +109,7 @@ export default function LiveMapPage() {
       {/* selected aircraft */}
       {selected && (
         <aside className="fa-float fa-map-sheet" aria-label={`${selected} details`}>
+          <Plane3D key={selected} className="bleed" tail={selected} type={selInfo?.aircraft_type} color={paintOf(selected, paints)} height={150} />
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -160,7 +165,7 @@ export default function LiveMapPage() {
               <button key={a.id} className="fa-dock-item" aria-pressed={selected === a.tail_number}
                 onClick={() => setSelected(selected === a.tail_number ? null : a.tail_number)}>
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span className={`fa-dot ${hot ? "live" : stage === "airborne" ? "" : "hollow"}`} />
+                  <span className="fa-paint-dot" style={{ background: paintOf(a.tail_number, paints) }} />
                   <Tail>{a.tail_number}</Tail>
                 </span>
                 <span className="fa-note" style={{ color: hot ? "var(--accent)" : undefined }}>

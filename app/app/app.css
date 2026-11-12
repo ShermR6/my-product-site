@@ -219,6 +219,35 @@ button.fa-map-chip[aria-pressed="true"] { color: var(--text); border-color: #4A4
 
 .fa-range { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: center; }
 
+/* ----- 3D aircraft and paint colours. Colour belongs to an aircraft (--paint), never to the app's own controls. ----- */
+.fa-vp { position: relative; overflow: hidden; border-radius: 12px; background: radial-gradient(55% 60% at 50% 58%, color-mix(in srgb, var(--paint, #FAFAFA) 20%, transparent), transparent 72%), #0E0E0E; touch-action: pan-y; cursor: grab; }
+.fa-vp:active { cursor: grabbing; }
+.fa-vp::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 10%; height: 10%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), transparent); pointer-events: none; }
+.fa-vp canvas { position: relative; z-index: 1; display: block; width: 100%; height: 100%; }
+.fa-vp-tag { position: absolute; z-index: 2; left: 14px; top: 11px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--faint); pointer-events: none; }
+.fa-card > .fa-vp.bleed { margin: -18px -22px 16px; border-radius: 15px 15px 0 0; border-bottom: 1px solid var(--border); }
+.fa-map-sheet > .fa-vp.bleed { margin: -18px -18px 14px; border-radius: 0; border-bottom: 1px solid var(--border); }
+.fa-vp.inset { margin-bottom: 16px; border: 1px solid var(--border); }
+.fa-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.fa-swatches button { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--border-strong); cursor: pointer; }
+.fa-swatches.small { gap: 6px; }
+.fa-swatches.small button { width: 20px; height: 20px; }
+.fa-swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text); }
+.fa-paint-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.fa-hangar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.fa-hangar-item { display: block; overflow: hidden; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; transition: border-color 0.15s; }
+.fa-hangar-item:hover { border-color: var(--border-strong); }
+.fa-hangar-item .fa-vp { border-radius: 0; border-bottom: 1px solid var(--border); }
+.fa-hangar-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 11px 14px 12px; }
+.fa-hangar-meta .fa-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fa-plane.fa-plane-3d { width: 56px; height: 56px; border-radius: 50%; }
+.fa-plane.fa-plane-3d img { display: block; width: 56px; height: 56px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
+.fa-plane.fa-plane-3d.live { background: rgba(56, 189, 248, 0.14); }
+.fa-plane.fa-plane-3d.selected { box-shadow: inset 0 0 0 1.5px var(--paint, #FAFAFA); }
+.fa-plane.fa-plane-3d .fa-plane-label { left: 54px; top: 17px; }
+@media (max-width: 1180px) { .fa-hangar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .fa-hangar { display: flex; overflow-x: auto; gap: 12px; scroll-snap-type: x proximity; margin-right: -16px; padding-right: 16px; } .fa-hangar-item { flex: 0 0 68%; scroll-snap-align: start; } }
+
 .fp-app :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .fp-app * { transition: none !important; }
