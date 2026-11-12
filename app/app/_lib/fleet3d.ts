@@ -1,6 +1,7 @@
-// The 3D aircraft. Eight shapes built from code (no model files), all drawn by
-// one shared WebGL renderer and copied onto ordinary 2D canvases, so a screen
-// full of aircraft cards still uses a single WebGL context.
+// The 3D aircraft. Eight shapes built from code (no model files). Cards share
+// one WebGL renderer that copies onto ordinary 2D canvases, so a screen full of
+// aircraft uses a single WebGL context; the Live Map draws the same models
+// straight into its own canvas (see MapGL).
 //
 // Load this with import() from a client component: it pulls in three.js.
 // Model axes: nose +X, up +Y, right wing +Z.
@@ -106,10 +107,10 @@ function prop(r: number, pairs: number) {
   return { g, rot };
 }
 
-type Model = { pivot: T.Group; tilt: T.Group; accent: T.MeshStandardMaterial; rotors: Rotor[] };
+export type Model = { pivot: T.Group; tilt: T.Group; accent: T.MeshStandardMaterial; rotors: Rotor[] };
 
-/** solid = paint the whole aircraft (map markers); otherwise white with painted tail, nose and stripe. */
-function build(fam: Family, hex: string, solid: boolean): Model {
+/** solid = paint the whole aircraft (on the map); otherwise white with painted tail, nose and stripe. */
+export function buildModel(fam: Family, hex: string, solid: boolean): Model {
   const M = mats();
   const g = new T.Group();
   const rotors: Rotor[] = [];
@@ -282,9 +283,18 @@ function build(fam: Family, hex: string, solid: boolean): Model {
   return { pivot, tilt, accent: A, rotors };
 }
 
-function destroy(m: Model) {
+export function destroyModel(m: Model) {
   m.pivot.traverse((o) => { if (o instanceof T.Mesh) o.geometry.dispose(); });
   m.accent.dispose();
+}
+
+/** The same three lights everywhere a model is shown. */
+export function lightScene(scene: T.Scene) {
+  const key = new T.DirectionalLight(0xffffff, 2.8);
+  key.position.set(3, 5, 4);
+  const rim = new T.DirectionalLight(0xffffff, 1.1);
+  rim.position.set(-4, 2, -3);
+  scene.add(new T.HemisphereLight(0xffffff, 0x202020, 2.6), key, rim);
 }
 
 // ----- the shared renderer -----
@@ -303,12 +313,7 @@ function renderer(): T.WebGLRenderer | null {
     R.setSize(BW, BH, false);
     R.setClearColor(0x000000, 0);
     scene = new T.Scene();
-    scene.add(new T.HemisphereLight(0xffffff, 0x202020, 2.6));
-    const key = new T.DirectionalLight(0xffffff, 2.8);
-    key.position.set(3, 5, 4);
-    const rim = new T.DirectionalLight(0xffffff, 1.1);
-    rim.position.set(-4, 2, -3);
-    scene.add(key, rim);
+    lightScene(scene);
   } catch {
     failed = true; // no WebGL here; callers fall back to flat icons
     R = null;
@@ -380,7 +385,7 @@ function frame() {
 export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | null {
   const ctx = canvas.getContext("2d");
   if (!ctx || !renderer()) return null;
-  const model = build(o.family, o.color, false);
+  const model = buildModel(o.family, o.color, false);
   model.tilt.rotation.z = 0.05;
   const v: View = {
     canvas, ctx, model, cam: new T.PerspectiveCamera(24, 1, 0.1, 50),
@@ -404,37 +409,6 @@ export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | n
   if (!raf) raf = requestAnimationFrame(frame);
   return {
     setColor(hex) { model.accent.color.set(hex); v.dirty = true; },
-    dispose() { views.delete(v); v.off(); destroy(model); },
+    dispose() { views.delete(v); v.off(); destroyModel(model); },
   };
-}
-
-// ----- still pictures for map markers -----
-
-const sprites = new Map<string, string>();
-let spriteCanvas: HTMLCanvasElement | null = null;
-let spriteCam: T.PerspectiveCamera | null = null;
-
-/** A picture of the aircraft from above, nose turned to the heading. Cached. Null without WebGL. */
-export function sprite(family: Family, color: string, heading: number | null, px = 112): string | null {
-  const hdg = (((Math.round((heading ?? 0) / 10) * 10) % 360) + 360) % 360;
-  const key = `${family}|${color}|${hdg}|${px}`;
-  const hit = sprites.get(key);
-  if (hit) return hit;
-  if (!renderer()) return null;
-  spriteCanvas ??= document.createElement("canvas");
-  spriteCanvas.width = spriteCanvas.height = px;
-  const ctx = spriteCanvas.getContext("2d");
-  if (!ctx) return null;
-  if (!spriteCam) {
-    spriteCam = new T.PerspectiveCamera(20, 1, 0.1, 50);
-    spriteCam.position.set(0, 9, 3);
-    spriteCam.lookAt(0, 0, 0);
-  }
-  const model = build(family, color, true);
-  model.pivot.rotation.y = PI / 2 - (hdg * PI) / 180;
-  draw(model, spriteCam, px, px, ctx);
-  destroy(model);
-  const url = spriteCanvas.toDataURL("image/png");
-  sprites.set(key, url);
-  return url;
 }

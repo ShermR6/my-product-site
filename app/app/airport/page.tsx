@@ -12,7 +12,7 @@ import { Btn, Card, Modal, PageHead, Tail, Toggle } from "../_components/kit";
 import RingEditor from "../_components/RingEditor";
 import AirportSearch, { findAirports } from "../_components/AirportSearch";
 
-const LeafletMap = dynamic(() => import("../_components/LeafletMap"), { ssr: false });
+const MapGL = dynamic(() => import("../_components/MapGL"), { ssr: false });
 
 type Draft = {
   code: string;
@@ -263,7 +263,7 @@ export default function AirportPage() {
           </div>
 
           <div className="fa-mapcard fa-preview">
-            <LeafletMap center={center} code={draft.code} rings={sortedRings} interactive={false} />
+            <MapGL center={center} code={draft.code} rings={sortedRings} interactive={false} />
             <div className="fa-map-chip" style={{ position: "absolute", left: 16, top: 16, zIndex: 450 }}>Preview · updates as you edit</div>
           </div>
         </div>

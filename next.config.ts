@@ -3,14 +3,16 @@ import type { NextConfig } from "next";
 // CSP applied in production only — dev needs eval/websockets for HMR.
 // 'unsafe-inline' is required for Next's inline bootstrap scripts and the
 // site's inline styles. PostHog (*.i.posthog.com) is the only external script
-// host. services.arcgisonline.com serves the web app's map tiles (images only).
+// host. tiles.openfreemap.org serves the web app's map tiles and label fonts;
+// the map's worker is our own file under /maplibre.
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://*.i.posthog.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://m.media-amazon.com https://services.arcgisonline.com",
+  "img-src 'self' data: blob: https://m.media-amazon.com",
   "font-src 'self'",
-  "connect-src 'self' https://*.i.posthog.com https://api.mapbox.com",
+  "connect-src 'self' https://*.i.posthog.com https://api.mapbox.com https://tiles.openfreemap.org https://elevation-tiles-prod.s3.amazonaws.com",
+  "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

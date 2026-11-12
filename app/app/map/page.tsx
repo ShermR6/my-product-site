@@ -6,7 +6,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Crosshair, X } from "lucide-react";
+import { Box, Crosshair, X } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api } from "../_lib/tracker";
 import {
@@ -15,11 +15,11 @@ import {
 import type { GroundRange } from "../_lib/types";
 import { Tail } from "../_components/kit";
 import ApproachLadder, { ladderSteps } from "../_components/ApproachLadder";
-import type { MapCoverage, MapPlane } from "../_components/LeafletMap";
+import type { MapCoverage, MapPlane } from "../_components/MapGL";
 import Plane3D from "../_components/Plane3D";
 import { paintOf, usePaints } from "../_lib/paint";
 
-const LeafletMap = dynamic(() => import("../_components/LeafletMap"), {
+const MapGL = dynamic(() => import("../_components/MapGL"), {
   ssr: false,
   loading: () => <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)" }}>Loading map…</div>,
 });
@@ -31,6 +31,7 @@ export default function LiveMapPage() {
   const [showRange, setShowRange] = useState(false);
   const [range, setRange] = useState<GroundRange | null>(null);
   const [fitSeq, setFitSeq] = useState(0);
+  const [tilt, setTilt] = useState(false);
   const paints = usePaints();
 
   const inbound = inboundOf(t.live, t.aircraft, t.airport);
@@ -54,6 +55,8 @@ export default function LiveMapPage() {
       tail: a.tail_number, lat: a.latitude as number, lon: a.longitude as number, heading: a.heading,
       live: inboundTails.has(a.tail_number), dim: !!a.on_ground,
       type: t.aircraft.find((x) => x.tail_number === a.tail_number)?.aircraft_type, color: paintOf(a.tail_number, paints),
+      speedKt: a.velocity_kts,
+      altFt: a.altitude_ft_agl ?? (a.altitude_ft_msl != null ? a.altitude_ft_msl - (t.airport?.elevation_ft_msl ?? 0) : null),
     }));
 
   const coverage: MapCoverage | null =
@@ -83,9 +86,9 @@ export default function LiveMapPage() {
 
   return (
     <div className="fa-map-full">
-      <LeafletMap
+      <MapGL
         center={center} code={t.airport?.airport_code} rings={rings} planes={planes}
-        selected={selected} onSelect={setSelected} showRings={showRings} coverage={coverage} fitSeq={fitSeq}
+        selected={selected} onSelect={setSelected} showRings={showRings} coverage={coverage} fitSeq={fitSeq} tilt={tilt}
       />
 
       {/* layer chips */}
@@ -98,6 +101,9 @@ export default function LiveMapPage() {
             <span className={`fa-dot ${showRange ? "" : "hollow"}`} style={{ width: 6, height: 6 }} />Receiver range
           </button>
         )}
+        <button className="fa-map-chip" aria-pressed={tilt} onClick={() => setTilt((v) => !v)} aria-label="Tilt the map for a 3D view">
+          <Box size={13} aria-hidden="true" />3D
+        </button>
         <button className="fa-map-chip" onClick={() => setFitSeq((n) => n + 1)} aria-label="Center on the airport">
           <Crosshair size={13} aria-hidden="true" />{t.airport?.airport_code ?? "Center"}
         </button>

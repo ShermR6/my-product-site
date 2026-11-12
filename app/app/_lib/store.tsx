@@ -6,6 +6,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "./tracker";
+import { recordFixes } from "./trails";
 import type { Aircraft, AirportConfig, GroundStatus, Integration, LiveAircraft, Me, NotificationLog } from "./types";
 
 const LIVE_MS = 10_000;   // positions and ground station status
@@ -80,7 +81,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   const loadLive = useCallback(async () => {
     const [lv, gs] = await Promise.all([get<LiveAircraft[]>("aircraft/live"), get<GroundStatus>("ground/status")]);
     setNow(Date.now());
-    if (lv.ok) { setLive(lv.value); setOffline(false); setUpdatedAt(new Date()); }
+    if (lv.ok) { recordFixes(lv.value); setLive(lv.value); setOffline(false); setUpdatedAt(new Date()); }
     else if (!gate(lv.status)) setOffline(lv.status === 0 || lv.status >= 500);
     if (gs.ok) { setGround(gs.value); setGroundEnabled(true); }
     else if (gs.status === 403) { setGround(null); setGroundEnabled(false); }
