@@ -5,7 +5,7 @@
 // for it. Without WebGL the box just keeps its soft glow.
 
 import { useEffect, useRef } from "react";
-import { FAMILY_LABEL, familyOf } from "../_lib/paint";
+import { FAMILY_LABEL, familyOf, modelOf } from "../_lib/paint";
 import type { ViewHandle } from "../_lib/fleet3d";
 
 export default function Plane3D({
@@ -26,6 +26,11 @@ export default function Plane3D({
   const handle = useRef<ViewHandle | null>(null);
   const latest = useRef(color);
   const family = familyOf(type);
+  const real = modelOf(type);
+  const modelId = real?.id ?? "";
+  const modelV = real?.v ?? "";
+  // A borrowed model (an R22 drawn as an R44) keeps the general name.
+  const label = real?.exact ? real.label : FAMILY_LABEL[family];
 
   useEffect(() => {
     latest.current = color;
@@ -36,19 +41,19 @@ export default function Plane3D({
     let gone = false;
     import("../_lib/fleet3d").then((m) => {
       if (gone || !canvas.current) return;
-      handle.current = m.mount(canvas.current, { family, color: latest.current, speed, start });
+      handle.current = m.mount(canvas.current, { family, color: latest.current, speed, start, model: modelId ? { id: modelId, v: modelV } : null });
     }).catch(() => {});
     return () => {
       gone = true;
       handle.current?.dispose();
       handle.current = null;
     };
-  }, [family, speed, start]);
+  }, [family, modelId, modelV, speed, start]);
 
   return (
     <div className={`fa-vp ${className}`} style={{ height, ["--paint" as string]: color }}>
-      <canvas ref={canvas} role="img" aria-label={`3D model of ${tail}, a ${FAMILY_LABEL[family].toLowerCase()}. Drag to turn it.`} />
-      {tag && <span className="fa-vp-tag">{FAMILY_LABEL[family]}</span>}
+      <canvas ref={canvas} role="img" aria-label={`3D model of ${tail}: ${label}. Drag to turn it.`} />
+      {tag && <span className="fa-vp-tag">{label}</span>}
     </div>
   );
 }

@@ -9,8 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import * as ml from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import * as T from "three";
-import { buildModel, destroyModel, lightScene, type Model } from "../_lib/fleet3d";
-import { familyOf, type Family } from "../_lib/paint";
+import { destroyModel, lightScene, loadReal, makeModel, type Model } from "../_lib/fleet3d";
+import { familyOf, modelOf, type Family } from "../_lib/paint";
 import { MAP_STYLE } from "../_lib/mapStyle";
 import { trailOf } from "../_lib/trails";
 
@@ -77,6 +77,8 @@ function circle(lat: number, lon: number, nm: number): [number, number][] {
 type Track = {
   plane: MapPlane;
   family: Family;
+  /** Which real model it uses, or "" for a built-in shape. */
+  modelId: string;
   color: string;
   model: Model;
   el: HTMLButtonElement;
@@ -396,15 +398,31 @@ export default function MapGL({
     for (const p of planes) {
       seen.add(p.tail);
       const family = familyOf(p.type);
+      const real = modelOf(p.type);
+      const modelId = real?.id ?? "";
       const color = p.color && /^#[0-9a-fA-F]{6}$/.test(p.color) ? p.color : "#FAFAFA";
       let tr = S.tracks.get(p.tail);
-      if (tr && tr.family !== family) {
+      if (tr && (tr.family !== family || tr.modelId !== modelId)) {
         scene.remove(tr.model.pivot); destroyModel(tr.model); tr.el.remove(); S.tracks.delete(p.tail); tr = undefined;
       }
       if (!tr) {
-        const model = buildModel(family, color, true);
+        const model = makeModel(family, real, color, true);
         model.pivot.traverse((o) => { o.frustumCulled = false; });
         scene.add(model.pivot);
+        if (real && !model.real) {
+          // Drawn as a built-in shape for now; change over when the file arrives.
+          void loadReal(real).then((ok) => {
+            const cur = S.tracks.get(p.tail);
+            if (!ok || !cur || cur.model !== model || stage.current !== S) return;
+            const next = makeModel(family, real, cur.color, true);
+            next.pivot.traverse((o) => { o.frustumCulled = false; });
+            scene.remove(model.pivot);
+            destroyModel(model);
+            cur.model = next;
+            scene.add(next.pivot);
+            S.map.triggerRepaint();
+          });
+        }
         const btn = document.createElement("button");
         btn.type = "button";
         btn.hidden = true;
@@ -414,7 +432,7 @@ export default function MapGL({
         btn.addEventListener("click", (e) => { e.stopPropagation(); onSelectRef.current?.(p.tail); });
         box.appendChild(btn);
         const at = S.toLocal(p.lat, p.lon);
-        tr = { plane: p, family, color, model, el: btn, fixLat: p.lat, fixLon: p.lon, fx: at.x, fz: at.z, fixAt: performance.now(), x: at.x, z: at.z, hdg: p.heading ?? 0 };
+        tr = { plane: p, family, modelId, color, model, el: btn, fixLat: p.lat, fixLon: p.lon, fx: at.x, fz: at.z, fixAt: performance.now(), x: at.x, z: at.z, hdg: p.heading ?? 0 };
         S.tracks.set(p.tail, tr);
       }
       if (tr.color !== color) { tr.model.accent.color.set(color); tr.color = color; }

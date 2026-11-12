@@ -5,6 +5,7 @@
 // number. This file has no 3D code in it, so any screen can import it cheaply.
 
 import { useSyncExternalStore } from "react";
+import { MODEL_LIST } from "./modelList";
 
 export type Family = "highwing" | "lowwing" | "twin" | "tprop" | "tprop2" | "jet" | "airliner" | "heli";
 
@@ -51,6 +52,33 @@ export function familyOf(type?: string | null): Family {
   if (!t) return "lowwing";
   for (const [fam, re] of RULES) if (re.test(t)) return fam;
   return "lowwing";
+}
+
+// ----- real models -----
+
+export type ModelRef = {
+  id: string;
+  /** What the model is, e.g. "Cessna 172 Skyhawk". */
+  label: string;
+  /** Changes when the file does, so browsers can keep it for good. */
+  v: string;
+  /** False when this type only borrows a close relative's model. */
+  exact: boolean;
+};
+
+let MODELS: { ref: ModelRef; exact: RegExp; alias: RegExp | null }[] | null = null;
+const word = (p: string) => new RegExp(`\\b(?:${p})\\b`);
+
+/** The real 3D model for this type, if there is one. Others use the eight built-in shapes. */
+export function modelOf(type?: string | null): ModelRef | null {
+  const t = (type ?? "").toUpperCase().replace(/TEXTRON AVIATION( INC)?/g, "CESSNA").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  MODELS ??= MODEL_LIST.map(([id, label, v, exact, alias]) => ({
+    ref: { id, label, v, exact: true }, exact: word(exact), alias: alias ? word(alias) : null,
+  }));
+  for (const m of MODELS) if (m.exact.test(t)) return m.ref;
+  for (const m of MODELS) if (m.alias?.test(t)) return { ...m.ref, exact: false };
+  return null;
 }
 
 // ----- the user's colour picks (kept in this browser) -----

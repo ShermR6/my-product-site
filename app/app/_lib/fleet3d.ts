@@ -1,4 +1,6 @@
-// The 3D aircraft. Eight shapes built from code (no model files). Cards share
+// The 3D aircraft. Types we have a real model for load it from /models (see
+// scripts/models); everything else, and every aircraft until its file arrives,
+// uses one of eight shapes built from code. Cards share
 // one WebGL renderer that copies onto ordinary 2D canvases, so a screen full of
 // aircraft uses a single WebGL context; the Live Map draws the same models
 // straight into its own canvas (see MapGL).
@@ -18,13 +20,14 @@ type Rotor = { o: T.Object3D; ax: "x" | "y" | "z"; v: number };
 const std = (color: T.ColorRepresentation, o: T.MeshStandardMaterialParameters = {}) =>
   new T.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05, side: T.DoubleSide, ...o });
 
-let MAT: { body: Mat; dark: Mat; glass: Mat; blade: Mat; disc: Mat } | null = null;
+let MAT: { body: Mat; dark: Mat; glass: Mat; blade: Mat; disc: Mat; rotor: Mat } | null = null;
 function mats() {
   return (MAT ??= {
     body: std(0xededed),
     dark: std(0x1c1c1c, { roughness: 0.7 }),
     glass: std(0x0b1017, { roughness: 0.15, metalness: 0.5 }),
     blade: std(0x2a2a2a, { transparent: true, opacity: 0.55 }),
+    rotor: std(0x5c5c5c, { roughness: 0.6 }),
     disc: new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.06, side: T.DoubleSide, depthWrite: false }),
   });
 }
@@ -107,7 +110,13 @@ function prop(r: number, pairs: number) {
   return { g, rot };
 }
 
-export type Model = { pivot: T.Group; tilt: T.Group; accent: T.MeshStandardMaterial; rotors: Rotor[] };
+export type Model = {
+  pivot: T.Group; tilt: T.Group; accent: T.MeshStandardMaterial; rotors: Rotor[];
+  /** True for a model loaded from a file. */
+  real?: boolean;
+  /** Materials made for this one model, to free with it. */
+  own?: Mat[];
+};
 
 /** solid = paint the whole aircraft (on the map); otherwise white with painted tail, nose and stripe. */
 export function buildModel(fam: Family, hex: string, solid: boolean): Model {
@@ -284,8 +293,133 @@ export function buildModel(fam: Family, hex: string, solid: boolean): Model {
 }
 
 export function destroyModel(m: Model) {
-  m.pivot.traverse((o) => { if (o instanceof T.Mesh) o.geometry.dispose(); });
+  // Loaded models share their geometry between every aircraft of that type.
+  m.pivot.traverse((o) => { if (o instanceof T.Mesh && !o.geometry.userData.shared) o.geometry.dispose(); });
   m.accent.dispose();
+  m.own?.forEach((x) => x.dispose());
+}
+
+// ----- real models -----
+
+/** Which file to load: the id and version from modelOf() in paint.ts. */
+export type ModelFile = { id: string; v: string };
+type Part = { kind: "body" | "glass" | "trim" | "spin"; geo: T.BufferGeometry; at: V3; ax: "x" | "y" | "z" };
+type Zones = { tailX: number; noseX: number; stripeY: number; stripeH: number; fuseZ: number };
+type Real = { parts: Part[]; zones: Zones };
+
+const REAL = new Map<string, Real | null>(); // null: the file could not be used
+const LOADING = new Map<string, Promise<boolean>>();
+
+type GltfDoc = {
+  asset: { extras: Zones };
+  nodes: { name: string; mesh: number; scale?: number[]; translation?: number[]; extras?: { axis?: string } }[];
+  meshes: { primitives: { attributes: { POSITION: number; NORMAL: number }; indices: number }[] }[];
+  accessors: { bufferView: number; componentType: number; count: number }[];
+  bufferViews: { byteOffset: number }[];
+};
+
+/** Read one of our own model files: 16-bit positions, 8-bit normals, one node per part. */
+function parseReal(buf: ArrayBuffer): Real {
+  const dv = new DataView(buf);
+  if (dv.getUint32(0, true) !== 0x46546c67) throw new Error("not a model file");
+  const jl = dv.getUint32(12, true);
+  const doc = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))) as GltfDoc;
+  const bin = 20 + jl + 8;
+  const parts: Part[] = [];
+  for (const n of doc.nodes) {
+    const pr = doc.meshes[n.mesh].primitives[0];
+    const pa = doc.accessors[pr.attributes.POSITION];
+    const ia = doc.accessors[pr.indices];
+    const po = bin + doc.bufferViews[pa.bufferView].byteOffset;
+    const no = bin + doc.bufferViews[doc.accessors[pr.attributes.NORMAL].bufferView].byteOffset;
+    const io = bin + doc.bufferViews[ia.bufferView].byteOffset;
+    const k = (n.scale?.[0] ?? 1) / 32767;
+    const pos = new Float32Array(pa.count * 3);
+    const nrm = new Float32Array(pa.count * 3);
+    for (let i = 0; i < pa.count; i++) {
+      for (let c = 0; c < 3; c++) {
+        pos[i * 3 + c] = dv.getInt16(po + i * 8 + c * 2, true) * k;
+        nrm[i * 3 + c] = dv.getInt8(no + i * 4 + c) / 127;
+      }
+    }
+    const wide = ia.componentType === 5125;
+    const raw = buf.slice(io, io + ia.count * (wide ? 4 : 2));
+    const geo = new T.BufferGeometry();
+    geo.setAttribute("position", new T.BufferAttribute(pos, 3));
+    geo.setAttribute("normal", new T.BufferAttribute(nrm, 3));
+    geo.setIndex(new T.BufferAttribute(wide ? new Uint32Array(raw) : new Uint16Array(raw), 1));
+    geo.userData.shared = true;
+    const kind = n.name === "glass" || n.name === "trim" || n.name === "spin" ? n.name : "body";
+    const ax = n.extras?.axis === "y" || n.extras?.axis === "z" ? n.extras.axis : "x";
+    const t = n.translation ?? [0, 0, 0];
+    parts.push({ kind, geo, at: [t[0], t[1], t[2]], ax });
+  }
+  return { parts, zones: doc.asset.extras };
+}
+
+/** Fetch a model file once. Resolves true when it is ready to draw. */
+export function loadReal(f: ModelFile): Promise<boolean> {
+  if (REAL.has(f.id)) return Promise.resolve(REAL.get(f.id) != null);
+  let p = LOADING.get(f.id);
+  if (!p) {
+    p = fetch(`/models/${f.id}.glb?v=${f.v}`)
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.arrayBuffer(); })
+      .then((b) => { REAL.set(f.id, parseReal(b)); return true; })
+      .catch(() => { REAL.set(f.id, null); return false; }) // keep the built-in shape
+      .finally(() => { LOADING.delete(f.id); });
+    LOADING.set(f.id, p);
+  }
+  return p;
+}
+
+/** White paintwork with the tail, nose and a stripe along the fuselage in the aircraft's colour. */
+function paintwork(paint: T.Color, z: Zones) {
+  const m = std(0xededed);
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uPaint = { value: paint };
+    sh.uniforms.uZone = { value: new T.Vector4(z.tailX, z.noseX, z.stripeY, z.stripeH) };
+    sh.uniforms.uHalf = { value: z.fuseZ };
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vAt;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvAt = position;");
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 uPaint;\nuniform vec4 uZone;\nuniform float uHalf;\nvarying vec3 vAt;")
+      .replace(
+        "#include <color_fragment>",
+        "#include <color_fragment>\nif (vAt.x < uZone.x || vAt.x > uZone.y || (abs(vAt.y - uZone.z) < uZone.w && abs(vAt.z) < uHalf)) diffuseColor.rgb = uPaint;",
+      );
+  };
+  m.customProgramCacheKey = () => "fp-paintwork";
+  return m;
+}
+
+function realModel(real: Real, hex: string, solid: boolean): Model {
+  const M = mats();
+  const A = std(hex, { roughness: 0.42 });
+  const own: Mat[] = [];
+  let B: Mat = A;
+  if (!solid) { B = paintwork(A.color, real.zones); own.push(B); }
+  const g = new T.Group();
+  const rotors: Rotor[] = [];
+  for (const p of real.parts) {
+    // On map markers a helicopter's main rotor is painted too, like the built-in one.
+    const mat = p.kind === "body" ? B : p.kind === "glass" ? M.glass : p.kind === "trim" ? M.dark : solid && p.ax === "y" ? A : M.rotor;
+    const mesh = new T.Mesh(p.geo, mat);
+    mesh.position.set(p.at[0], p.at[1], p.at[2]);
+    g.add(mesh);
+    if (p.kind === "spin") rotors.push({ o: mesh, ax: p.ax, v: p.ax === "y" ? 0.33 : p.ax === "z" ? 0.6 : 0.5 });
+  }
+  const tilt = new T.Group();
+  tilt.add(g);
+  const pivot = new T.Group();
+  pivot.add(tilt);
+  return { pivot, tilt, accent: A, rotors, real: true, own };
+}
+
+/** The real model when its file has loaded; otherwise the built-in shape for the family. */
+export function makeModel(fam: Family, file: ModelFile | null | undefined, hex: string, solid: boolean): Model {
+  const real = file ? REAL.get(file.id) : null;
+  return real ? realModel(real, hex, solid) : buildModel(fam, hex, solid);
 }
 
 /** The same three lights everywhere a model is shown. */
@@ -336,7 +470,7 @@ function draw(model: Model, cam: T.Camera, w: number, h: number, ctx: CanvasRend
 
 // ----- turning models on cards -----
 
-export type ViewOptions = { family: Family; color: string; speed?: number; start?: number };
+export type ViewOptions = { family: Family; color: string; speed?: number; start?: number; model?: ModelFile | null };
 export type ViewHandle = { setColor: (hex: string) => void; dispose: () => void };
 
 type View = {
@@ -385,10 +519,14 @@ function frame() {
 export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | null {
   const ctx = canvas.getContext("2d");
   if (!ctx || !renderer()) return null;
-  const model = buildModel(o.family, o.color, false);
-  model.tilt.rotation.z = 0.05;
+  let color = o.color;
+  const make = () => {
+    const m = makeModel(o.family, o.model, color, false);
+    m.tilt.rotation.z = 0.05;
+    return m;
+  };
   const v: View = {
-    canvas, ctx, model, cam: new T.PerspectiveCamera(24, 1, 0.1, 50),
+    canvas, ctx, model: make(), cam: new T.PerspectiveCamera(24, 1, 0.1, 50),
     ang: o.start ?? -0.6, speed: o.speed ?? 0.006, drag: false, dirty: true, off: () => {},
   };
   let px = 0;
@@ -407,8 +545,18 @@ export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | n
   };
   views.add(v);
   if (!raf) raf = requestAnimationFrame(frame);
+  // Start with the built-in shape and change to the real model when its file arrives.
+  if (o.model && !v.model.real) {
+    void loadReal(o.model).then((ok) => {
+      if (!ok || !views.has(v)) return;
+      const old = v.model;
+      v.model = make();
+      destroyModel(old);
+      v.dirty = true;
+    });
+  }
   return {
-    setColor(hex) { model.accent.color.set(hex); v.dirty = true; },
-    dispose() { views.delete(v); v.off(); destroyModel(model); },
+    setColor(hex) { color = hex; v.model.accent.color.set(hex); v.dirty = true; },
+    dispose() { views.delete(v); v.off(); destroyModel(v.model); },
   };
 }

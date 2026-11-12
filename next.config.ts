@@ -41,6 +41,11 @@ const nextConfig: NextConfig = {
             : []),
         ],
       },
+      {
+        // Aircraft models are requested with ?v=<hash of the file>, so a browser can keep them.
+        source: "/models/:file*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
   async redirects() {

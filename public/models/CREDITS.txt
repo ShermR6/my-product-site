@@ -1,0 +1,513 @@
+Aircraft models used by the FinalPing web app
+=============================================
+
+The .glb files in this folder are simplified versions of 3D models made by the
+FlightGear community (https://www.flightgear.org, aircraft from FGAddon) and by
+Flightradar24 (https://github.com/Flightradar24/fr24-3d-models).
+
+Licence: GNU General Public License, version 2 (see COPYING.txt). The original
+models are published under that licence and these converted files are offered
+under the same licence. You may copy, change and share them on those terms.
+
+What was changed: textures, cockpits and other hidden parts were removed, the
+meshes were simplified to about 10,000 triangles, and each model was turned to
+face +X and scaled to a common size. The scripts that do this are in the site's
+source under scripts/models/.
+
+Models
+------
+r44.glb        Robinson R44
+               from flightgear/helicopters/R44
+               by BARANGER Emmanuel, AUBERGER Jean Michel, BACON Guillaume (Sounds, Simulation Config), DE L'HAMAIDE Clément, Emmanuel BARANGER /JM-26 /BACON Guillaume
+
+b06.glb        Bell 206 JetRanger
+               from flightgear/helicopters/Bell-206
+               by Anders Gidenstam, Mojo, StuartC
+
+b407.glb       Bell 407
+               from flightgear/helicopters/bell407
+               by Anders Gidenstam, StuartC, Maik Justus
+
+uh1.glb        Bell UH-1 Huey
+               from flightgear/helicopters/UH-1
+               by BARANGER Emmanuel, StuartC, Heiko Schulz, Simon Lister, Maik Justus (FDM, sound)
+
+uh60.glb       Sikorsky UH-60 Black Hawk
+               from flightgear/helicopters/UH-60
+               by Anders Gidenstam, Reagan Thomas, Maik Justus, StuartC +, Geed, Garry Brown, Hitoshi Uchida, BARANGER Emmanuel, Maik Justus + StuartC
+
+as350.glb      Airbus H125 / AS350
+               from flightgear/helicopters/AS350
+               by Anders Gidenstam, StuartC, Maik Justus
+
+ec130.glb      Airbus H130 / EC130
+               from flightgear/helicopters/ec130
+               by Heiko Schulz, Melchior Franz, Michael Habarta (Model-Details, Animations, Liveries)
+
+ec135.glb      Airbus H135 / EC135
+               from fr24-3d-models/models/heli.glb
+               by Flightradar24 AB
+
+ec145.glb      Airbus H145 / EC145
+               from flightgear/helicopters/ec145
+               by Anders Gidenstam, Melchior Franz Heiko Schulz, Maik Justus, StuartC, Melchior Franz
+
+bk117.glb      MBB/Kawasaki BK 117
+               from flightgear/helicopters/bk117
+               by Melchior Franz Heiko Schulz, Maik Justus, Melchior Franz
+
+bo105.glb      MBB Bo 105
+               from flightgear/helicopters/bo105
+               by Melchior Franz (3d, nasal scripts, configs), Maik Justus
+
+md900.glb      MD 900 Explorer
+               from flightgear/helicopters/md900
+               by Martien van der Plas, Marco F., Heiko Schulz
+
+h500.glb       MD 500 / Hughes 500
+               from flightgear/helicopters/hughes500
+               by Alphasim, StuartC, Maik Justus, Anders Gidenstam
+
+aw139.glb      Leonardo AW139
+               from flightgear/helicopters/aw139
+               by Heiko Schulz, Maik Justus, Melchior Franz, LesterBoffo Rotor, liveries, interior animations, coding, patches
+
+a318.glb       Airbus A318
+               from fr24-3d-models/models/a318.glb
+               by Flightradar24 AB
+
+a319.glb       Airbus A319
+               from fr24-3d-models/models/a319.glb
+               by Flightradar24 AB
+
+a320.glb       Airbus A320
+               from fr24-3d-models/models/a320.glb
+               by Flightradar24 AB
+
+a321.glb       Airbus A321
+               from fr24-3d-models/models/a321.glb
+               by Flightradar24 AB
+
+a332.glb       Airbus A330-200
+               from fr24-3d-models/models/a332.glb
+               by Flightradar24 AB
+
+a333.glb       Airbus A330-300
+               from fr24-3d-models/models/a333.glb
+               by Flightradar24 AB
+
+a343.glb       Airbus A340-300
+               from fr24-3d-models/models/a343.glb
+               by Flightradar24 AB
+
+a346.glb       Airbus A340-600
+               from fr24-3d-models/models/a346.glb
+               by Flightradar24 AB
+
+a359.glb       Airbus A350
+               from fr24-3d-models/models/a359.glb
+               by Flightradar24 AB
+
+a388.glb       Airbus A380
+               from fr24-3d-models/models/a380.glb
+               by Flightradar24 AB
+
+beluga.glb     Airbus Beluga
+               from fr24-3d-models/models/beluga.glb
+               by Flightradar24 AB
+
+bcs1.glb       Airbus A220-100
+               from fr24-3d-models/models/cs100.glb
+               by Flightradar24 AB
+
+bcs3.glb       Airbus A220-300
+               from fr24-3d-models/models/cs300.glb
+               by Flightradar24 AB
+
+b712.glb       Boeing 717
+               from flightgear/airliners/717
+               by the FlightGear aircraft authors
+
+b733.glb       Boeing 737-300
+               from flightgear/airliners/737-300
+               by Original by David Culp, Innis Cunningham, Heiko Schulz (3D, Panel), Emmanuel Baranger - Current Version by Jarvum, e-pilot, Skyop, Soitanen
+
+b736.glb       Boeing 737-600
+               from fr24-3d-models/models/b736.glb
+               by Flightradar24 AB
+
+b737.glb       Boeing 737-700
+               from fr24-3d-models/models/b737.glb
+               by Flightradar24 AB
+
+b738.glb       Boeing 737-800
+               from fr24-3d-models/models/b738.glb
+               by Flightradar24 AB
+
+b739.glb       Boeing 737-900
+               from fr24-3d-models/models/b739.glb
+               by Flightradar24 AB
+
+b744.glb       Boeing 747-400
+               from fr24-3d-models/models/b744.glb
+               by Flightradar24 AB
+
+b748.glb       Boeing 747-8
+               from fr24-3d-models/models/b748.glb
+               by Flightradar24 AB
+
+b752.glb       Boeing 757-200
+               from fr24-3d-models/models/b752.glb
+               by Flightradar24 AB
+
+b753.glb       Boeing 757-300
+               from fr24-3d-models/models/b753.glb
+               by Flightradar24 AB
+
+b762.glb       Boeing 767-200
+               from fr24-3d-models/models/b762.glb
+               by Flightradar24 AB
+
+b763.glb       Boeing 767-300
+               from fr24-3d-models/models/b763.glb
+               by Flightradar24 AB
+
+b764.glb       Boeing 767-400
+               from fr24-3d-models/models/b764.glb
+               by Flightradar24 AB
+
+b772.glb       Boeing 777-200
+               from fr24-3d-models/models/b772.glb
+               by Flightradar24 AB
+
+b773.glb       Boeing 777-300
+               from fr24-3d-models/models/b773.glb
+               by Flightradar24 AB
+
+b788.glb       Boeing 787-8
+               from fr24-3d-models/models/b788.glb
+               by Flightradar24 AB
+
+b789.glb       Boeing 787-9
+               from fr24-3d-models/models/b789.glb
+               by Flightradar24 AB
+
+bae146.glb     BAe 146 / Avro RJ
+               from fr24-3d-models/models/bae146.glb
+               by Flightradar24 AB
+
+crj2.glb       Bombardier CRJ200
+               from flightgear/turboprops-regional/CRJ-200
+               by Joshua Wilson/Nick I
+
+crj7.glb       Bombardier CRJ700
+               from fr24-3d-models/models/crj700.glb
+               by Flightradar24 AB
+
+crj9.glb       Bombardier CRJ900
+               from fr24-3d-models/models/crj900.glb
+               by Flightradar24 AB
+
+e145.glb       Embraer ERJ 145
+               from flightgear/turboprops-regional/Embraer-ERJ-145
+               by Emmanuel BARANGER, 'Buckaroo', Jonathan REDPATH
+
+e170.glb       Embraer E170 / E175
+               from fr24-3d-models/models/e170.glb
+               by Flightradar24 AB
+
+e190.glb       Embraer E190 / E195
+               from fr24-3d-models/models/e190.glb
+               by Flightradar24 AB
+
+c17.glb        Boeing C-17 Globemaster
+               from flightgear/airliners/C-17
+               by Mathias Froehlich, Algernon, IH-COL, D. Waggoner, Jon Bourgeois, Adam Fothergill, Geed, StuartC
+
+c130.glb       Lockheed C-130 Hercules
+               from flightgear/turboprops-regional/C130
+               by BARANGER Emmanuel, FABERT Didier, Jettoo, Jack Mermod
+
+at45.glb       ATR 42
+               from fr24-3d-models/models/atr42.glb
+               by Flightradar24 AB
+
+at72.glb       ATR 72
+               from flightgear/turboprops-regional/ATR-72-500
+               by Ryan Miller
+
+dh8d.glb       De Havilland Dash 8 Q400
+               from flightgear/turboprops-regional/dhc8-400
+               by Alex Park
+
+dh8c.glb       De Havilland Dash 8-300
+               from flightgear/turboprops-regional/dhc8
+               by Alex Park
+
+d228.glb       Dornier 228
+               from flightgear/turboprops-regional/DO-228
+               by BARANGER Emmanuel
+
+d328.glb       Dornier 328
+               from flightgear/turboprops-regional/do328
+               by HHS (3d, config, fdm), xcvb85 (Primus 2000 Canvas, debug), clm76 (CDU, RMU), Jentron (prop, turbine files)
+
+l410.glb       Let L-410 Turbolet
+               from flightgear/turboprops-regional/Let-L410
+               by Jiří &amp, Jiří Javůrek, Emmanuel Baranger
+
+sw4.glb        Fairchild Metroliner
+               from flightgear/turboprops-regional/Fairchild-Metroliner
+               by BARANGER Emmanuel
+
+sc7.glb        Short Skyvan
+               from flightgear/turboprops-regional/Skyvan
+               by BARANGER Emmanuel
+
+bn2.glb        Britten-Norman Islander
+               from flightgear/light-aircraft/BN-2
+               by Paul RICHTER, configuration, FDM based on work by Syd Adams
+
+b350.glb       Beechcraft King Air 350
+               from flightgear/turboprops-regional/KingAir-350
+               by JWocky, it0uchpods, IAHM-COL, GabrielYV
+
+be20.glb       Beechcraft King Air 200
+               from flightgear/turboprops-regional/Beechcraft-King-Air
+               by BARANGER Emmanuel
+
+p180.glb       Piaggio P.180 Avanti
+               from flightgear/turboprops-regional/P180
+               by Guillaume Chauvat
+
+star.glb       Beechcraft Starship
+               from flightgear/turboprops-regional/Starship
+               by Emmanuel BARANGER
+
+pc12.glb       Pilatus PC-12
+               from flightgear/light-aircraft/PC-12
+               by Emmanuel BARANGER
+
+c208.glb       Cessna 208 Caravan
+               from flightgear/light-aircraft/Cessna-208-Caravan
+               by Emmanuel BARANGER
+
+e500.glb       Extra EA-500
+               from flightgear/light-aircraft/extra500
+               by Dirk Dittmann, Eric van den Berg, Thomas Grossberger
+
+ac50.glb       Aero Commander 500
+               from flightgear/light-aircraft/Aero-Commander
+               by BARANGER Emmanuel (3D/FDM), Samaliet (Panel)
+
+c550.glb       Cessna Citation II
+               from flightgear/bizjets/Citation
+               by the FlightGear aircraft authors
+
+c750.glb       Cessna Citation X
+               from flightgear/bizjets/CitationX
+               by Syd Adams
+
+c525.glb       Cessna Citation
+               from fr24-3d-models/models/citation.glb
+               by Flightradar24 AB
+
+glf5.glb       Gulfstream G550
+               from flightgear/bizjets/GulfstreamG550
+               by xsaint, 2009
+
+fa50.glb       Dassault Falcon 50
+               from flightgear/bizjets/Falcon-50
+               by Emmanuel BARANGER, OO-ZVY
+
+h25b.glb       Hawker / BAe 125
+               from flightgear/bizjets/BAe-125
+               by Emmanuel BARANGER / Gary BROWN
+
+c337.glb       Cessna 337 Skymaster
+               from flightgear/light-aircraft/Cessna337
+               by Fernando Espinosa, Pavel Cueto
+
+c421.glb       Cessna 421 Golden Eagle
+               from flightgear/light-aircraft/Cessna-421-Golden-Eagle
+               by Emmanuel BARANGER
+
+da42.glb       Diamond DA42 Twin Star
+               from flightgear/light-aircraft/Diamond-Da42
+               by Emmanuel BARANGER - OO ZVY - Jeep - MrZac
+
+p06t.glb       Tecnam P2006T
+               from flightgear/light-aircraft/Tecnam-P2006T
+               by BARANGER Emmanuel
+
+aest.glb       Piper Aerostar
+               from flightgear/light-aircraft/Aerostar-700
+               by Syd Adams, Christian Thiriot, Christian Le Moigne, PAF Team
+
+be18.glb       Beechcraft Model 18
+               from flightgear/light-aircraft/Beechcraft-C18S
+               by Emmanuel BARANGER
+
+pa18.glb       Piper PA-18 Super Cub
+               from flightgear/light-aircraft/Piper-PA-18
+               by Emmanuel BARANGER
+
+pa22.glb       Piper PA-22 Tri-Pacer
+               from flightgear/light-aircraft/pa22
+               by Robert Leda, Pawel Luchowski
+
+pa20.glb       Piper PA-20 Pacer
+               from flightgear/light-aircraft/pa20
+               by Robert Leda, Pawel Luchowski
+
+pa32.glb       Piper PA-32 Saratoga
+               from flightgear/light-aircraft/Piper-PA-32
+               by Emmanuel BARANGER
+
+pa28.glb       Piper PA-28 Warrior
+               from flightgear/light-aircraft/PA28-Warrior
+               by the FlightGear aircraft authors
+
+j3.glb         Piper J-3 Cub
+               from flightgear/light-aircraft/Cub
+               by David Megginson (3D, FDM), Jim Wilson, Don Lavelle (3D remodel, instrument mods, pilot mods, effects, livery), Gilberto Agostinho
+
+c150.glb       Cessna 150
+               from flightgear/light-aircraft/c150
+               by the FlightGear aircraft authors
+
+c152.glb       Cessna 152
+               from flightgear/light-aircraft/c152
+               by awall86, gsagostinho, wlbragg
+
+c170.glb       Cessna 170
+               from flightgear/light-aircraft/c170b
+               by awall86, wlbragg, TheEagle
+
+c172.glb       Cessna 172 Skyhawk
+               from flightgear/light-aircraft/c172p
+               by the FlightGear aircraft authors
+
+c82r.glb       Cessna 182RG Skylane
+               from flightgear/light-aircraft/c182rg
+               by Stuart Buchanan
+
+c182.glb       Cessna 182 Skylane
+               from flightgear/light-aircraft/c182s
+               by the FlightGear aircraft authors
+
+l19.glb        Cessna L-19 Bird Dog
+               from flightgear/light-aircraft/Cessna-L19
+               by Emmanuel BARANGER
+
+sr22.glb       Cirrus SR20 / SR22
+               from flightgear/light-aircraft/Cirrus-SR22
+               by Emmanuel BARANGER
+
+da40.glb       Diamond DA40
+               from flightgear/light-aircraft/Diamond-Da40
+               by Emmanuel BARANGER
+
+dv20.glb       Diamond DA20 Katana
+               from flightgear/light-aircraft/Katana
+               by Emmanuel BARANGER
+
+hk36.glb       Diamond HK36 Super Dimona
+               from flightgear/light-aircraft/HK36
+               by Emmanuel BARANGER, D-ECHO
+
+dr40.glb       Robin DR400
+               from flightgear/light-aircraft/DR400
+               by Emmanuel BARANGER, Laurent WROMMAN, Laurent HAYVEL, F-JJTH, Laurent VROMMAN
+
+be35.glb       Beechcraft V35 Bonanza
+               from flightgear/light-aircraft/beech-v35
+               by flyingfisch
+
+navi.glb       Ryan Navion
+               from flightgear/light-aircraft/Ryan-Navion
+               by Emmanuel BARANGER / Samaliet
+
+aa1.glb        Grumman American AA-1
+               from flightgear/light-aircraft/Grumman-American-AA1
+               by Emmanuel BARANGER
+
+sf260.glb      SIAI-Marchetti SF.260
+               from flightgear/light-aircraft/SIAI-Marchetti-SF.260
+               by Emmanuel BARANGER
+
+st10.glb       Socata ST-10 Diplomate
+               from flightgear/light-aircraft/Socata-ST10
+               by BARANGER Emmanuel, Samaliet
+
+rallye.glb     Morane-Saulnier Rallye
+               from flightgear/light-aircraft/rallye-MS893
+               by Patrice Poly "WooT" (3D, FDM) Beber
+
+d140.glb       Jodel D.140
+               from flightgear/light-aircraft/Jodel-D140
+               by Emmanuel BARANGER
+
+cap10.glb      Mudry CAP 10
+               from flightgear/light-aircraft/Cap10B
+               by Flavien BLANC, PAF team
+
+z50.glb        Zlin Z-50
+               from flightgear/light-aircraft/Zlin-50lx
+               by Emmanuel BARANGER, Pierre GEOFFROY, Sebastien MARQUE, Laurent HAYVEL, Victhor
+
+yk18.glb       Yakovlev Yak-18T
+               from flightgear/light-aircraft/Yak-18T
+               by BARANGER Emmanuel / Samaliet
+
+st75.glb       Boeing Stearman
+               from flightgear/light-aircraft/Stearman
+               by Emmanuel BARANGER (3D, FDM)
+
+lanc.glb       Lancair 235
+               from flightgear/light-aircraft/Lancair-235
+               by Emmanuel BARANGER / Philippe BROCORENS
+
+lgez.glb       Rutan Long-EZ
+               from flightgear/light-aircraft/Long-EZ
+               by Emmanuel BARANGER, Daniel MORTARA, Victhor FOSTER
+
+velo.glb       Velocity XL
+               from flightgear/light-aircraft/Velocity-XL
+               by BARANGER Emmanuel, Brian GLADDEN, Gary R. NEELY, John LICHTENBERGER
+
+jab.glb        Jabiru J170
+               from flightgear/light-aircraft/Jabiru-j170
+               by Narendran Muraleedharan, Sam Clancy
+
+ch650.glb      Zenith CH 650
+               from flightgear/light-aircraft/CH650
+               by hydroz.net, D-ECHO, more
+
+ch750.glb      Zenith STOL CH 750
+               from flightgear/light-aircraft/CH750STOL
+               by hydroz.net, D-ECHO, more
+
+virus.glb      Pipistrel Virus SW
+               from flightgear/light-aircraft/pipistrel-virus-sw
+               by Nick R
+
+g115.glb       Grob G 115
+               from flightgear/light-aircraft/Grob-G115
+               by Emmanuel BARANGER (3D, FDM), Jon STOCKILL (Panel
+
+p92.glb        Tecnam P92
+               from flightgear/light-aircraft/Tecnam-P92
+               by the FlightGear aircraft authors
+
+p2010.glb      Tecnam P2010
+               from flightgear/light-aircraft/Tecnam-P2010
+               by BARANGER Emmanuel
+
+pup.glb        Beagle Pup
+               from flightgear/light-aircraft/Beagle-Pup
+               by Richard Senior
+
+ask21.glb      Schleicher ASK 21
+               from fr24-3d-models/models/ask21.glb
+               by Flightradar24 AB
