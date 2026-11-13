@@ -65,7 +65,8 @@ if (typeof window !== "undefined") ml.setWorkerUrl("/maplibre/maplibre-gl-worker
 const PI = Math.PI;
 const KT = 0.514444;            // knots to metres per second
 const STALE_MS = 90_000;        // a position older than this is where it was, not where it is
-const ICON_PX = 60;             // wingspan on screen
+const ICON_PX = 60;             // wingspan on screen, zoomed in
+const ICON_FAR_PX = 22;         // and zoomed right out: aircraft shrink as the view widens
 const MIN_SPAN_M = 14;          // zoomed right in, models stop shrinking at about real size
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -232,6 +233,7 @@ export default function MapGL({
     let renderer: T.WebGLRenderer | null = null;
     let last = performance.now();
     let lastTrail = 0;
+    let lastMk = 0;
 
     const layer: ml.CustomLayerInterface = {
       id: "fp-aircraft",
@@ -261,7 +263,12 @@ export default function MapGL({
         const w = box.clientWidth;
         const h = box.clientHeight;
         const mpp = (40075016.686 * Math.cos((S.lat0 * PI) / 180)) / (512 * Math.pow(2, map.getZoom()));
-        const size = Math.max(ICON_PX * mpp, MIN_SPAN_M) / 2.2; // models are 2.2 units across
+        // Full size from zoom 11.5 in, shrinking steadily to the small size at zoom 7 and wider.
+        const px = ICON_FAR_PX + (ICON_PX - ICON_FAR_PX) * Math.max(0, Math.min(1, (map.getZoom() - 7) / 4.5));
+        const size = Math.max(px * mpp, MIN_SPAN_M) / 2.2; // models are 2.2 units across
+        // The tap target and the label keep to the edge of the model.
+        const mk = Math.round(Math.max(px, 30));
+        if (mk !== lastMk) { lastMk = mk; box.style.setProperty("--mk", `${mk}px`); }
         // With relief on, heights are measured from sea level, so everything starts at the field's own height.
         if (map.getTerrain()) {
           const g = map.queryTerrainElevation(S.toLngLat(0, 0));
