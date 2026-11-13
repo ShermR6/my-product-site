@@ -91,10 +91,21 @@ export function airportRings(airport: AirportConfig | null): number[] {
   return (airport?.alert_distances_nm ?? []).map(Number).filter((n) => isFinite(n) && n > 0).sort((a, b) => b - a);
 }
 
-export type Stage = "ground" | "airborne" | "inbound" | "final";
+export type Stage = "ground" | "airborne" | "inbound" | "final" | "lost";
+
+/** How long an airborne aircraft can go unheard before its position stops being treated as current. */
+export const LOST_AFTER_MS = 3 * 60 * 1000;
+
+/** Airborne, but not heard from for a few minutes: the position shown is where it was, not where it is. */
+export function isLost(a: LiveAircraft, now = Date.now()): boolean {
+  if (a.on_ground) return false;
+  const seen = parseUtc(a.last_seen)?.getTime();
+  return seen != null && now - seen > LOST_AFTER_MS;
+}
 
 export function stageOf(a: LiveAircraft, rings: number[]): Stage {
   if (a.on_ground) return "ground";
+  if (isLost(a)) return "lost";
   if (!a.is_approaching || !rings.length) return "airborne";
   if (a.distance_nm > rings[0] + 0.9) return "airborne";
   return a.distance_nm <= rings[rings.length - 1] + 0.9 || rings.length === 1 ? "final" : "inbound";
@@ -105,6 +116,7 @@ export const STAGE_LABEL: Record<Stage, string> = {
   airborne: "Airborne",
   inbound: "Inbound",
   final: "On final",
+  lost: "Signal lost",
 };
 
 /** Tracked aircraft that are airborne and closing, nearest first. */

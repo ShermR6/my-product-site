@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { Box, Crosshair, Maximize2 } from "lucide-react";
 import { useTracker } from "./_lib/store";
 import {
-  ago, airportRings, channelLabel, clock, etaMinutes, eventLabel, groupEvents, inboundOf, nm, parseUtc, planOf,
+  ago, airportRings, channelLabel, clock, etaMinutes, eventLabel, groupEvents, inboundOf, isLost, nm, parseUtc, planOf,
   recentAlertsFor, ringsFor, runwayFor, stageOf, STAGE_LABEL, whole,
 } from "./_lib/format";
 import { Card, PageHead, Tail } from "./_components/kit";
@@ -36,7 +36,8 @@ export default function DashboardPage() {
   const paints = Object.fromEntries(t.aircraft.map((a) => [a.tail_number, paintOf(a.tail_number, saved)]));
   const inbound = inboundOf(t.live, t.aircraft, t.airport);
   const lead = inbound[0] ?? null;
-  const airborne = t.live.filter((a) => !a.on_ground);
+  const airborne = t.live.filter((a) => !a.on_ground && !isLost(a, t.now));
+  const lost = t.live.filter((a) => isLost(a, t.now));
   const place = t.airport?.airport_name || t.airport?.airport_code || "";
   const today = new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
 
@@ -86,6 +87,9 @@ export default function DashboardPage() {
   } else if (airborne.length > 1) {
     title = `${airborne.length} aircraft airborne.`;
     sub = "None inbound right now.";
+  } else if (lost.length === 1) {
+    title = `Lost track of ${lost[0].tail_number}.`;
+    sub = `Last heard ${nm(lost[0].distance_nm)} from ${t.airport?.airport_code ?? "the airport"}, ${ago((t.now - (parseUtc(lost[0].last_seen)?.getTime() ?? t.now)) / 1000)}.`;
   } else {
     title = place ? `All quiet at ${t.airport?.airport_code ?? place}.` : "All quiet.";
     sub = `Watching ${plural(t.aircraft.length, "aircraft", "aircraft")}. You'll get an alert as soon as one heads in.`;
