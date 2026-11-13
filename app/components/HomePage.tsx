@@ -180,7 +180,7 @@ export default function HomePage() {
               Connect the channels you actually check. When an aircraft crosses a ring, every one of them fires at
               once, or you choose which alerts go to which channel.
             </p>
-            <p className="fh-fine">Discord and email are on every plan. More channels unlock on Premium and Pro.</p>
+            <p className="fh-fine">Every channel is included: Discord, email, Slack, Microsoft Teams, Google Chat, Telegram, text messages and webhooks.</p>
           </div>
           <div className="fh-art">
             <div className="fh-channels">
@@ -209,7 +209,7 @@ export default function HomePage() {
             <Bullets items={[
               "Look up by tail number",
               "Live distance, speed and altitude for each one",
-              "3 aircraft on Starter, 7 on Premium, 15 on Pro",
+              "Up to 15 aircraft on one plan",
             ]} />
           </div>
           <div className="fh-art" aria-hidden="true">

@@ -3,25 +3,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 import { computeShippingRates, type ShippingAddress } from "@/lib/shipping";
+import { PLAN, isPlanTier, type Billing } from "@/lib/plan";
+import { planLineItem } from "@/lib/planCheckout";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
 });
 
+// Hardware only. The subscription is one plan (lib/plan.ts), priced by
+// planLineItem. Ground Station support is part of that plan now, so the old
+// "ground-station" unlock is no longer sold.
 const PRICE_MAP: Record<string, string> = {
-  starter: process.env.STRIPE_PRICE_STARTER!,
-  premium: process.env.STRIPE_PRICE_PREMIUM!,
-  pro: process.env.STRIPE_PRICE_PRO!,
-  "team-starter": process.env.STRIPE_PRICE_TEAM_STARTER!,
-  "team-premium": process.env.STRIPE_PRICE_TEAM_PREMIUM!,
-  "team-pro": process.env.STRIPE_PRICE_TEAM_PRO!,
-  "starter-yearly": process.env.STRIPE_PRICE_STARTER_YEARLY!,
-  "premium-yearly": process.env.STRIPE_PRICE_PREMIUM_YEARLY!,
-  "pro-yearly": process.env.STRIPE_PRICE_PRO_YEARLY!,
-  "team-starter-yearly": process.env.STRIPE_PRICE_TEAM_STARTER_YEARLY!,
-  "team-premium-yearly": process.env.STRIPE_PRICE_TEAM_PREMIUM_YEARLY!,
-  "team-pro-yearly": process.env.STRIPE_PRICE_TEAM_PRO_YEARLY!,
-  "ground-station": process.env.STRIPE_PRICE_GROUND_STATION!,
   "ground-station-kit": process.env.STRIPE_PRICE_GROUND_STATION_KIT!,
   "ground-station-kit-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_BUILT!,
   "ground-station-kit-stubby": process.env.STRIPE_PRICE_GROUND_STATION_KIT_STUBBY!,
@@ -32,7 +24,6 @@ const PRICE_MAP: Record<string, string> = {
 };
 
 const ONE_TIME_TIERS = new Set([
-  "ground-station",
   "ground-station-kit",
   "ground-station-kit-built",
   "ground-station-kit-stubby",
@@ -107,7 +98,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please log in first", requireLogin: true }, { status: 401 });
     }
 
-    const { tier, addons = [], cartItems, shippingRate, shippingAddress } = await req.json();
+    const { tier, billing: billingIn, addons = [], cartItems, shippingRate, shippingAddress } = await req.json();
     const addrMeta = shippingAddress ? JSON.stringify(shippingAddress) : undefined;
     const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
 
@@ -151,7 +142,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ url: checkoutSession.url });
     }
 
-    // Single-tier checkout
+    // The plan: one price, monthly or yearly. Any of the old plan names buys it.
+    if (isPlanTier(tier)) {
+      const billing: Billing = billingIn === "yearly" || String(tier).endsWith("-yearly") ? "yearly" : "monthly";
+      const meta = { tier: PLAN.tier, billing, email: session.user.email };
+      const planSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        payment_method_types: ["card"],
+        line_items: [await planLineItem(stripe, billing)],
+        success_url: `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${PLAN.tier}`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
+        customer_email: session.user.email,
+        metadata: meta,
+        allow_promotion_codes: true,
+        subscription_data: { metadata: meta },
+      });
+      return NextResponse.json({ url: planSession.url });
+    }
+
+    if (tier === "ground-station") {
+      return NextResponse.json({ error: "Ground Station support is included in the plan now." }, { status: 400 });
+    }
+
+    // Single hardware item
     const priceId = PRICE_MAP[tier];
     if (!priceId) {
       return NextResponse.json({ error: "Invalid tier" }, { status: 400 });

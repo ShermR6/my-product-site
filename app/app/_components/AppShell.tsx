@@ -1,8 +1,8 @@
 "use client";
 
 // The web app's frame: top bar with the section pills, the live strip, the
-// page, and bottom tabs on a phone. Also the three states that replace the
-// page entirely: still loading, plan expired, signed out.
+// page, and bottom tabs on a phone. Also the states that replace the page
+// entirely: still loading, no plan yet, plan expired, signed out.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +12,7 @@ import { Bell, ChevronDown, CreditCard, Home, LogOut, Map as MapIcon, MoreHorizo
 import { TrackerProvider, useTracker } from "../_lib/store";
 import { clockSeconds, etaText, inboundOf, nm, planOf, recentAlertsFor, ringsFor, ringKey, stageOf, STAGE_LABEL } from "../_lib/format";
 import { Logo, Btn, Tail } from "./kit";
+import { PLAN as OFFER } from "@/lib/plan";
 
 const SECTIONS = [
   { href: "/app", label: "Dashboard" },
@@ -60,6 +61,15 @@ function Frame({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (t.loaded && t.me?.license_tier === "free") {
+    return (
+      <>
+        <TopBar pathname={pathname} bare />
+        <NoPlan />
+      </>
+    );
+  }
+
   if (!t.loaded) {
     return (
       <>
@@ -90,6 +100,47 @@ function Frame({ children }: { children: React.ReactNode }) {
       </main>
       <BottomTabs pathname={pathname} />
     </>
+  );
+}
+
+/** Signed in without a plan: nothing is tracked until they start one. */
+function NoPlan() {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function start() {
+    setBusy(true);
+    setNote(null);
+    try {
+      const res = await fetch("/api/trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billing: "monthly" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) { window.location.href = data.url; return; }
+      // Trial already used (409): the pricing page is where they subscribe.
+      if (res.status === 409) { window.location.href = "/pricing"; return; }
+      setNote(data.error ?? "Something went wrong. Please try again.");
+    } catch {
+      setNote("Something went wrong. Please try again.");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <FullMessage title={`Start your ${OFFER.trialDays}-day free trial`}>
+      <p className="fa-sub" style={{ marginBottom: 20 }}>
+        FinalPing tracks your aircraft and sends arrival alerts once you have a plan. It is ${OFFER.monthly.toFixed(2)} a month
+        after the trial, or ${OFFER.yearlyPerMonth.toFixed(2)} a month billed yearly, with everything included. Anything you set up before is still here.
+      </p>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        <Btn variant="primary" disabled={busy} onClick={start}>{busy ? "Loading…" : "Start free trial"}</Btn>
+        <Link className="fa-btn" href="/pricing">See what&apos;s included</Link>
+      </div>
+      {note && <p className="fa-note" role="alert" style={{ marginTop: 14, color: "var(--bad)" }}>{note}</p>}
+      <p className="fa-note" style={{ marginTop: 14 }}>The trial needs a card. Nothing is charged until it ends, and you can cancel before then.</p>
+    </FullMessage>
   );
 }
 

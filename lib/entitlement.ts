@@ -3,7 +3,9 @@
 // Used by /api/auth/verify (password login) and /api/internal/entitlement
 // (Google sign-in and periodic refresh), so every path agrees.
 
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { baseTier } from "@/lib/plan";
 
 // Tiers that are hardware purchases, not plans. They live in the same table but
 // must never be selected as someone's plan — TIER_LIMITS has no entry for them,
@@ -32,6 +34,18 @@ export const FREE: Entitlement = {
   expires_at: null,
   license_key: null,
 };
+
+/**
+ * The site's own admin account always has the internal "owner" plan, so
+ * whoever runs FinalPing is never locked out of it by a billing change. The
+ * key is derived from the address: stable, and not a licence anyone can buy.
+ */
+function ownerFallback(email: string, product?: string | null): Entitlement {
+  const admin = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+  if (!admin || email !== admin || product === "teams") return FREE;
+  const tag = crypto.createHash("sha256").update(email).digest("hex").slice(0, 12).toUpperCase();
+  return { tier: "owner", status: "active", expires_at: null, license_key: `FP-OWNER-${tag}` };
+}
 
 /**
  * The live plan for an account, scoped to the product that is asking.
@@ -74,10 +88,11 @@ export async function getEntitlement(
     (l) => !isHardware(l.tier) && (!l.expiresAt || l.expiresAt.getTime() > now)
   );
 
-  if (!live) return FREE;
+  if (!live) return ownerFallback(normalized, product);
 
   return {
-    tier: live.tier,
+    // Billing period is not part of a tier: "starter-yearly" is "starter".
+    tier: baseTier(live.tier),
     status: live.status,
     expires_at: live.expiresAt ? live.expiresAt.toISOString() : null,
     license_key: live.licenseKey,

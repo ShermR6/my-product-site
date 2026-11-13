@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { INTERNAL_SECRET } from "@/lib/internalSecret";
+import { planLabel } from "@/lib/plan";
 import { Resend } from "resend";
 import crypto from "crypto";
 import * as React from "react";
@@ -301,12 +302,12 @@ export async function POST(req: NextRequest) {
 
     await createLicenseInBackend(licenseKey, tier, email);
 
-    const tierLabel = tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : tier.startsWith("team-") ? tier.replace("team-", "Team ") : "Starter";
+    const tierLabel = planLabel(tier);
 
     await resend.emails.send({
       from: "FinalPing <noreply@finalpingapp.com>",
       to: email,
-      subject: `Your FinalPing ${tierLabel} License Key`,
+      subject: `Your FinalPing ${tierLabel} plan is active`,
       react: React.createElement(LicenseKey, { email, licenseKey, tierLabel }),
     });
 
@@ -329,10 +330,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true });
       }
 
+      // Paid through the end of the period this invoice covers: a month or a
+      // year. Adding a flat 30 days expired a yearly plan a month after it renewed.
       const now = new Date();
+      const periodEnd = invoice.lines?.data?.[0]?.period?.end;
       const currentExpiry = license.expiresAt ?? now;
       const baseDate = currentExpiry > now ? currentExpiry : now;
-      const newExpiry = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const paidThrough = typeof periodEnd === "number" ? new Date(periodEnd * 1000) : null;
+      const newExpiry = paidThrough && paidThrough > now
+        ? paidThrough
+        : new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
 
       await prisma.license.update({ where: { id: license.id }, data: { expiresAt: newExpiry } });
 
@@ -346,7 +353,7 @@ export async function POST(req: NextRequest) {
         console.error("Failed to update Railway on renewal:", err);
       }
 
-      const tierLabel = license.tier === "pro" ? "Pro" : license.tier === "premium" ? "Premium" : "Starter";
+      const tierLabel = planLabel(license.tier);
       const expiryFormatted = newExpiry.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
       await resend.emails.send({
@@ -383,7 +390,7 @@ export async function POST(req: NextRequest) {
       const now = new Date();
       await prisma.license.update({ where: { id: license.id }, data: { status: "expired", expiresAt: now } });
 
-      const tierLabel = license.tier === "pro" ? "Pro" : license.tier === "premium" ? "Premium" : "Starter";
+      const tierLabel = planLabel(license.tier);
       const expiredFormatted = now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
       await resend.emails.send({
@@ -436,7 +443,7 @@ export async function POST(req: NextRequest) {
 
       const license = await licenseForSubscription(subscriptionIdFromInvoice(invoice));
 
-      const tierLabel = license?.tier === "pro" ? "Pro" : license?.tier === "premium" ? "Premium" : "Starter";
+      const tierLabel = planLabel(license?.tier);
 
       await resend.emails.send({
         from: "FinalPing <noreply@finalpingapp.com>",

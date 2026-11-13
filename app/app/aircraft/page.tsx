@@ -81,7 +81,7 @@ export default function AircraftPage() {
     <div className="fa-page">
       <PageHead
         title="Aircraft"
-        sub={<>The tail numbers FinalPing watches for you. {plan.aircraft != null ? `${t.aircraft.length} of ${plan.aircraft} slots used on ${plan.name}.` : `${t.aircraft.length} tracked.`}</>}
+        sub={<>The tail numbers FinalPing watches for you. {plan.aircraft != null ? `${t.aircraft.length} of ${plan.aircraft} slots used.` : `${t.aircraft.length} tracked.`}</>}
       >
         {t.aircraft.length > 3 && (
           <div style={{ position: "relative" }}>
@@ -96,7 +96,7 @@ export default function AircraftPage() {
       </PageHead>
 
       {atLimit && (
-        <div className="fa-banner"><span>All {plan.aircraft} aircraft slots on {plan.name} are in use. <a href="/pricing" style={{ fontWeight: 600, textDecoration: "underline" }}>See plans</a></span></div>
+        <div className="fa-banner"><span>All {plan.aircraft} aircraft slots are in use. Need more? <a href="/contact" style={{ fontWeight: 600, textDecoration: "underline" }}>Contact us</a></span></div>
       )}
 
       {t.aircraft.length === 0 ? (

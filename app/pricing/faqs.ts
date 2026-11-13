@@ -3,27 +3,39 @@
 
 export const faqs = [
   {
-    q: "Can I switch plans later?",
-    a: "Yes. You can upgrade your plan at any time directly from your dashboard. You'll be charged the flat price difference between plans today, and your subscription renews at the new plan's price on your next billing date. Downgrades can be arranged by contacting support.",
+    q: "How does the free trial work?",
+    a: "You get 7 days of the full plan. Starting the trial needs a card, but nothing is charged until the trial ends, and you can cancel before then from your dashboard and pay nothing. Each account gets one trial.",
+  },
+  {
+    q: "What is the difference between monthly and yearly?",
+    a: "Only the price. Monthly is $14.99 a month. Yearly is $107.88 charged once a year, which works out to $8.99 a month and saves 40%. Both include everything.",
+  },
+  {
+    q: "Are there other plans or paid add-ons?",
+    a: "No. There is one plan and it includes every feature: up to 15 aircraft, every notification channel and Ground Station support. The only thing sold separately is receiver hardware, if you want your own Ground Station.",
+  },
+  {
+    q: "Is there a limit on text message alerts?",
+    a: "Yes, 100 text messages a month per account, because each one has a carrier cost. Every other channel, including Discord, email, Slack, Microsoft Teams, Google Chat, Telegram and webhooks, has no monthly limit.",
+  },
+  {
+    q: "What if I need more than 15 aircraft?",
+    a: "Contact us. Flight schools, FBOs and fleet operators are better served by FinalPing for Teams, which is in development, and we can arrange something in the meantime.",
   },
   {
     q: "How does the 30-day refund work?",
     a: "If you're not satisfied for any reason within the first 30 days, contact us and we'll issue a full refund, no questions asked.",
   },
   {
-    q: "Do I need a license per device?",
-    a: "Personal licenses are tied to your email, not a specific device. You can reinstall or switch computers and activate with the same license key.",
+    q: "Do I need to install anything?",
+    a: "No. FinalPing runs in your browser at finalpingapp.com/app. Sign in on any computer and your aircraft, airport and alerts are there.",
   },
   {
     q: "What happens when my subscription renews?",
-    a: "Your subscription renews automatically each month or year depending on your billing cycle. You'll receive an email receipt from Stripe, and your access continues uninterrupted.",
+    a: "It renews automatically each month or year depending on your billing period. You'll receive an email receipt from Stripe, and tracking continues uninterrupted.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Absolutely. You can cancel your subscription at any time from your dashboard or by contacting support. You'll keep access until the end of your current billing period.",
-  },
-  {
-    q: "What's the difference between Personal and Team plans?",
-    a: "Personal plans are for individual users tracking their own aircraft. Team plans are built for businesses like FBOs, fuel services, and flight schools. Multiple team members can log in and monitor a shared fleet, with much higher limits on tracked aircraft and notification channels.",
+    a: "Yes. Cancel from your dashboard or by contacting support. You keep access until the end of the period you have paid for. After that, tracking and alerts stop, and your aircraft and settings are kept in case you come back.",
   },
 ];

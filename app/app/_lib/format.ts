@@ -190,14 +190,17 @@ export function channelLabel(type: string): string {
 
 /** What each plan includes. Display only: the backend enforces the real limits. */
 export const PLAN: Record<string, { name: string; aircraft: number | null; rings: number | null; integrations: number | null; channels: string[] }> = {
-  starter: { name: "Starter", aircraft: 3, rings: 2, integrations: 1, channels: ["discord", "email"] },
-  premium: { name: "Premium", aircraft: 7, rings: 5, integrations: 3, channels: ["discord", "email", "slack", "teams", "google_chat"] },
-  pro: { name: "Pro", aircraft: 15, rings: 7, integrations: 5, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
+  // One plan. "premium" and "pro" are names older licences still carry.
+  starter: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
+  premium: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
+  pro: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
+  // No live plan: nothing is tracked until they subscribe.
+  free: { name: "No", aircraft: 0, rings: 0, integrations: 0, channels: [] },
   owner: { name: "Owner", aircraft: null, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
 };
 
 export function planOf(tier: string | undefined | null) {
-  return PLAN[tier ?? ""] ?? { ...PLAN.starter, name: tier && tier !== "free" ? tier : "Free" };
+  return PLAN[tier ?? ""] ?? PLAN.starter;
 }
 
 /** Position of a point relative to a center, in nautical miles east (x) and north (y). */

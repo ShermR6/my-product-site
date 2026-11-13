@@ -42,7 +42,7 @@ export default function GroundStationPage() {
           </Card>
           <Card title="Not on this account yet">
             <p className="fa-note" style={{ lineHeight: 1.6, marginBottom: 16 }}>
-              Ground Station is an add-on. The kit arrives ready to plug in, and this page lights up as soon as it starts reporting.
+              Ground Station is included in your plan. The kit arrives ready to plug in, and this page lights up as soon as it starts reporting.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link className="fa-btn primary" href="/groundstationkit">See the kit</Link>

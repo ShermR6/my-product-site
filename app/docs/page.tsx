@@ -109,7 +109,7 @@ const sections: Section[] = [
       },
       {
         q: "Can I switch between monthly and yearly billing?",
-        a: "Contact support at aircraftalerts@finalpingapp.com and we can switch your billing cycle. Switching to yearly saves 17% compared to monthly.",
+        a: "Contact support at aircraftalerts@finalpingapp.com and we can switch your billing cycle. Yearly billing saves 40% compared to monthly.",
       },
     ],
   },
@@ -119,7 +119,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What is Ground Station?",
-        a: "Ground Station is an optional add-on that lets you connect a local ADS-B receiver (RTL-SDR with dump1090 or similar) directly to FinalPing. This gives you lower-latency landing and takeoff detection that does not depend on cloud data coverage gaps.",
+        a: "Ground Station is included in the FinalPing plan. It lets you connect a local ADS-B receiver (RTL-SDR with dump1090 or similar) directly to FinalPing. This gives you lower-latency landing and takeoff detection that does not depend on cloud data coverage gaps.",
       },
       {
         q: "What hardware do I need?",
@@ -127,7 +127,7 @@ const sections: Section[] = [
       },
       {
         q: "How do I get Ground Station access?",
-        a: "Ground Station is available on Pro and Team plans. Once your plan is active, contact support to have it enabled on your account. You will receive setup instructions by email.",
+        a: "Ground Station is included in the FinalPing plan, with nothing extra to buy besides the receiver hardware. Once your plan is active, open Ground Station in the web app and follow the setup guide.",
       },
       {
         q: "Where do I find the setup instructions?",

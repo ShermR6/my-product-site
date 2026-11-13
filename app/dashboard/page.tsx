@@ -19,7 +19,8 @@ type NotificationLog = {
 type TwoFAStatus = { email: boolean; sms: boolean; totp: boolean; phone: string | null; };
 
 const tierLabels: Record<string, string> = {
-  starter: "Starter", premium: "Premium", pro: "Pro",
+  starter: "Personal", premium: "Personal", pro: "Personal",
+  "starter-yearly": "Personal", "premium-yearly": "Personal", "pro-yearly": "Personal",
   "team-starter": "Team Starter", "team-premium": "Team Premium", "team-pro": "Team Pro",
 };
 const CHANNEL_COLORS: Record<string, string> = { discord: "var(--text-2)", slack: "var(--text-2)", teams: "var(--text-2)", email: "var(--text)", sms: "var(--good)", whatsapp: "var(--text-2)" };
@@ -590,7 +591,8 @@ function AccountTab({ email, session }: { email: string; session: any }) {
   );
 }
 
-const TIER_ORDER = ["starter", "premium", "pro"];
+// One plan: nothing to upgrade to, so the upgrade section never shows.
+const TIER_ORDER: string[] = [];
 const MONTHLY_PRICES: Record<string, number> = { starter: 14.99, premium: 24.99, pro: 49.99 };
 const YEARLY_PRICES: Record<string, number> = { starter: 149, premium: 249, pro: 499 };
 

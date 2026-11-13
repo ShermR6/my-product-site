@@ -70,6 +70,8 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [now, setNow] = useState(0);
   const busy = useRef(false);
+  // No plan means nothing is being tracked, so there is no live data to poll.
+  const noPlan = useRef(false);
 
   /** Returns true when the call tells us to stop (plan expired or signed out). */
   const gate = useCallback((status: number) => {
@@ -79,6 +81,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadLive = useCallback(async () => {
+    if (noPlan.current) return;
     const [lv, gs] = await Promise.all([get<LiveAircraft[]>("aircraft/live"), get<GroundStatus>("ground/status")]);
     setNow(Date.now());
     if (lv.ok) { recordFixes(lv.value); setLive(lv.value); setOffline(false); setUpdatedAt(new Date()); }
@@ -99,7 +102,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
         get<NotificationLog[]>("notifications/recent?limit=200"),
       ]);
       if (!u.ok && gate(u.status)) return;
-      if (u.ok) setMe(u.value);
+      if (u.ok) { setMe(u.value); noPlan.current = u.value.license_tier === "free"; }
       if (ac.ok) setAircraft(ac.value);
       if (ap.ok) { setAirport(ap.value); setHasAirport(true); }
       else if (ap.status === 404) { setAirport(null); setHasAirport(false); }

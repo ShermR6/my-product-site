@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { PLAN, type Billing } from "@/lib/plan";
+import { planLineItem } from "@/lib/planCheckout";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
@@ -27,26 +29,27 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const msg = existing.status === "active"
         ? "Your account already has an active plan. Visit your dashboard to manage it."
-        : "You've already used your free trial. Subscribe to a plan to continue.";
+        : "You've already used your free trial. Subscribe to continue.";
       return NextResponse.json({ error: msg }, { status: 409 });
     }
 
-    const priceId = process.env.STRIPE_PRICE_STARTER!;
-    if (!priceId) {
-      return NextResponse.json({ error: "Starter price not configured" }, { status: 500 });
+    if (!process.env.STRIPE_PRICE_STARTER) {
+      return NextResponse.json({ error: "Plan price not configured" }, { status: 500 });
     }
+
+    // The trial runs on whichever billing period they picked; nothing is charged until it ends.
+    const body = await req.json().catch(() => ({}));
+    const billing: Billing = body?.billing === "yearly" ? "yearly" : "monthly";
+    const meta = { tier: PLAN.tier, billing, email, is_trial: "true" };
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: {
-        trial_period_days: 7,
-        metadata: { tier: "starter", email, is_trial: "true" },
-      },
+      line_items: [await planLineItem(stripe, billing)],
+      subscription_data: { trial_period_days: PLAN.trialDays, metadata: meta },
       success_url: `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=starter-trial`,
       cancel_url: `${process.env.NEXTAUTH_URL}/pricing`,
       customer_email: email,
-      metadata: { tier: "starter", email, is_trial: "true" },
+      metadata: meta,
       allow_promotion_codes: true,
     });
 

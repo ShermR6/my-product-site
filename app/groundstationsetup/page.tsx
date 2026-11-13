@@ -145,7 +145,7 @@ export default function GroundStationSetupPage() {
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>Before you start</div>
             {[
-              "Active FinalPing account with Ground Station add-on",
+              "FinalPing account with an active plan (Ground Station is included)",
               "Aircraft and location set up in the FinalPing app",
               "FlightAware Pro Stick Plus + 1090MHz antenna",
             ].map(i => (
@@ -366,7 +366,7 @@ export default function GroundStationSetupPage() {
             { q: "Ground Station shows Offline in the app", a: "Check that your Pi or PC is powered on and online. On the Pi, SSH in and run: sudo systemctl status finalping-ground — look for errors. On Windows, check Task Scheduler for the FinalPingGroundStation task." },
             { q: "SSH gives \"host key changed\" warning", a: "You previously connected to a different Pi at this IP address. Clear the old key (replace the IP with your Pi's actual IP) and try again:\n\nssh-keygen -R 192.168.1.45" },
             { q: "\"Cannot reach dump1090\" in the logs", a: "dump1090 is not running or the receiver isn't detected. On the Pi: sudo systemctl status finalping-dump1090. Make sure the Pro Stick Plus is plugged in." },
-            { q: "\"Ground station not enabled\"", a: "Your account doesn't have the Ground Station add-on. Purchase it at finalpingapp.com/pricing." },
+            { q: "\"Ground station not enabled\"", a: "Your account doesn't have an active plan. Ground Station is included in the FinalPing plan: start one at finalpingapp.com/pricing." },
             { q: "\"Ground station not enabled\" or \"Invalid device key\"", a: "Your FinalPing account doesn't have Ground Station enabled, or the wrong email was entered during setup. To redo setup, delete the config and reboot — the Pi will broadcast FinalPing-Setup again:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot" },
             { q: "Pi won't connect to my WiFi after setup", a: "The SSID or password entered during phone setup may have been wrong. To redo setup, delete the config and reboot:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot\n\nThen connect to FinalPing-Setup again and re-enter your WiFi credentials and email." },
             { q: "No aircraft appearing", a: "Make sure your antenna is connected and pointing skyward. Indoor antennas near windows work but outdoor antennas give much better range. Confirm your aircraft have ICAO24 codes entered in the FinalPing app." },

@@ -444,9 +444,7 @@ function CreateLicenseTab() {
             <label style={s.label}>Tier</label>
             <select style={{ ...s.select, width: "100%" }} value={tier} onChange={(e) => setTier(e.target.value)}>
               <optgroup label="Personal (FP-)">
-                <option value="starter">Starter</option>
-                <option value="premium">Premium</option>
-                <option value="pro">Pro</option>
+                <option value="starter">Personal</option>
               </optgroup>
               <optgroup label="Teams (FPT-)">
                 <option value="team-starter">Team Starter</option>
