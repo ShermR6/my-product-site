@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
-  TRACKER_URL, TRACKER_COOKIE, TRACKER_COOKIE_MAX_AGE,
+  TRACKER_URL, TRACKER_COOKIE, TRACKER_COOKIE_MAX_AGE, TRACKER_ORIGIN_HEADERS,
   TrackerAuthError, mintTrackerToken, packTrackerCookie, unpackTrackerCookie,
 } from "@/lib/trackerSession";
 
@@ -51,6 +51,7 @@ async function forward(method: Method, path: string, search: string, body: strin
     method,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...TRACKER_ORIGIN_HEADERS,
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
     },
     body,

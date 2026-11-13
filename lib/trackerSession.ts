@@ -16,11 +16,19 @@
 
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_SECRET } from "@/lib/internalSecret";
 
 export const TRACKER_URL =
   process.env.TRACKER_API_URL ?? "https://aircraft-tracker-backend-production.up.railway.app";
 
 export const TRACKER_COOKIE = "fp_tracker";
+
+/**
+ * Marks a request as coming from this site. The tracker only serves signed-in
+ * requests that carry it, which is what keeps the retired desktop apps out.
+ * Server-side only: it must never be sent from page scripts.
+ */
+export const TRACKER_ORIGIN_HEADERS: Record<string, string> = { "x-internal-secret": INTERNAL_SECRET };
 // The backend's JWT lasts 30 days; ask for a new one a little before that.
 export const TRACKER_COOKIE_MAX_AGE = 60 * 60 * 24 * 25;
 
@@ -70,7 +78,7 @@ export async function mintTrackerToken(email: string): Promise<string> {
   try {
     res = await fetch(`${TRACKER_URL}/api/auth/google-desktop`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...TRACKER_ORIGIN_HEADERS },
       body: JSON.stringify({ token: bridgeToken, email: normalized }),
       cache: "no-store",
     });
