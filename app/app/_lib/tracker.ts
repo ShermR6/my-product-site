@@ -7,6 +7,21 @@ export class ApiError extends Error {
   }
 }
 
+/** Fired on the window when someone without a plan tries to change something. */
+export const PAYWALL_EVENT = "fp-paywall";
+const NO_PLAN_TEXT = "Start your free trial to make changes.";
+
+// Accounts without a plan can look around the app but not change anything.
+let preview = false;
+export function setPreview(on: boolean) {
+  preview = on;
+}
+
+function askToSubscribe(): ApiError {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(PAYWALL_EVENT));
+  return new ApiError(402, NO_PLAN_TEXT);
+}
+
 function detailOf(body: unknown, fallback: string): string {
   if (body && typeof body === "object" && "detail" in body) {
     const d = (body as { detail: unknown }).detail;
@@ -25,6 +40,7 @@ function detailOf(body: unknown, fallback: string): string {
  */
 export async function api<T>(path: string, init: { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: unknown } = {}): Promise<T> {
   const method = init.method ?? "GET";
+  if (preview && method !== "GET") throw askToSubscribe();
   let res: Response;
   try {
     res = await fetch(`/api/tracker/${path}`, {
@@ -49,6 +65,8 @@ export async function api<T>(path: string, init: { method?: "GET" | "POST" | "PU
   }
 
   if (!res.ok) {
+    // The server refuses changes without a plan too, whatever this page believed.
+    if (res.status === 402 && method !== "GET") throw askToSubscribe();
     const fallback =
       res.status === 502 ? "The tracker isn't responding right now." :
       res.status === 401 ? "Your session has ended. Sign in again." :

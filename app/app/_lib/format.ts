@@ -194,8 +194,8 @@ export const PLAN: Record<string, { name: string; aircraft: number | null; rings
   starter: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
   premium: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
   pro: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
-  // No live plan: nothing is tracked until they subscribe.
-  free: { name: "No", aircraft: 0, rings: 0, integrations: 0, channels: [] },
+  // No live plan: a read-only preview that shows what the plan allows.
+  free: { name: "Preview", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
   owner: { name: "Owner", aircraft: null, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
 };
 

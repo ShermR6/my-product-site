@@ -4,6 +4,9 @@
 // /api/tracker/<path>; this handler checks the website session, attaches the
 // user's tracker JWT (lib/trackerSession) and forwards to <backend>/api/<path>.
 // The backend's status and JSON body are passed back unchanged.
+//
+// An account without a plan may read (the app is a preview for it) but every
+// change is refused here with 402, whatever the page in the browser allows.
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -35,6 +38,7 @@ const ALLOWED: { prefix: string; methods: Method[]; exact?: boolean }[] = [
 ];
 
 const SEGMENT = /^[A-Za-z0-9._~-]+$/;
+const NO_PLAN = "Start your free trial to make changes.";
 
 function isAllowed(path: string, method: Method): boolean {
   return ALLOWED.some(
@@ -102,22 +106,35 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
       minted = true;
     }
 
-    let res = await forward(method, path, search, body, token);
+    const lapsed = async (r: Response) =>
+      r.status === 401 && (await r.clone().json().catch(() => ({})))?.detail === "license_expired";
 
-    if (res.status === 401) {
-      const detail = (await res.clone().json().catch(() => ({})))?.detail;
-      if (detail === "license_expired") return json({ detail: "license_expired" }, 402);
-      // The stored token expired or was rejected: get a new one and try once more.
-      if (!minted) {
-        token = await mintTrackerToken(email);
-        minted = true;
-        res = await forward(method, path, search, body, token);
-        if (res.status === 401) {
-          const again = (await res.clone().json().catch(() => ({})))?.detail;
-          if (again === "license_expired") return json({ detail: "license_expired" }, 402);
-        }
+    // One backend call. If the stored token has expired or is rejected, get a
+    // new one and try once more. "expired" means the plan itself has lapsed.
+    const send = async (m: Method, p: string, s: string, b: string | undefined): Promise<Response | "expired"> => {
+      let r = await forward(m, p, s, b, token!);
+      if (r.status !== 401) return r;
+      if (await lapsed(r)) return "expired";
+      if (minted) return r;
+      token = await mintTrackerToken(email);
+      minted = true;
+      r = await forward(m, p, s, b, token);
+      return (await lapsed(r)) ? "expired" : r;
+    };
+
+    // Changes need a plan. The backend's own answer decides, so this always
+    // agrees with what the app shows.
+    if (method !== "GET") {
+      const who = await send("GET", "user/me", "", undefined);
+      if (who === "expired") return json({ detail: "license_expired" }, 402);
+      if (who.ok) {
+        const me = await who.json().catch(() => null);
+        if (me?.license_tier === "free") return json({ detail: NO_PLAN }, 402);
       }
     }
+
+    const res = await send(method, path, search, body);
+    if (res === "expired") return json({ detail: "license_expired" }, 402);
 
     const text = await res.text();
     const out = new NextResponse(text, {

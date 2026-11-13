@@ -5,7 +5,7 @@
 // something.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, ApiError } from "./tracker";
+import { api, ApiError, setPreview } from "./tracker";
 import { recordFixes } from "./trails";
 import type { Aircraft, AirportConfig, GroundStatus, Integration, LiveAircraft, Me, NotificationLog } from "./types";
 
@@ -70,7 +70,8 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [now, setNow] = useState(0);
   const busy = useRef(false);
-  // No plan means nothing is being tracked, so there is no live data to poll.
+  // No plan: the app is a read-only preview. Nothing is being tracked, so
+  // there is no live data to poll either.
   const noPlan = useRef(false);
 
   /** Returns true when the call tells us to stop (plan expired or signed out). */
@@ -102,7 +103,13 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
         get<NotificationLog[]>("notifications/recent?limit=200"),
       ]);
       if (!u.ok && gate(u.status)) return;
-      if (u.ok) { setMe(u.value); noPlan.current = u.value.license_tier === "free"; }
+      if (u.ok) {
+        const free = u.value.license_tier === "free";
+        setMe(u.value);
+        noPlan.current = free;
+        setPreview(free);
+        if (free) { setLive([]); setGround(null); setGroundEnabled(false); }
+      }
       if (ac.ok) setAircraft(ac.value);
       if (ap.ok) { setAirport(ap.value); setHasAirport(true); }
       else if (ap.status === 404) { setAirport(null); setHasAirport(false); }

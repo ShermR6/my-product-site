@@ -2,7 +2,8 @@
 
 // The web app's frame: top bar with the section pills, the live strip, the
 // page, and bottom tabs on a phone. Also the states that replace the page
-// entirely: still loading, no plan yet, plan expired, signed out.
+// entirely: still loading, plan expired, signed out. An account with no plan
+// yet sees the whole app as a read-only preview.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,6 +11,7 @@ import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Bell, ChevronDown, CreditCard, Home, LogOut, Map as MapIcon, MoreHorizontal, Plane, Globe } from "lucide-react";
 import { TrackerProvider, useTracker } from "../_lib/store";
+import { PAYWALL_EVENT } from "../_lib/tracker";
 import { clockSeconds, etaText, inboundOf, nm, planOf, recentAlertsFor, ringsFor, ringKey, stageOf, STAGE_LABEL } from "../_lib/format";
 import { Logo, Btn, Tail } from "./kit";
 import { PLAN as OFFER } from "@/lib/plan";
@@ -61,14 +63,6 @@ function Frame({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (t.loaded && t.me?.license_tier === "free") {
-    return (
-      <>
-        <TopBar pathname={pathname} bare />
-        <NoPlan />
-      </>
-    );
-  }
 
   if (!t.loaded) {
     return (
@@ -89,7 +83,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   return (
     <>
       <TopBar pathname={pathname} />
-      <LiveStrip />
+      {t.me?.license_tier === "free" ? <Preview /> : <LiveStrip />}
       <main className="fa-main">
         {t.offline && (
           <div className="fa-page" style={{ paddingBottom: 0 }}>
@@ -103,8 +97,8 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Signed in without a plan: nothing is tracked until they start one. */
-function NoPlan() {
+/** Sends them to Stripe to start the trial; to the pricing page if it is already used. */
+function useStartTrial() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -128,19 +122,59 @@ function NoPlan() {
     setBusy(false);
   }
 
+  return { busy, note, start };
+}
+
+/**
+ * No plan yet: a bar that says this is a preview, and the prompt that opens
+ * when they try to change something (the tracker client fires PAYWALL_EVENT).
+ */
+function Preview() {
+  const trial = useStartTrial();
+  const [asking, setAsking] = useState(false);
+
+  useEffect(() => {
+    const open = () => setAsking(true);
+    window.addEventListener(PAYWALL_EVENT, open);
+    return () => window.removeEventListener(PAYWALL_EVENT, open);
+  }, []);
+
+  useEffect(() => {
+    if (!asking) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setAsking(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [asking]);
+
   return (
-    <FullMessage title={`Start your ${OFFER.trialDays}-day free trial`}>
-      <p className="fa-sub" style={{ marginBottom: 20 }}>
-        FinalPing tracks your aircraft and sends arrival alerts once you have a plan. It is ${OFFER.monthly.toFixed(2)} a month
-        after the trial, or ${OFFER.yearlyPerMonth.toFixed(2)} a month billed yearly, with everything included. Anything you set up before is still here.
-      </p>
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-        <Btn variant="primary" disabled={busy} onClick={start}>{busy ? "Loading…" : "Start free trial"}</Btn>
-        <Link className="fa-btn" href="/pricing">See what&apos;s included</Link>
+    <>
+      <div className="fa-strip fa-preview" role="status">
+        <span className="fa-preview-tag">Preview</span>
+        <span>You&apos;re looking around. Start your {OFFER.trialDays}-day free trial to add aircraft and get alerts.</span>
+        <span className="fa-strip-spacer" />
+        <Btn small variant="primary" disabled={trial.busy} onClick={trial.start}>{trial.busy ? "Loading…" : "Start free trial"}</Btn>
       </div>
-      {note && <p className="fa-note" role="alert" style={{ marginTop: 14, color: "var(--bad)" }}>{note}</p>}
-      <p className="fa-note" style={{ marginTop: 14 }}>The trial needs a card. Nothing is charged until it ends, and you can cancel before then.</p>
-    </FullMessage>
+      {asking && (
+        <div className="fa-overlay" onClick={() => setAsking(false)}>
+          <div className="fa-modal" role="dialog" aria-modal="true" aria-labelledby="fa-trial-title" onClick={(e) => e.stopPropagation()}>
+            <h2 id="fa-trial-title">Start your {OFFER.trialDays}-day free trial</h2>
+            <p className="fa-sub" style={{ marginTop: 0 }}>
+              You can look around for as long as you like. To add aircraft, set your airport and get alerts, start a plan:
+              ${OFFER.monthly.toFixed(2)} a month after the trial, or ${OFFER.yearlyPerMonth.toFixed(2)} a month billed yearly, with everything included.
+            </p>
+            <p className="fa-note" style={{ marginTop: 12 }}>The trial needs a card. Nothing is charged until it ends, and you can cancel before then.</p>
+            {trial.note && <p className="fa-error" role="alert">{trial.note}</p>}
+            <div className="fa-modal-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <Link className="fa-link" href="/pricing">See what&apos;s included</Link>
+              <span style={{ display: "flex", gap: 10 }}>
+                <Btn onClick={() => setAsking(false)}>Not now</Btn>
+                <Btn variant="primary" disabled={trial.busy} onClick={trial.start}>{trial.busy ? "Loading…" : "Start free trial"}</Btn>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -197,7 +231,7 @@ function TopBar({ pathname, bare }: { pathname: string; bare?: boolean }) {
         <div className="fa-menu" role="menu" onClick={(e) => e.stopPropagation()}>
           <div className="fa-menu-head">
             <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>{t.me?.email ?? "Signed in"}</div>
-            {t.me && <div className="fa-note">{planOf(t.me.license_tier).name} plan</div>}
+            {t.me && <div className="fa-note">{t.me.license_tier === "free" ? "Preview, no plan yet" : `${planOf(t.me.license_tier).name} plan`}</div>}
           </div>
           <Link href="/dashboard" role="menuitem"><CreditCard size={15} aria-hidden="true" />Account and billing</Link>
           <Link href="/" role="menuitem"><Globe size={15} aria-hidden="true" />finalpingapp.com</Link>
