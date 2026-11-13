@@ -11,6 +11,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import * as T from "three";
 import { destroyModel, lightScene, loadReal, makeModel, type Model } from "../_lib/fleet3d";
 import { familyOf, modelOf, type Family } from "../_lib/paint";
+import { endHeading, headingGap } from "../_lib/format";
+import type { Runway } from "../_lib/types";
 import { MAP_STYLE } from "../_lib/mapStyle";
 import { trailOf } from "../_lib/trails";
 
@@ -49,6 +51,10 @@ type Props = {
   interactive?: boolean;
   /** Tilt the map over for the 3D view. */
   tilt?: boolean;
+  /** The home airport's runways, drawn brighter than the basemap's and named at each end. */
+  runways?: Runway[] | null;
+  /** Landing headings that alerts are limited to; each gets its approach path drawn. */
+  approach?: number[];
 };
 
 // The worker is a file of its own; scripts/copy-map-worker.mjs keeps this copy in step with the package.
@@ -72,6 +78,37 @@ function circle(lat: number, lon: number, nm: number): [number, number][] {
   const pts: [number, number][] = [];
   for (let i = 0; i <= 128; i++) pts.push(destination(lat, lon, (i / 128) * 360, nm));
   return pts;
+}
+
+/** Runways as map features: the strips, a name at each end, and the approach paths in use. */
+function runwayFeatures(lat: number, lon: number, runways: Runway[], approach: number[], reachNm: number) {
+  const strips: GeoJSON.Feature[] = [];
+  const ends: GeoJSON.Feature[] = [];
+  const paths: GeoJSON.Feature[] = [];
+  const alone = runways.length === 1;
+  for (const r of runways) {
+    const leH = endHeading(r.leIdent, r.leHdg);
+    const heH = endHeading(r.heIdent, r.heHdg) ?? (leH != null ? (leH + 180) % 360 : null);
+    let le: [number, number] | null = null;
+    let he: [number, number] | null = null;
+    if (r.leLat != null && r.leLon != null && r.heLat != null && r.heLon != null) {
+      le = [r.leLon, r.leLat]; he = [r.heLon, r.heLat];
+    } else if (leH != null && r.lengthFt && (alone || !/[LRC]$/i.test(r.leIdent ?? ""))) {
+      // No surveyed ends: centre the strip on the airport. Parallel runways can't be placed this way.
+      const half = r.lengthFt / 6076.12 / 2;
+      le = destination(lat, lon, leH + 180, half); he = destination(lat, lon, leH, half);
+    }
+    if (!le || !he) continue;
+    strips.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [le, he] } });
+    for (const [ident, hdg, at] of [[r.leIdent, leH, le], [r.heIdent, heH, he]] as const) {
+      if (!ident || hdg == null) continue;
+      const out = ((hdg + 180) * PI) / 180; // away from the runway, the way an arrival comes from
+      const used = approach.some((h) => headingGap(h, hdg) < 1);
+      ends.push({ type: "Feature", properties: { ident, off: [Math.sin(out) * 1.2, -Math.cos(out) * 1.2], used }, geometry: { type: "Point", coordinates: at } });
+      if (used) paths.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [at, destination(at[1], at[0], hdg + 180, reachNm)] } });
+    }
+  }
+  return { strips, ends, paths };
 }
 
 type Track = {
@@ -105,6 +142,7 @@ type Stage = {
 
 export default function MapGL({
   center, code, rings, planes = [], selected, onSelect, showRings = true, coverage, fitSeq = 0, interactive = true, tilt = false,
+  runways, approach,
 }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
@@ -271,7 +309,26 @@ export default function MapGL({
       map.addSource("fp-rings", { type: "geojson", data: EMPTY });
       map.addSource("fp-trails", { type: "geojson", data: EMPTY });
       map.addSource("fp-airport", { type: "geojson", data: EMPTY });
+      map.addSource("fp-runways", { type: "geojson", data: EMPTY });
+      map.addSource("fp-runway-ends", { type: "geojson", data: EMPTY });
+      map.addSource("fp-approach", { type: "geojson", data: EMPTY });
       map.addLayer({ id: "fp-coverage", type: "fill", source: "fp-coverage", paint: { "fill-color": "#FAFAFA", "fill-opacity": 0.09 } });
+      map.addLayer({
+        id: "fp-approach", type: "line", source: "fp-approach",
+        paint: { "line-color": "#D4D4D4", "line-width": 1.2, "line-dasharray": [2, 4] },
+      });
+      map.addLayer({
+        id: "fp-runway", type: "line", source: "fp-runways", minzoom: 8,
+        paint: { "line-color": "#F2F2F2", "line-width": ["interpolate", ["exponential", 1.6], ["zoom"], 8, 1, 11, 2, 14, 7, 17, 34] },
+      });
+      map.addLayer({
+        id: "fp-runway-end", type: "symbol", source: "fp-runway-ends", minzoom: 10.6,
+        layout: {
+          "text-field": ["get", "ident"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 10.6, 10, 14, 13],
+          "text-offset": ["get", "off"], "text-padding": 1, "symbol-sort-key": ["case", ["get", "used"], 0, 1],
+        },
+        paint: { "text-color": ["case", ["get", "used"], "#FFFFFF", "#B8B8B8"], "text-halo-color": "#0A0A0A", "text-halo-width": 1.6 },
+      });
       map.addLayer({ id: "fp-ring", type: "line", source: "fp-rings", filter: ["!", ["get", "inner"]], paint: { "line-color": "#7A7A7A", "line-width": 1 } });
       map.addLayer({ id: "fp-ring-inner", type: "line", source: "fp-rings", filter: ["get", "inner"], paint: { "line-color": "#B0B0B0", "line-width": 1, "line-dasharray": [3, 5] } });
       map.addLayer({
@@ -359,6 +416,20 @@ export default function MapGL({
     if (code) label([lon, lat], code, "fa-plane-label", [12, 14]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, lat, lon, ringsKey, showRings, code, coverageKey]);
+
+  // The home airport's runways.
+  const runwaysKey = JSON.stringify([runways ?? [], approach ?? []]);
+  useEffect(() => {
+    const S = stage.current;
+    if (!S || !ready) return;
+    const f = lat == null || lon == null
+      ? { strips: [], ends: [], paths: [] }
+      : runwayFeatures(lat, lon, runways ?? [], approach ?? [], Math.max(3, Math.min(8, Number(ringsKey.split(",")[0]) || 5)));
+    const set = (id: string, features: GeoJSON.Feature[]) =>
+      (S.map.getSource(id) as ml.GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features });
+    set("fp-runways", f.strips); set("fp-runway-ends", f.ends); set("fp-approach", f.paths);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, lat, lon, runwaysKey, ringsKey]);
 
   // Fit the view to the widest ring.
   useEffect(() => {

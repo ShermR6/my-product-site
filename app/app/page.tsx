@@ -2,17 +2,26 @@
 
 // Dashboard: what is happening right now, in one sentence, then the detail.
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Box, Crosshair, Maximize2 } from "lucide-react";
 import { useTracker } from "./_lib/store";
 import {
   ago, airportRings, channelLabel, clock, etaMinutes, eventLabel, groupEvents, inboundOf, nm, parseUtc, planOf,
-  recentAlertsFor, ringsFor, stageOf, STAGE_LABEL,
+  recentAlertsFor, ringsFor, runwayFor, stageOf, STAGE_LABEL, whole,
 } from "./_lib/format";
 import { Card, PageHead, Tail } from "./_components/kit";
 import ApproachLadder, { ladderSteps } from "./_components/ApproachLadder";
-import RingMap from "./_components/RingMap";
 import Plane3D from "./_components/Plane3D";
 import { paintOf, usePaints } from "./_lib/paint";
+import { mapPlanes } from "./_lib/mapPlanes";
+
+// The same map as the Live Map screen, in a card.
+const MapGL = dynamic(() => import("./_components/MapGL"), {
+  ssr: false,
+  loading: () => <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)" }}>Loading map…</div>,
+});
 
 function plural(n: number, one: string, many = one + "s") {
   return `${n} ${n === 1 ? one : many}`;
@@ -21,6 +30,9 @@ function plural(n: number, one: string, many = one + "s") {
 export default function DashboardPage() {
   const t = useTracker();
   const saved = usePaints();
+  const [picked, setPicked] = useState<string | null>(null);
+  const [tilt, setTilt] = useState(false);
+  const [fitSeq, setFitSeq] = useState(0);
   const paints = Object.fromEntries(t.aircraft.map((a) => [a.tail_number, paintOf(a.tail_number, saved)]));
   const inbound = inboundOf(t.live, t.aircraft, t.airport);
   const lead = inbound[0] ?? null;
@@ -34,6 +46,23 @@ export default function DashboardPage() {
   const leadRings = lead ? ringsFor(lead.tail_number, t.aircraft, t.airport) : airportRings(t.airport);
   const leadSent = lead ? recentAlertsFor(lead.tail_number, t.recent) : new Map<string, Date>();
   const steps = ladderSteps(leadRings, leadSent, lead);
+  const leadRunway = lead ? runwayFor(lead, t.airport?.runway_info) : null;
+
+  // The map follows whichever aircraft was clicked, or else the one closest in.
+  const focus = (picked ? t.live.find((a) => a.tail_number === picked) : null) ?? lead;
+  const focusRings = focus ? ringsFor(focus.tail_number, t.aircraft, t.airport) : airportRings(t.airport);
+  const focusSteps = focus === lead ? steps : ladderSteps(focusRings, recentAlertsFor(focus!.tail_number, t.recent), focus);
+  const focusStage = focus ? stageOf(focus, focusRings) : null;
+  const focusHot = focusStage === "final" || focusStage === "inbound";
+  const focusAge = focus ? Math.max(0, (t.now - (parseUtc(focus.last_seen)?.getTime() ?? t.now)) / 1000) : null;
+
+  const lat = Number(t.airport?.latitude);
+  const lon = Number(t.airport?.longitude);
+  const center = useMemo(() => (t.airport && isFinite(lat) && isFinite(lon) ? { lat, lon } : null), [t.airport, lat, lon]);
+  const planes = mapPlanes(t.live, t.aircraft, t.airport, saved);
+  const landing = t.airport?.approach_corridor_enabled
+    ? (t.airport.approach_runway_headings?.length ? t.airport.approach_runway_headings : t.airport.approach_runway_heading != null ? [t.airport.approach_runway_heading] : []).map(Number)
+    : [];
 
   if (t.hasAirport === false) {
     title = "Pick your airport to start.";
@@ -47,7 +76,7 @@ export default function DashboardPage() {
     const done = steps.filter((s) => s.key !== "landing" && s.state === "done").length;
     const left = steps.filter((s) => s.key !== "landing").length - done;
     sub = [
-      m ? `About ${plural(m, "minute")} away.` : "Inbound.",
+      m ? `About ${plural(m, "minute")} away${leadRunway ? `, lined up for runway ${leadRunway}` : ""}.` : leadRunway ? `Inbound, lined up for runway ${leadRunway}.` : "Inbound.",
       leadRings.length ? `${plural(done, "ring alert")} sent, ${left} to go.` : "",
       inbound.length > 1 ? `${plural(inbound.length - 1, "more aircraft", "more aircraft")} inbound.` : "",
     ].filter(Boolean).join(" ");
@@ -88,7 +117,6 @@ export default function DashboardPage() {
     })
     .sort((a, b) => Number(b.hot) - Number(a.hot) || Number(!!b.lv && !b.lv.on_ground) - Number(!!a.lv && !a.lv.on_ground))
     .slice(0, 4);
-  const leadAge = lead ? Math.max(0, (t.now - (parseUtc(lead.last_seen)?.getTime() ?? t.now)) / 1000) : null;
 
   return (
     <div className="fa-page">
@@ -104,19 +132,41 @@ export default function DashboardPage() {
       </PageHead>
 
       <div className="fa-split">
-        <div className={`fa-mapcard ${t.hasAirport && leadRings.length > 0 ? "has-ladder" : ""}`}>
+        <div className="fa-mapcard stack">
           <div className="fa-mapcard-art">
-            <RingMap airport={t.airport} rings={leadRings} live={t.live} focusTail={lead?.tail_number ?? airborne[0]?.tail_number} paints={paints} bottomPad={t.hasAirport && leadRings.length > 0 ? 84 : 0} />
+            <MapGL
+              center={center} code={t.airport?.airport_code} rings={focusRings} planes={planes}
+              selected={focus?.tail_number ?? null} onSelect={setPicked} fitSeq={fitSeq} tilt={tilt}
+              runways={t.airport?.runway_info} approach={landing}
+            />
+            <div className="fa-map-chip" style={{ position: "absolute", zIndex: 450, left: 16, top: 16, maxWidth: "calc(100% - 190px)" }}>
+              <span className={`fa-dot ${focusHot ? "live" : "hollow"}`} style={{ width: 6, height: 6, flex: "none" }} />
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {focus
+                  ? [
+                      focus.tail_number,
+                      focus.on_ground ? "On the ground" : [whole(focus.velocity_kts, "kt"), whole(focus.altitude_ft_msl, "ft")].filter((v) => v !== "—").join(" · "),
+                      focus.source === "ground_station" ? "Ground Station" : "Network",
+                      `${ago(focusAge).replace(" ago", "")} old`,
+                    ].filter(Boolean).join(" · ")
+                  : t.live.length ? `${plural(t.live.length, "aircraft", "aircraft")} in view` : "No tracked aircraft in view"}
+              </span>
+            </div>
+            <div className="fa-map-layers" style={{ left: "auto", right: 16 }}>
+              <button className="fa-map-chip" aria-pressed={tilt} onClick={() => setTilt((v) => !v)} aria-label="Tilt the map for a 3D view">
+                <Box size={13} aria-hidden="true" />3D
+              </button>
+              <button className="fa-map-chip" onClick={() => setFitSeq((n) => n + 1)} aria-label="Center on the airport">
+                <Crosshair size={13} aria-hidden="true" />
+              </button>
+              <Link className="fa-map-chip" href="/app/map" aria-label="Open the full live map">
+                <Maximize2 size={13} aria-hidden="true" />
+              </Link>
+            </div>
           </div>
-          <div className="fa-map-chip" style={{ position: "absolute", left: 16, top: 16 }}>
-            <span className={`fa-dot ${lead ? "live" : "hollow"}`} style={{ width: 6, height: 6 }} />
-            {lead
-              ? `Live · ${lead.source === "ground_station" ? "Ground Station" : "Network"} · position ${ago(leadAge).replace(" ago", "")} old`
-              : t.live.length ? `${plural(t.live.length, "aircraft", "aircraft")} in view` : "No tracked aircraft in view"}
-          </div>
-          {t.hasAirport && leadRings.length > 0 && (
+          {t.hasAirport && focusRings.length > 0 && (
             <div className="fa-ladder-wrap">
-              <ApproachLadder steps={steps} />
+              <ApproachLadder steps={focusSteps} />
             </div>
           )}
         </div>

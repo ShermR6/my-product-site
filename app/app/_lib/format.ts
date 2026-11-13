@@ -201,3 +201,48 @@ export function endHeading(ident: string | null, surveyed: number | null): numbe
   const n = parseInt(ident ?? "", 10);
   return n >= 1 && n <= 36 ? (n * 10) % 360 : null;
 }
+
+type RunwayLike = {
+  leIdent: string | null; leHdg: number | null; heIdent: string | null; heHdg: number | null;
+  leLat?: number | null; leLon?: number | null; heLat?: number | null; heLon?: number | null;
+};
+
+/** Smallest angle between two headings, in degrees. */
+export function headingGap(a: number, b: number): number {
+  return Math.abs(((a - b + 540) % 360) - 180);
+}
+
+/**
+ * The runway an aircraft is lined up with, like "18" or "17L", or null when it
+ * is not lined up with any (same 35° tolerance the tracker uses). Parallel
+ * runways are told apart by which centreline the aircraft is closest to; when
+ * that can't be worked out the side letter is left off.
+ */
+export function runwayFor(
+  a: { heading: number | null; latitude: number | null; longitude: number | null },
+  runways: RunwayLike[] | null | undefined,
+): string | null {
+  if (a.heading == null || !runways?.length) return null;
+  const ends: { ident: string; hdg: number; lat: number | null; lon: number | null }[] = [];
+  for (const r of runways) {
+    for (const [ident, hdg, lat, lon] of [[r.leIdent, r.leHdg, r.leLat, r.leLon], [r.heIdent, r.heHdg, r.heLat, r.heLon]] as const) {
+      const h = endHeading(ident, hdg);
+      if (ident && h != null && headingGap(h, a.heading) <= 35) ends.push({ ident, hdg: h, lat: lat ?? null, lon: lon ?? null });
+    }
+  }
+  if (!ends.length) return null;
+  if (ends.length === 1) return ends[0].ident;
+  const placed = a.latitude != null && a.longitude != null && ends.every((e) => e.lat != null && e.lon != null);
+  if (placed) {
+    // Distance off each extended centreline, in nautical miles.
+    const off = (e: (typeof ends)[number]) => {
+      const p = offsetNm(e.lat as number, e.lon as number, a.latitude as number, a.longitude as number);
+      const h = (e.hdg * Math.PI) / 180;
+      return Math.abs(p.x * Math.cos(h) - p.y * Math.sin(h));
+    };
+    return [...ends].sort((x, y) => off(x) - off(y))[0].ident;
+  }
+  const best = [...ends].sort((x, y) => headingGap(x.hdg, a.heading as number) - headingGap(y.hdg, a.heading as number))[0];
+  const twins = ends.filter((e) => parseInt(e.ident, 10) === parseInt(best.ident, 10));
+  return twins.length > 1 ? best.ident.replace(/[LRC]$/i, "") : best.ident;
+}

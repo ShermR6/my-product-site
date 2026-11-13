@@ -51,16 +51,13 @@ export default function AircraftPage() {
   const t = useTracker();
   const plan = planOf(t.me?.license_tier);
   const [query, setQuery] = useState("");
-  const [quick, setQuick] = useState("");
-  const [looking, setLooking] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(() =>
     typeof window !== "undefined" && new URLSearchParams(window.location.search).has("add") ? blank() : null
   );
   const [lookupNote, setLookupNote] = useState("");
   const paints = usePaints();
 
-  const slotsLeft = plan.aircraft == null ? null : Math.max(0, plan.aircraft - t.aircraft.length);
-  const atLimit = slotsLeft === 0;
+  const atLimit = plan.aircraft != null && t.aircraft.length >= plan.aircraft;
   const defaultRings = airportRings(t.airport);
   const sendsTo = t.integrations.filter((i) => i.enabled).map((i) => channelLabel(i.type));
 
@@ -76,17 +73,6 @@ export default function AircraftPage() {
       id: a.id, tail: a.tail_number, icao24: a.icao24 ?? "", type: a.aircraft_type ?? "", name: a.friendly_name ?? "",
       ownRings: own.length > 0, rings: own.length ? own : defaultRings, paint: paints[a.tail_number] ?? "",
     });
-  }
-
-  async function quickAdd() {
-    const tail = cleanTail(quick);
-    if (tail.length < 3) return;
-    setLooking(true);
-    const r = await lookup(tail);
-    setLooking(false);
-    setLookupNote(r.found ? "Found in the registry. Check the details and save." : "Not found in the registry. Enter the transponder code by hand.");
-    setDraft({ ...blank(r.tail_number ?? tail), icao24: r.icao24 ?? "", type: r.aircraft_type ?? "" });
-    setQuick("");
   }
 
   const movements = groupEvents(t.recent.filter((n) => n.alert_type === "landing" || n.alert_type === "takeoff")).slice(0, 6);
@@ -114,7 +100,12 @@ export default function AircraftPage() {
       )}
 
       {t.aircraft.length === 0 ? (
-        <Card><Empty title="No aircraft yet">Add a tail number below and FinalPing starts watching for it.</Empty></Card>
+        <Card>
+          <Empty title="No aircraft yet">
+            Enter a tail number and FinalPing fills in the type and transponder code from the registry, then starts watching for it.
+            <div style={{ marginTop: 16 }}><Btn variant="primary" onClick={() => { setLookupNote(""); setDraft(blank()); }}><Plus size={16} aria-hidden="true" />Add aircraft</Btn></div>
+          </Empty>
+        </Card>
       ) : shown.length === 0 ? (
         <Card><Empty title="No match">Nothing tracked matches “{query}”.</Empty></Card>
       ) : (
@@ -180,17 +171,7 @@ export default function AircraftPage() {
         </div>
       )}
 
-      <div className="fa-grid fa-cols-2" style={{ marginTop: 16 }}>
-        <Card title="Add an aircraft">
-          <p className="fa-note" style={{ marginBottom: 14 }}>Enter a tail number and FinalPing fills in the type and transponder code from the registry.</p>
-          <form style={{ display: "flex", gap: 10 }} onSubmit={(e) => { e.preventDefault(); quickAdd(); }}>
-            <input className="fa-input mono" placeholder="N12345" aria-label="Tail number" value={quick} disabled={atLimit}
-              onChange={(e) => setQuick(cleanTail(e.target.value))} />
-            <Btn type="submit" variant="primary" square disabled={atLimit || looking || quick.length < 3}>{looking ? "Looking up…" : "Look up"}</Btn>
-          </form>
-          {slotsLeft != null && <div className="fa-note" style={{ marginTop: 10 }}>{slotsLeft} {slotsLeft === 1 ? "slot" : "slots"} left</div>}
-        </Card>
-
+      <div style={{ marginTop: 16 }}>
         <Card title="Recent movements" note="Takeoffs and landings">
           {movements.length === 0 && <div className="fa-row fa-note">Nothing yet.</div>}
           {movements.map((m) => (

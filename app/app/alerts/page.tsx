@@ -1,28 +1,21 @@
 "use client";
 
-// Alerts: which event goes to which channel, quiet hours, and the wording.
+// Alerts: which alerts exist, which channel each goes to, quiet hours, and the wording.
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTracker } from "../_lib/store";
 import { api, errorText } from "../_lib/tracker";
-import { airportRings, channelLabel, ringKey } from "../_lib/format";
+import { Plus, X } from "lucide-react";
+import { airportRings, channelLabel, planOf, ringKey } from "../_lib/format";
 import type { AlertSetting, Routing } from "../_lib/types";
 import { Btn, Card, Check, PageHead, Toggle } from "../_components/kit";
+import MessageEditor, { MESSAGE_FIELD_KEYS } from "../_components/MessageEditor";
+import { RING_MAX, RING_MIN } from "../_components/RingEditor";
 
-type EventRow = { type: string; label: string; hint: string };
+type EventRow = { type: string; label: string; hint: string; ring?: number };
 
-const VARIABLES: { key: string; label: string }[] = [
-  { key: "tail", label: "tail" },
-  { key: "distance", label: "distance" },
-  { key: "eta", label: "eta" },
-  { key: "runway", label: "runway" },
-  { key: "airport", label: "airport" },
-  { key: "speed", label: "speed" },
-  { key: "altitude", label: "altitude" },
-  { key: "time", label: "time" },
-];
-const KNOWN = new Set([...VARIABLES.map((v) => v.key), "tail_number"]);
+const KNOWN = MESSAGE_FIELD_KEYS;
 
 /** The wording the tracker uses when no custom message is saved. Keep in step with tracker.get_default_template. */
 function defaultTemplate(type: string): string {
@@ -55,19 +48,28 @@ function Rich({ text }: { text: string }) {
 
 export default function AlertsPage() {
   const t = useTracker();
-  const rings = useMemo(() => airportRings(t.airport), [t.airport]);
+  const plan = planOf(t.me?.license_tier);
+  const savedRings = useMemo(() => airportRings(t.airport), [t.airport]);
+  // ── which distance alerts exist: null until the person adds or removes one ──
+  const [ringDraft, setRingDraft] = useState<number[] | null>(null);
+  const rings = ringDraft ?? savedRings;
+  const ringsDirty = ringDraft !== null;
+  const [adding, setAdding] = useState(false);
+  const [newRing, setNewRing] = useState("");
+  const [addErr, setAddErr] = useState("");
 
   const events = useMemo<EventRow[]>(() => {
     const hints = ["The first heads-up", "Getting close", "On short final"];
     const rows: EventRow[] = rings.map((r, i) => ({
       type: ringKey(r),
+      ring: r,
       label: `Crosses ${r} nm`,
-      hint: i === 0 ? hints[0] : i === rings.length - 1 ? hints[2] : hints[1],
+      hint: !savedRings.includes(r) ? "New. Starts when you save" : i === 0 ? hints[0] : i === rings.length - 1 ? hints[2] : hints[1],
     }));
     rows.push({ type: "landing", label: "Landed", hint: "Wheels down at your airport" });
     rows.push({ type: "takeoff", label: "Took off", hint: "Departed your airport" });
     return rows;
-  }, [rings]);
+  }, [rings, savedRings]);
 
   // ── routing ──
   const [routing, setRouting] = useState<Routing | null>(null);
@@ -118,9 +120,35 @@ export default function AlertsPage() {
     setRoutingDirty(true); setOk(""); setErr("");
   }
 
+  function changeRings(next: number[]) {
+    const sorted = [...next].sort((a, b) => b - a);
+    setRingDraft(sorted.join() === savedRings.join() ? null : sorted);
+    setOk(""); setErr("");
+  }
+
+  function addRing() {
+    const n = Number(newRing);
+    if (!newRing.trim() || !Number.isInteger(n) || n < RING_MIN || n > RING_MAX) { setAddErr(`Enter a whole number from ${RING_MIN} to ${RING_MAX}.`); return; }
+    if (rings.includes(n)) { setAddErr(`There is already a ${n} nm alert.`); return; }
+    changeRings([...rings, n]);
+    setNewRing(""); setAddErr(""); setAdding(false);
+  }
+
+  function removeRing(r: number) {
+    changeRings(rings.filter((x) => x !== r));
+    if (editType === ringKey(r)) { setEditing(""); setTextDirty(false); setMsgNote(null); }
+  }
+
   async function save() {
+    if (ringsDirty && rings.length === 0) { setErr("Keep at least one distance alert. To silence one, untick its boxes."); return; }
     setBusy(true); setErr(""); setOk("");
     try {
+      // Rings first: saving them drops the routing of any ring that was removed.
+      if (ringsDirty) {
+        await api("airport/config", { method: "POST", body: { alert_distances_nm: rings } });
+        await t.reload();
+        setRingDraft(null);
+      }
       if (routingDirty && routing) {
         const r = await api<{ routing: Routing }>("settings/routing", { method: "PUT", body: { routing } });
         setRouting(r.routing ?? {});
@@ -158,11 +186,6 @@ export default function AlertsPage() {
     }
   }
 
-  function insert(key: string) {
-    setText((s) => `${s}${s && !/\s$/.test(s) ? " " : ""}{${key}}`);
-    setTextDirty(true); setMsgNote(null);
-  }
-
   const sampleTail = t.aircraft[0]?.tail_number ?? "N172AK";
   const sample: Record<string, string> = {
     tail: sampleTail, tail_number: sampleTail,
@@ -172,8 +195,9 @@ export default function AlertsPage() {
     airport: t.airport?.airport_code ?? "KDTO", runway: "Runway 18",
   };
 
-  const dirty = routingDirty || quietDirty;
+  const dirty = routingDirty || quietDirty || ringsDirty;
   const cols = t.integrations;
+  const ringsFull = plan.rings != null && rings.length >= plan.rings;
 
   return (
     <div className="fa-page">
@@ -185,28 +209,49 @@ export default function AlertsPage() {
       {ok && <div className="fa-banner" role="status">{ok}</div>}
 
       <div className="fa-table-wrap" style={{ marginBottom: 16 }}>
-        <div style={{ padding: "16px 22px 12px", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <span className="fa-card-title">Events and routing</span>
-          <span className="fa-card-note">Untick a box to keep that event out of that channel.</span>
+        <div style={{ padding: "16px 22px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <span className="fa-card-title">Alerts</span>
+            <div className="fa-card-note" style={{ marginTop: 2 }}>
+              {cols.length ? "Untick a box to keep that alert out of that channel." : "One alert each time a tracked aircraft crosses a distance inbound."}
+            </div>
+          </div>
+          {t.hasAirport !== false && (adding ? (
+            <form style={{ display: "inline-flex", gap: 6, alignItems: "center" }} onSubmit={(e) => { e.preventDefault(); addRing(); }}>
+              <span className="fa-note">Alert at</span>
+              <input className="fa-input mono" style={{ width: 84, height: 34 }} inputMode="numeric" autoFocus placeholder="nm"
+                aria-label="Alert distance in nautical miles" value={newRing}
+                onChange={(e) => { setNewRing(e.target.value); setAddErr(""); }}
+                onKeyDown={(e) => { if (e.key === "Escape") { setAdding(false); setAddErr(""); setNewRing(""); } }} />
+              <Btn small type="submit">Add</Btn>
+              <button type="button" className="fa-link fa-note" onClick={() => { setAdding(false); setAddErr(""); setNewRing(""); }}>Cancel</button>
+            </form>
+          ) : (
+            <Btn small disabled={ringsFull} title={ringsFull ? `${plan.name} includes up to ${plan.rings} distance alerts` : undefined}
+              onClick={() => setAdding(true)}>
+              <Plus size={14} aria-hidden="true" />Add alert
+            </Btn>
+          ))}
         </div>
+        {addErr && <div className="fa-error" role="alert" style={{ padding: "0 22px 10px", marginTop: 0 }}>{addErr}</div>}
+        {ringsFull && !adding && <div className="fa-note" style={{ padding: "0 22px 10px" }}>{plan.name} includes up to {plan.rings} distance alerts. <a className="fa-link" href="/pricing">See plans</a></div>}
         {t.hasAirport === false ? (
-          <div className="fa-empty"><strong>No airport yet</strong>Events appear once you <Link className="fa-link" href="/app/airport">pick your airport</Link>.</div>
-        ) : cols.length === 0 ? (
-          <div className="fa-empty"><strong>No channels connected</strong>Alerts have nowhere to go yet. <Link className="fa-link" href="/app/integrations">Connect a channel</Link></div>
+          <div className="fa-empty"><strong>No airport yet</strong>Alerts appear once you <Link className="fa-link" href="/app/airport">pick your airport</Link>.</div>
         ) : (
           <div className="fa-table-scroll">
             <table className="fa-table fa-routing" style={{ "--cols": cols.length } as React.CSSProperties}>
               <thead>
                 <tr>
-                  <th>Event</th>
+                  <th>Alert</th>
                   {cols.map((c) => (
                     <th key={c.id} className="ch">{channelLabel(c.type)}{!c.enabled && " (off)"}</th>
                   ))}
+                  <th className="fa-rm" aria-label="Remove" />
                 </tr>
               </thead>
               <tbody>
                 {events.map((ev) => {
-                  const silent = routing !== null && cols.filter((c) => c.enabled).every((c) => !isOn(ev.type, c.id));
+                  const silent = routing !== null && cols.length > 0 && cols.filter((c) => c.enabled).every((c) => !isOn(ev.type, c.id));
                   return (
                     <tr key={ev.type}>
                       <td style={{ height: 58 }}>
@@ -219,11 +264,26 @@ export default function AlertsPage() {
                             label={`Send “${ev.label}” to ${channelLabel(c.type)}`} onChange={(on) => toggle(ev.type, c.id, on)} />
                         </td>
                       ))}
+                      <td className="fa-rm">
+                        {ev.ring != null && (
+                          <button type="button" className="fa-icon-btn" style={{ width: 28, height: 28 }} aria-label={`Remove the ${ev.ring} nm alert`}
+                            title="Remove this alert" onClick={() => removeRing(ev.ring as number)}>
+                            <X size={14} aria-hidden="true" />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {t.hasAirport !== false && (
+          <div className="fa-note" style={{ padding: "12px 22px 16px", borderTop: "1px solid #1E1E1E" }}>
+            {cols.length === 0
+              ? <>These have nowhere to go yet. <Link className="fa-link" href="/app/integrations">Connect a channel</Link></>
+              : <>Landed and Took off are always listed; untick them to switch them off. An aircraft with its own rings keeps those: see <Link className="fa-link" href="/app/aircraft">Aircraft</Link>.</>}
           </div>
         )}
       </div>
@@ -262,13 +322,10 @@ export default function AlertsPage() {
             <p className="fa-note" style={{ marginTop: 12 }}>Custom wording is available for whole-number rings. This ring uses the standard message.</p>
           ) : (
             <>
-              <textarea className="fa-input mono" style={{ marginTop: 12, fontSize: 13 }} rows={4} maxLength={500} aria-label="Message wording"
-                value={text} onChange={(e) => { setText(e.target.value); setTextDirty(true); setMsgNote(null); }} />
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                {VARIABLES.map((v) => (
-                  <button key={v.key} type="button" className="fa-chip selectable" style={{ height: 26, fontSize: 11.5 }} onClick={() => insert(v.key)}>+ {v.label}</button>
-                ))}
+              <div style={{ marginTop: 12 }}>
+                <MessageEditor label="Message wording" value={text} onChange={(next) => { setText(next); setTextDirty(true); setMsgNote(null); }} />
               </div>
+              {text.length > 500 && <div className="fa-error" role="alert">That is {text.length - 500} characters too long.</div>}
               {problems.length > 0 && (
                 <div className="fa-error" role="alert" style={{ color: "var(--warn)" }}>
                   {problems.join(", ")} isn&apos;t something FinalPing can fill in. The standard message would be sent instead.
@@ -287,7 +344,7 @@ export default function AlertsPage() {
               <div className="fa-modal-actions" style={{ marginTop: 14 }}>
                 <Btn disabled={busy || (savedTemplate ?? defaultTemplate(editType)) === defaultTemplate(editType) && !textDirty}
                   onClick={() => saveMessage(defaultTemplate(editType))}>Reset to standard</Btn>
-                <Btn variant="primary" disabled={busy || !textDirty || problems.length > 0} onClick={() => saveMessage(text)}>Save message</Btn>
+                <Btn variant="primary" disabled={busy || !textDirty || problems.length > 0 || text.length > 500} onClick={() => saveMessage(text.trimEnd())}>Save message</Btn>
               </div>
             </>
           )}

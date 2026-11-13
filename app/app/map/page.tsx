@@ -10,14 +10,15 @@ import { Box, Crosshair, X } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api } from "../_lib/tracker";
 import {
-  ago, airportRings, channelLabel, etaText, inboundOf, nm, parseUtc, recentAlertsFor, ringsFor, stageOf, STAGE_LABEL, whole,
+  ago, airportRings, channelLabel, etaText, nm, parseUtc, recentAlertsFor, ringsFor, runwayFor, stageOf, STAGE_LABEL, whole,
 } from "../_lib/format";
 import type { GroundRange } from "../_lib/types";
 import { Tail } from "../_components/kit";
 import ApproachLadder, { ladderSteps } from "../_components/ApproachLadder";
-import type { MapCoverage, MapPlane } from "../_components/MapGL";
+import type { MapCoverage } from "../_components/MapGL";
 import Plane3D from "../_components/Plane3D";
 import { paintOf, usePaints } from "../_lib/paint";
+import { mapPlanes } from "../_lib/mapPlanes";
 
 const MapGL = dynamic(() => import("../_components/MapGL"), {
   ssr: false,
@@ -34,8 +35,6 @@ export default function LiveMapPage() {
   const [tilt, setTilt] = useState(false);
   const paints = usePaints();
 
-  const inbound = inboundOf(t.live, t.aircraft, t.airport);
-
   useEffect(() => {
     if (!showRange || range || t.groundEnabled !== true) return;
     let live = true;
@@ -48,16 +47,10 @@ export default function LiveMapPage() {
   const center = useMemo(() => (t.airport && isFinite(lat) && isFinite(lon) ? { lat, lon } : null), [t.airport, lat, lon]);
 
   const rings = airportRings(t.airport);
-  const inboundTails = new Set(inbound.map((a) => a.tail_number));
-  const planes: MapPlane[] = t.live
-    .filter((a) => a.latitude != null && a.longitude != null)
-    .map((a) => ({
-      tail: a.tail_number, lat: a.latitude as number, lon: a.longitude as number, heading: a.heading,
-      live: inboundTails.has(a.tail_number), dim: !!a.on_ground,
-      type: t.aircraft.find((x) => x.tail_number === a.tail_number)?.aircraft_type, color: paintOf(a.tail_number, paints),
-      speedKt: a.velocity_kts,
-      altFt: a.altitude_ft_agl ?? (a.altitude_ft_msl != null ? a.altitude_ft_msl - (t.airport?.elevation_ft_msl ?? 0) : null),
-    }));
+  const planes = mapPlanes(t.live, t.aircraft, t.airport, paints);
+  const landing = t.airport?.approach_corridor_enabled
+    ? (t.airport.approach_runway_headings?.length ? t.airport.approach_runway_headings : t.airport.approach_runway_heading != null ? [t.airport.approach_runway_heading] : []).map(Number)
+    : [];
 
   const coverage: MapCoverage | null =
     showRange && range?.range_nm && range.receiver_lat != null && range.receiver_lon != null
@@ -69,6 +62,7 @@ export default function LiveMapPage() {
   const selRings = selected ? ringsFor(selected, t.aircraft, t.airport) : [];
   const selStage = sel ? stageOf(sel, selRings) : null;
   const selHot = selStage === "final" || selStage === "inbound";
+  const selRunway = sel && selHot ? runwayFor(sel, t.airport?.runway_info) : null;
   const sendsTo = t.integrations.filter((i) => i.enabled).map((i) => channelLabel(i.type));
   const selAge = sel ? Math.max(0, (t.now - (parseUtc(sel.last_seen)?.getTime() ?? t.now)) / 1000) : null;
 
@@ -89,6 +83,7 @@ export default function LiveMapPage() {
       <MapGL
         center={center} code={t.airport?.airport_code} rings={rings} planes={planes}
         selected={selected} onSelect={setSelected} showRings={showRings} coverage={coverage} fitSeq={fitSeq} tilt={tilt}
+        runways={t.airport?.runway_info} approach={landing}
       />
 
       {/* layer chips */}
@@ -134,6 +129,7 @@ export default function LiveMapPage() {
                   <span className="fa-stat" style={{ fontSize: 40 }}>{sel.distance_nm.toFixed(1)}<small>nm out</small></span>
                 </div>
               )}
+              {selRunway && <div style={{ fontSize: 13.5, fontWeight: 600, margin: "2px 0 0" }}>Lined up for runway {selRunway}</div>}
               <div className="fa-grid fa-cols-3 fa-keep-cols" style={{ gap: 8, margin: "12px 0 6px" }}>
                 <Mini label="ETA" value={selHot ? etaText(sel.distance_nm, sel.velocity_kts) : "—"} />
                 <Mini label="Speed" value={whole(sel.velocity_kts, "kt")} />

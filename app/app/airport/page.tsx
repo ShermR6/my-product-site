@@ -3,10 +3,11 @@
 // Airport: where FinalPing watches and how far out it starts telling you.
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Crosshair } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api, errorText } from "../_lib/tracker";
-import { airportRings, endHeading, planOf } from "../_lib/format";
+import { airportRings, endHeading, headingGap, planOf } from "../_lib/format";
 import type { AirportMatch, Runway, SavedLocation } from "../_lib/types";
 import { Btn, Card, Modal, PageHead, Tail, Toggle } from "../_components/kit";
 import RingEditor from "../_components/RingEditor";
@@ -36,7 +37,7 @@ function runwayEnds(runways: Runway[]): RunwayEnd[] {
       if (!ident || h == null) continue;
       const heading = Math.round(h) % 360;
       // Parallel runways share a heading, and the tracker filters by heading, so they are one choice.
-      const twin = out.find((e) => e.heading === heading);
+      const twin = out.find((e) => headingGap(e.heading, heading) <= 3 && parseInt(e.ident, 10) === parseInt(ident, 10));
       if (twin) { if (!twin.ident.split(" / ").includes(ident)) twin.ident += ` / ${ident}`; }
       else out.push({ ident, heading });
     }
@@ -44,7 +45,10 @@ function runwayEnds(runways: Runway[]): RunwayEnd[] {
   return out;
 }
 
-const same = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180) < 1;
+const same = (a: number, b: number) => headingGap(a, b) < 1;
+
+/** Runways with their two ends surveyed, so they can be drawn where they really are. */
+const placed = (runways: Runway[]) => runways.length > 0 && runways.every((r) => r.leLat != null && r.heLat != null);
 
 export default function AirportPage() {
   const t = useTracker();
@@ -71,9 +75,36 @@ export default function AirportPage() {
   const [locations, setLocations] = useState<SavedLocation[] | null>(null);
   const [locErr, setLocErr] = useState("");
   const [adding, setAdding] = useState(false);
+  const [fitSeq, setFitSeq] = useState(0);
 
   // Follow the saved settings until the person starts editing.
   useEffect(() => { if (!dirty) setDraft(saved); }, [saved, dirty]);
+
+  // Runway detection: an airport set up before the web app (or in the desktop app) may have no
+  // runways saved, or runways without their positions. Look them up once and keep them.
+  const [found, setFound] = useState("");
+  const looked = useRef("");
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const reload = t.reload;
+  useEffect(() => {
+    if (!saved?.code || placed(saved.runways) || looked.current === saved.code) return;
+    looked.current = saved.code;
+    const code = saved.code;
+    const have = saved.runways.length;
+    (async () => {
+      const match = (await findAirports(code)).find((m) => m.icao === code);
+      if (!mounted.current || !match?.runways.length) return;
+      if (!placed(match.runways) && have >= match.runways.length) return;
+      try {
+        await api("airport/config", { method: "POST", body: { runway_info: match.runways } });
+        if (!mounted.current) return;
+        setDraft((d) => (d && d.code === code ? { ...d, runways: match.runways } : d));
+        setFound(`Found ${match.runways.length === 1 ? "the runway" : `${match.runways.length} runways`} at ${code}.`);
+        await reload();
+      } catch { /* still shown from the saved copy */ }
+    })();
+  }, [saved, reload]);
 
   async function loadLocations() {
     try { setLocations(await api<SavedLocation[]>("locations")); } catch { setLocations([]); }
@@ -178,7 +209,7 @@ export default function AirportPage() {
       </PageHead>
 
       {err && <div className="fa-banner bad" role="alert">{err}</div>}
-      {ok && <div className="fa-banner" role="status">{ok}</div>}
+      {(ok || found) && <div className="fa-banner" role="status">{ok || found}</div>}
 
       {!draft ? (
         <Card title="Pick your home airport">
@@ -204,39 +235,55 @@ export default function AirportPage() {
               <p className="fa-note" style={{ marginTop: 12 }}>One alert each time a tracked aircraft crosses a ring inbound. Any aircraft can override these with its own.</p>
             </Card>
 
-            <Card>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+            <Card title="Runways" note={draft.runways.length ? `${draft.runways.length} found` : undefined}>
+              {draft.runways.length === 0 ? (
+                <p className="fa-note">No runway data for this airport. Alerts still work; FinalPing just can&apos;t tell which runway an aircraft is lined up for.</p>
+              ) : (
+                draft.runways.map((r, i) => (
+                  <div key={i} className="fa-row">
+                    <span className="mono" style={{ width: 92, fontWeight: 600 }}>{[r.leIdent, r.heIdent].filter(Boolean).join(" / ") || "—"}</span>
+                    <span className="fa-note" style={{ flex: 1 }}>
+                      {[r.leIdent, r.heIdent].map((id, k) => {
+                        const h = endHeading(id, k === 0 ? r.leHdg : r.heHdg);
+                        return h == null ? null : `${String(Math.round(h) % 360 || 360).padStart(3, "0")}°`;
+                      }).filter(Boolean).join(" and ")}
+                    </span>
+                    <span className="mono fa-note">{r.lengthFt ? `${Math.round(r.lengthFt).toLocaleString()} ft` : ""}</span>
+                  </div>
+                ))
+              )}
+              {draft.runways.length > 0 && (
+                <p className="fa-note" style={{ marginTop: 10 }}>
+                  Drawn on the map. When an aircraft is inbound, FinalPing shows which of these it is lined up for.
+                </p>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginTop: 14, paddingTop: 14, borderTop: "1px solid #1E1E1E" }}>
                 <div>
-                  <div className="fa-card-title">Only alert on approach</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>Only alert on approach</div>
                   <p className="fa-note" style={{ marginTop: 4 }}>Skip flyovers and departures. Alert only when the aircraft is heading for the field.</p>
                 </div>
                 <Toggle on={draft.approachOnly} label="Only alert on approach" onChange={(on) => change({ approachOnly: on })} />
               </div>
-              {draft.approachOnly && (
-                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1E1E1E" }}>
+              {draft.approachOnly && ends.length > 0 && (
+                <div style={{ marginTop: 14 }}>
                   <div className="fa-label">Landing runways</div>
-                  {ends.length === 0 ? (
-                    <p className="fa-note">No runway data for this airport, so any direction toward the field counts.</p>
-                  ) : (
-                    <>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {ends.map((e) => {
-                          const on = draft.headings.some((h) => same(h, e.heading));
-                          return (
-                            <button key={e.ident} type="button" className="fa-chip selectable" aria-pressed={on}
-                              onClick={() => change({ headings: on ? draft.headings.filter((h) => !same(h, e.heading)) : [...draft.headings, e.heading] })}>
-                              {e.ident}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className="fa-note" style={{ marginTop: 10 }}>
-                        {draft.headings.length === 0
-                          ? "None picked: any direction toward the field counts."
-                          : "Alerts go out only for aircraft lined up with a picked runway (within 35°)."}
-                      </p>
-                    </>
-                  )}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {ends.map((e) => {
+                      const on = draft.headings.some((h) => same(h, e.heading));
+                      return (
+                        <button key={e.ident} type="button" className="fa-chip selectable" aria-pressed={on}
+                          onClick={() => change({ headings: on ? draft.headings.filter((h) => !same(h, e.heading)) : [...draft.headings, e.heading] })}>
+                          {e.ident}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="fa-note" style={{ marginTop: 10 }}>
+                    {draft.headings.length === 0
+                      ? "None picked: any direction toward the field counts."
+                      : "Alerts go out only for aircraft lined up with a picked runway (within 35°). Its approach path is dashed on the map."}
+                  </p>
                 </div>
               )}
             </Card>
@@ -263,8 +310,13 @@ export default function AirportPage() {
           </div>
 
           <div className="fa-mapcard fa-preview">
-            <MapGL center={center} code={draft.code} rings={sortedRings} interactive={false} />
-            <div className="fa-map-chip" style={{ position: "absolute", left: 16, top: 16, zIndex: 450 }}>Preview · updates as you edit</div>
+            <MapGL center={center} code={draft.code} rings={sortedRings} runways={draft.runways} approach={draft.approachOnly ? draft.headings : []} fitSeq={fitSeq} />
+            <div className="fa-map-layers">
+              <span className="fa-map-chip">Updates as you edit</span>
+              <button className="fa-map-chip" onClick={() => setFitSeq((n) => n + 1)} aria-label="Center on the airport">
+                <Crosshair size={13} aria-hidden="true" />{draft.code || "Center"}
+              </button>
+            </div>
           </div>
         </div>
       )}
