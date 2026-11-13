@@ -11,7 +11,6 @@ export const SOCIAL_LINKS = {
 const PRODUCT_LINKS = [
   { href: "/", label: "Product" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download" },
   { href: "/groundstationkit", label: "Ground Station Kit" },
 ];
 

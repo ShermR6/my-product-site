@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
             <p style="font-size:15px;margin-bottom:16px;">Welcome! Your account is ready.</p>
             <p style="font-size:13px;color:#bdbdbd;margin-bottom:24px;">Browse plans to get started tracking aircraft and receive real-time proximity alerts.</p>
             <a href="https://finalpingapp.com/pricing" style="display:inline-block;padding:12px 24px;background:#f5b400;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;margin-right:12px;margin-bottom:12px;">Browse Plans</a>
-            <a href="https://finalpingapp.com/download" style="display:inline-block;padding:12px 24px;background:transparent;color:#f5b400;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;border:1px solid #f5b400;">Download the App</a>
+            <a href="https://finalpingapp.com/app" style="display:inline-block;padding:12px 24px;background:transparent;color:#f5b400;font-weight:700;border-radius:999px;text-decoration:none;font-size:14px;border:1px solid #f5b400;">Open FinalPing</a>
             <p style="font-size:12px;color:#555;margin-top:28px;">
               Questions? Visit <a href="https://finalpingapp.com/dashboard" style="color:#f5b400;">your dashboard</a> anytime.
             </p>

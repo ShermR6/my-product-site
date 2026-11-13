@@ -39,12 +39,11 @@ export default function Navbar() {
           <nav style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <Link className="nav-link" href="/">Product</Link>
             <Link className="nav-link" href="/pricing">Pricing</Link>
-            <Link className="nav-link" href="/download">Download</Link>
             <Link className="nav-link" href="/contact">Contact Us</Link>
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {/* The web app is the main way in. Download stays in the link row. */}
+            {/* The web app is the only way in: the desktop apps are retired. */}
             <Link href="/app" className="nav-dl-btn">
               <span>Open<span className="nav-dl-long">&nbsp;app</span></span>
             </Link>

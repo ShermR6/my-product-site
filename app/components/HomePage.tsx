@@ -456,7 +456,6 @@ export default function HomePage() {
             <Link href="/pricing" className="fh-btn ghost">View pricing</Link>
           </div>
           <p className="fh-cta-note">
-            Prefer a desktop app? <Link href="/download" className="fh-textlink">Download for Windows or Mac</Link>.
             Questions or a bug to report? Write to{" "}
             <a href="mailto:aircraftalerts@finalpingapp.com" className="fh-textlink">aircraftalerts@finalpingapp.com</a>
           </p>

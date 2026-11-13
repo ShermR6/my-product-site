@@ -1,270 +1,41 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+
+// The desktop apps were retired on 13 November 2026. This address stays so
+// that old links and emails still land somewhere useful.
 
 export const metadata: Metadata = {
-  title: "Download",
-  description: "Download FinalPing for Windows or macOS. Personal and Teams editions available.",
+  title: "No download needed",
+  description: "FinalPing runs in your browser. Sign in to track your aircraft and get arrival alerts, with nothing to install.",
 };
-
-const PERSONAL_BASE = `https://github.com/ShermR6/aircraft-tracker-desktop/releases/latest/download`;
-const TEAMS_BASE = `https://github.com/ShermR6/aircraft-tracker-teams/releases/latest/download`;
-
-function PlatformCard({
-  name,
-  ext,
-  href,
-  label,
-}: {
-  name: string;
-  ext: string;
-  href?: string;
-  label: string;
-}) {
-  return (
-    <div
-      className="panel-white"
-      style={{
-        border: "1px solid var(--border-strong)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.13)",
-      }}
-    >
-      <h2 style={{ marginBottom: 4 }}>{name}</h2>
-      <p style={{ marginTop: 0, color: "var(--text)", fontSize: 13 }}>{ext}</p>
-      {href ? (
-        <a
-          className="btn btn-solid"
-          style={{ width: "100%", display: "block", textAlign: "center", marginTop: 12 }}
-          href={href}
-        >
-          {label}
-        </a>
-      ) : (
-        <div style={{
-          width: "100%", textAlign: "center", marginTop: 12,
-          padding: "10px 14px", borderRadius: 10,
-          border: "1px solid rgba(0,0,0,0.12)",
-          fontSize: 13, fontWeight: 600, color: "var(--muted)",
-        }}>
-          Coming Soon
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AppSection({
-  tag,
-  title,
-  tagline,
-  version,
-  winHref,
-  macHref,
-  accent,
-}: {
-  tag: string;
-  title: string;
-  tagline: string;
-  version: string;
-  winHref: string;
-  macHref: string;
-  accent?: boolean;
-}) {
-  return (
-    <div style={{
-      borderRadius: 16,
-      border: accent ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border-strong)",
-      background: accent ? "linear-gradient(135deg, rgba(255,255,255,0.03), transparent)" : "rgba(255,255,255,0.02)",
-      boxShadow: accent ? "0 2px 12px rgba(0,0,0,0)" : "none",
-      padding: "28px 28px 24px",
-      marginTop: 32,
-    }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{
-          display: "inline-block",
-          fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-          textTransform: "uppercase", padding: "3px 10px", borderRadius: 999,
-          background: accent ? "rgba(255,255,255,0.075)" : "rgba(255,255,255,0.08)",
-          color: accent ? "var(--text)" : "var(--muted)",
-          border: accent ? "1px solid rgba(255,255,255,0.18)" : "1px solid var(--border)",
-          marginBottom: 10,
-        }}>
-          {tag}
-        </div>
-        <h2 style={{ fontSize: 24, margin: "0 0 4px", fontWeight: 800, letterSpacing: -0.5 }}>{title}</h2>
-        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>{tagline}</p>
-      </div>
-
-      <div className="grid-3">
-        <PlatformCard name="Windows" ext=".exe installer" href={winHref} label="Download for Windows" />
-        <PlatformCard name="macOS" ext=".dmg installer" href={macHref} label="Download for macOS" />
-        <div className="panel-white" style={{ opacity: 0.55, border: "1px solid var(--border-strong)", boxShadow: "0 1px 3px rgba(0,0,0,0.13)" }}>
-          <h2 style={{ marginBottom: 4 }}>Linux</h2>
-          <p style={{ marginTop: 0, color: "var(--text)", fontSize: 13 }}>AppImage / .deb</p>
-          <div style={{
-            width: "100%", textAlign: "center", marginTop: 12,
-            padding: "10px 14px", borderRadius: 10,
-            border: "1px solid rgba(0,0,0,0.12)",
-            fontSize: 13, fontWeight: 600, color: "var(--muted)",
-          }}>
-            Coming Soon
-          </div>
-        </div>
-      </div>
-
-      <div style={{
-        marginTop: 16, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap",
-        borderTop: "1px solid var(--border-strong)", paddingTop: 16,
-        fontSize: 12, color: "var(--muted)",
-      }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <strong style={{ color: "var(--text)", fontSize: 13 }}>v{version}</strong>
-          <span style={{
-            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
-            background: "rgba(255,255,255,0.06)", color: "var(--good)",
-            textTransform: "uppercase", letterSpacing: "0.05em",
-          }}>Latest</span>
-        </span>
-        <span>Windows 10/11 · macOS 12+</span>
-        <span>~101 MB</span>
-      </div>
-    </div>
-  );
-}
 
 export default function DownloadPage() {
   return (
-    <div style={{ paddingTop: 48, paddingBottom: 80 }}>
-      <h1>Download</h1>
-      <p>Choose the edition that matches your license. Not sure which one? <a href="/pricing" style={{ color: "var(--text)" }}>Compare plans →</a></p>
-
-      <AppSection
-        tag="Personal"
-        title="FinalPing Personal"
-        tagline="For individual pilots and operators. Activate with your FP- license key."
-        version="1.1.1"
-        winHref={`${PERSONAL_BASE}/FinalPingSetup.exe`}
-        macHref={`${PERSONAL_BASE}/FinalPingSetup.dmg`}
-        accent
-      />
-
-      {/* Teams — coming soon */}
-      <div style={{
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "linear-gradient(135deg, rgba(255,255,255,0.02), transparent)",
-        padding: "28px 28px 24px",
-        marginTop: 32,
-      }}>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-            textTransform: "uppercase", padding: "3px 10px", borderRadius: 999,
-            background: "rgba(255,255,255,0.075)", color: "var(--text)",
-            border: "1px solid rgba(255,255,255,0.18)", marginBottom: 10,
-          }}>
-            Teams
-          </div>
-          <h2 style={{ fontSize: 24, margin: "0 0 4px", fontWeight: 800, letterSpacing: -0.5 }}>FinalPing for Teams</h2>
-          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>For FBOs, ramp crews, and flight schools.</p>
-        </div>
-
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexDirection: "column", gap: 12,
-          padding: "36px 24px",
-          borderRadius: 12,
-          border: "1px dashed rgba(255,255,255,0.12)",
-          background: "rgba(255,255,255,0.015)",
-          textAlign: "center",
-        }}>
-          <div style={{
-            fontSize: 14, fontWeight: 800, letterSpacing: "0.12em",
-            textTransform: "uppercase", color: "var(--text)",
-          }}>Coming Soon</div>
-          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, maxWidth: 380, lineHeight: 1.6 }}>
-            The Teams edition is currently in development. Download links will appear here when it launches.
-          </p>
-          <a
-            href="/waitlist"
-            style={{
-              marginTop: 4, fontSize: 13, fontWeight: 600,
-              color: "var(--text)", textDecoration: "none",
-            }}
-          >
-            Get notified when it launches →
-          </a>
-        </div>
+    <div style={{ paddingTop: 48, paddingBottom: 80, maxWidth: 720 }}>
+      <h1>No download needed</h1>
+      <p>
+        FinalPing now runs in your browser. Sign in and your aircraft, airport and alerts are ready, with nothing to install or update.
+      </p>
+      <div className="btn-row" style={{ marginTop: 20 }}>
+        <Link className="btn btn-solid" href="/app">Open FinalPing</Link>
+        <Link className="btn btn-outline" href="/pricing">View pricing</Link>
       </div>
 
-      {/* Installation steps */}
-      <div style={{ marginTop: 32 }}>
-        <div className="panel" style={{ padding: 20 }}>
-          <h2 style={{ fontSize: 16, marginBottom: 16 }}>Installation Guide</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              {
-                num: "1",
-                title: "Download the installer",
-                desc: "Click the download button for your platform and edition above.",
-              },
-              {
-                num: "2",
-                title: "Run the installer",
-                desc: "Windows: Double-click the .exe and follow the setup wizard. You may need to click \"More info\" then \"Run anyway\" for SmartScreen. macOS: Open the .dmg and drag the app to your Applications folder.",
-              },
-              {
-                num: "3",
-                title: "Activate with your license key",
-                desc: "Open the app and enter your license key (FP- for Personal, FPT- for Teams) along with the email you used to purchase.",
-              },
-              {
-                num: "4",
-                title: "Configure and start tracking",
-                desc: "Set your airport or coordinates, add your aircraft tail numbers, connect your notification channels, and you're live.",
-              },
-            ].map((step) => (
-              <div key={step.num} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid var(--border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 13, fontWeight: 800, color: "var(--text)", flexShrink: 0,
-                }}>
-                  {step.num}
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{step.title}</div>
-                  <p style={{ fontSize: 13, margin: 0, lineHeight: 1.6 }}>{step.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="panel" style={{ padding: 20, marginTop: 40 }}>
+        <h2 style={{ fontSize: 16, marginBottom: 8 }}>Used the desktop app?</h2>
+        <p style={{ fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+          The Windows and macOS apps were retired on 13 November 2026 and no longer sign in. Nothing is lost: your aircraft, airport,
+          alert settings, integrations and history are stored with your account. Sign in to the web app with the same email, and
+          uninstall the desktop app whenever you like. Alerts keep arriving either way.
+        </p>
       </div>
 
-      {/* System requirements */}
-      <div style={{ marginTop: 24 }}>
-        <div className="panel" style={{ padding: 20 }}>
-          <h2 style={{ fontSize: 16, marginBottom: 16 }}>System Requirements</h2>
-          <div className="grid-2" style={{ gap: 12 }}>
-            {[
-              { label: "Operating System", value: "Windows 10+ (64-bit) or macOS 12+" },
-              { label: "RAM", value: "4 GB minimum" },
-              { label: "Disk Space", value: "~200 MB" },
-              { label: "Internet", value: "Required for live tracking and alerts" },
-            ].map((req) => (
-              <div key={req.label} style={{
-                padding: "12px 16px",
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 10, border: "1px solid var(--border)",
-              }}>
-                <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 2 }}>{req.label}</div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{req.value}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="panel" style={{ padding: 20, marginTop: 16 }}>
+        <h2 style={{ fontSize: 16, marginBottom: 8 }}>FinalPing for Teams</h2>
+        <p style={{ fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+          The Teams edition for FBOs, ramp crews and flight schools is in development.{" "}
+          <Link href="/waitlist" style={{ color: "var(--text)" }}>Get notified when it launches</Link>.
+        </p>
       </div>
     </div>
   );

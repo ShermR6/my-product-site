@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
                 Thanks for signing up for <strong style="color:#fff;">FinalPing updates</strong>.
                 We'll email you when new features, releases, and products land — no spam, nothing else.
               </p>
-              <a href="https://finalpingapp.com/download" style="display:inline-block;padding:12px 24px;background:#0ea5e9;color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;">
-                Download FinalPing →
+              <a href="https://finalpingapp.com/app" style="display:inline-block;padding:12px 24px;background:#0ea5e9;color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;">
+                Open FinalPing →
               </a>
               <p style="font-size:12px;color:#4b5563;margin-top:32px;">
                 The FinalPing Team · <a href="https://finalpingapp.com" style="color:#4b5563;">finalpingapp.com</a>

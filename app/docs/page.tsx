@@ -18,8 +18,8 @@ const sections: Section[] = [
     title: "Getting Started",
     items: [
       {
-        q: "How do I download and install FinalPing?",
-        a: "Go to the Download page and grab the Windows installer. Run FinalPingSetup.exe, follow the prompts, and the app will launch automatically. A shortcut is added to your desktop and Start menu.",
+        q: "How do I start using FinalPing?",
+        a: "FinalPing runs in your browser, so there is nothing to install. Go to finalpingapp.com/app and sign in. The Windows and macOS desktop apps were retired on 13 November 2026; your aircraft, airport and alerts are stored with your account and appear in the web app when you sign in with the same email.",
       },
       {
         q: "How do I activate my license?",

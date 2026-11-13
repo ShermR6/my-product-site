@@ -10,7 +10,6 @@ import { useSession } from "next-auth/react";
 const LINKS = [
   { href: "/", label: "Product" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download" },
   { href: "/groundstationkit", label: "Ground Station Kit" },
   { href: "/contact", label: "Contact Us" },
   { href: "/docs", label: "Help & Docs" },

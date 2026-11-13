@@ -6,9 +6,9 @@ export default function CheckoutSuccessPage() {
       <div style={{ marginBottom: 16, lineHeight: 0, color: "var(--text-2)" }}><PartyPopper size={40} strokeWidth={1.5} aria-hidden="true" /></div>
       <h1 style={{ marginBottom: 8 }}>Purchase successful!</h1>
       <p>Your license key is on its way to your email. Check your inbox (and spam folder just in case).</p>
-      <p>Once you have your key, download the app and activate it.</p>
+      <p>FinalPing runs in your browser, so there is nothing to install. Sign in to start tracking.</p>
       <div className="btn-row" style={{ justifyContent: "center", marginTop: 20 }}>
-        <a className="btn btn-solid" href="/download">Download App</a>
+        <a className="btn btn-solid" href="/app">Open FinalPing</a>
         <a className="btn btn-outline" href="/dashboard">View Dashboard</a>
       </div>
     </div>
