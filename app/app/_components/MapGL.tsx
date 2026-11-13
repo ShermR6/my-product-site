@@ -32,6 +32,8 @@ export type MapPlane = {
   speedKt?: number | null;
   /** Height above the field, in feet. */
   altFt?: number | null;
+  /** When this position was reported (ms since 1970), if known. */
+  seenAt?: number | null;
 };
 
 export type MapCoverage = { lat: number; lon: number; rangeNm: number[] };
@@ -62,8 +64,8 @@ if (typeof window !== "undefined") ml.setWorkerUrl("/maplibre/maplibre-gl-worker
 
 const PI = Math.PI;
 const KT = 0.514444;            // knots to metres per second
-const COAST_S = 20;             // stop gliding this long after the last report
-const ICON_PX = 50;             // wingspan on screen
+const STALE_MS = 90_000;        // a position older than this is where it was, not where it is
+const ICON_PX = 60;             // wingspan on screen
 const MIN_SPAN_M = 14;          // zoomed right in, models stop shrinking at about real size
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -121,6 +123,10 @@ type Track = {
   el: HTMLButtonElement;
   // The last reported position, in the scene's local metres, and when we got it.
   fixLat: number; fixLon: number; fx: number; fz: number; fixAt: number;
+  /** How many times the position has changed while we watched. Zero = never seen it move. */
+  moves: number;
+  /** Seconds between the last two changes: how long to keep gliding before the next one is due. */
+  gap: number;
   // Where it is drawn right now.
   x: number; z: number; hdg: number;
 };
@@ -264,8 +270,12 @@ export default function MapGL({
 
         for (const tr of S.tracks.values()) {
           const p = tr.plane;
-          const moving = !calm && !p.dim && (p.speedKt ?? 0) > 20 && p.heading != null;
-          const age = Math.min((now - tr.fixAt) / 1000, COAST_S);
+          // Glide ahead of the last report only for an aircraft we have watched move, and only for
+          // about as long as its reports are apart. A position that is already old when the app
+          // opens stays where it was reported: flying it onward would put it somewhere it never was.
+          const flying = !p.dim && (p.speedKt ?? 0) > 20 && (p.seenAt == null || Date.now() - p.seenAt < STALE_MS);
+          const moving = !calm && flying && p.heading != null && tr.moves > 0;
+          const age = Math.min((now - tr.fixAt) / 1000, tr.gap * 1.25);
           const hr = ((p.heading ?? tr.hdg) * PI) / 180;
           const run = moving ? (p.speedKt as number) * KT * age : 0;
           const tx = tr.fx + Math.sin(hr) * run;
@@ -282,7 +292,7 @@ export default function MapGL({
           pivot.position.set(tr.x, y + size * 0.3, tr.z);
           pivot.scale.setScalar(size);
           pivot.rotation.y = PI / 2 - (tr.hdg * PI) / 180;
-          if (moving) for (const r of tr.model.rotors) r.o.rotation[r.ax] += r.v;
+          if (flying && !calm) for (const r of tr.model.rotors) r.o.rotation[r.ax] += r.v;
 
           // The tap target and label follow the model on screen.
           v.set(tr.x, y + size * 0.3, tr.z, 1).applyMatrix4(P);
@@ -349,7 +359,8 @@ export default function MapGL({
       odd = !odd;
       if (calm || odd) return;
       for (const tr of S.tracks.values()) {
-        if (!tr.plane.dim && (tr.plane.speedKt ?? 0) > 20) { map.triggerRepaint(); break; }
+        const p = tr.plane;
+        if (!p.dim && (p.speedKt ?? 0) > 20 && (p.seenAt == null || Date.now() - p.seenAt < STALE_MS)) { map.triggerRepaint(); break; }
       }
     };
     raf = requestAnimationFrame(loop);
@@ -448,7 +459,7 @@ export default function MapGL({
   }, [ready, tilt]);
 
   // Aircraft.
-  const planesKey = planes.map((p) => `${p.tail}:${p.lat.toFixed(5)}:${p.lon.toFixed(5)}:${Math.round(p.heading ?? 0)}:${Math.round(p.speedKt ?? 0)}:${Math.round(p.altFt ?? 0)}:${p.live}:${p.dim}:${p.type ?? ""}:${p.color ?? ""}`).join("|");
+  const planesKey = planes.map((p) => `${p.tail}:${p.lat.toFixed(5)}:${p.lon.toFixed(5)}:${Math.round(p.heading ?? 0)}:${Math.round(p.speedKt ?? 0)}:${Math.round(p.altFt ?? 0)}:${p.live}:${p.dim}:${p.type ?? ""}:${p.color ?? ""}:${p.seenAt != null ? Math.floor((Date.now() - p.seenAt) / 60000) : ""}`).join("|");
   useEffect(() => {
     const S = stage.current;
     const box = overlay.current;
@@ -477,7 +488,7 @@ export default function MapGL({
         scene.remove(tr.model.pivot); destroyModel(tr.model); tr.el.remove(); S.tracks.delete(p.tail); tr = undefined;
       }
       if (!tr) {
-        const model = makeModel(family, real, color, true);
+        const model = makeModel(family, real, color, false);
         model.pivot.traverse((o) => { o.frustumCulled = false; });
         scene.add(model.pivot);
         if (real && !model.real) {
@@ -485,7 +496,7 @@ export default function MapGL({
           void loadReal(real).then((ok) => {
             const cur = S.tracks.get(p.tail);
             if (!ok || !cur || cur.model !== model || stage.current !== S) return;
-            const next = makeModel(family, real, cur.color, true);
+            const next = makeModel(family, real, cur.color, false);
             next.pivot.traverse((o) => { o.frustumCulled = false; });
             scene.remove(model.pivot);
             destroyModel(model);
@@ -503,16 +514,21 @@ export default function MapGL({
         btn.addEventListener("click", (e) => { e.stopPropagation(); onSelectRef.current?.(p.tail); });
         box.appendChild(btn);
         const at = S.toLocal(p.lat, p.lon);
-        tr = { plane: p, family, modelId, color, model, el: btn, fixLat: p.lat, fixLon: p.lon, fx: at.x, fz: at.z, fixAt: performance.now(), x: at.x, z: at.z, hdg: p.heading ?? 0 };
+        tr = { plane: p, family, modelId, color, model, el: btn, fixLat: p.lat, fixLon: p.lon, fx: at.x, fz: at.z, fixAt: performance.now(), moves: 0, gap: 10, x: at.x, z: at.z, hdg: p.heading ?? 0 };
         S.tracks.set(p.tail, tr);
       }
       if (tr.color !== color) { tr.model.accent.color.set(color); tr.color = color; }
       if (p.lat !== tr.fixLat || p.lon !== tr.fixLon) {
         const at = S.toLocal(p.lat, p.lon);
-        tr.fixLat = p.lat; tr.fixLon = p.lon; tr.fx = at.x; tr.fz = at.z; tr.fixAt = performance.now();
+        const t = performance.now();
+        tr.gap = Math.min(40, Math.max(4, (t - tr.fixAt) / 1000));
+        tr.moves += 1;
+        tr.fixLat = p.lat; tr.fixLon = p.lon; tr.fx = at.x; tr.fz = at.z; tr.fixAt = t;
       }
       tr.plane = p;
-      tr.el.className = `fa-mk${p.live ? " live" : ""}${p.tail === selected ? " selected" : ""}${p.dim ? " dim" : ""}`;
+      const oldMin = p.seenAt != null && !p.dim ? Math.floor((Date.now() - p.seenAt) / 60000) : 0;
+      (tr.el.firstChild as HTMLElement).textContent = oldMin >= 2 ? `${p.tail} · ${oldMin} min ago` : p.tail;
+      tr.el.className = `fa-mk${p.live ? " live" : ""}${p.tail === selected ? " selected" : ""}${p.dim || oldMin >= 2 ? " dim" : ""}`;
       tr.el.style.setProperty("--paint", color);
       tr.el.setAttribute("aria-label", p.tail);
       tr.el.setAttribute("aria-pressed", String(p.tail === selected));

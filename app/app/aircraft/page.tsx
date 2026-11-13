@@ -161,7 +161,7 @@ export default function AircraftPage() {
                   <span>Sends to</span>
                   <span style={{ textAlign: "right" }}>{sendsTo.length ? sendsTo.join(" · ") : <a className="fa-link" href="/app/integrations">Connect a channel</a>}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, paddingTop: 12, borderTop: "1px solid #1E1E1E" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, paddingTop: 12, borderTop: "1px solid #1E1E1E" }}>
                   <PaintSwatches small tail={a.tail_number} value={paint} onPick={(hex) => setPaint(a.tail_number, hex)} />
                   <Btn small onClick={() => edit(a)}>Edit</Btn>
                 </div>

@@ -261,6 +261,21 @@ b .fa-token, strong .fa-token, .fa-token:has(b, strong) { font-weight: 700; bord
 .fa-swatches.small { gap: 6px; }
 .fa-swatches.small button { width: 20px; height: 20px; }
 .fa-swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text); }
+.fa-swatches button.any { background: conic-gradient(#F87171, #FBBF24, #A3E635, #34D399, #38BDF8, #5B7CFA, #A78BFA, #F472B6, #F87171); }
+/* any colour: a square for shade, a strip for colour, a box for a hex code */
+.fa-paint { flex: 1; min-width: 0; }
+.fa-spectrum { margin-top: 12px; max-width: 320px; }
+.fa-spectrum-sv { position: relative; height: 132px; border-radius: 10px; border: 1px solid var(--border-strong); cursor: crosshair; touch-action: none; outline: none; }
+.fa-spectrum-sv:focus-visible { border-color: var(--text); }
+.fa-spectrum-sv span { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6); pointer-events: none; }
+.fa-spectrum-hue { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 12px; margin: 12px 0; border-radius: 6px; border: 1px solid var(--border-strong); cursor: pointer; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+.fa-spectrum-hue::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #0A0A0A; box-shadow: 0 0 0 1px #fff; }
+.fa-spectrum-hue::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid #0A0A0A; box-shadow: 0 0 0 1px #fff; }
+.fa-spectrum-hue::-moz-range-track { background: transparent; }
+.fa-spectrum-row { display: flex; align-items: center; gap: 8px; }
+.fa-spectrum-row .fa-input { height: 34px; flex: 1; min-width: 92px; padding: 0 9px; font-size: 13px; text-transform: uppercase; }
+.fa-spectrum-row .fa-input[aria-invalid="true"] { border-color: var(--warn); }
+.fa-spectrum-chip { width: 34px; height: 34px; flex: none; border-radius: 9px; border: 1px solid var(--border-strong); }
 .fa-paint-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .fa-hangar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .fa-hangar-item { display: block; overflow: hidden; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; transition: border-color 0.15s; }
