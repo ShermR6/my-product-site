@@ -261,7 +261,9 @@ b .fa-token, strong .fa-token, .fa-token:has(b, strong) { font-weight: 700; bord
 .fa-swatches.small { gap: 6px; }
 .fa-swatches.small button { width: 20px; height: 20px; }
 .fa-swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text); }
-.fa-swatches button.any { background: conic-gradient(#F87171, #FBBF24, #A3E635, #34D399, #38BDF8, #5B7CFA, #A78BFA, #F472B6, #F87171); }
+.fa-swatches button.any { --wheel: conic-gradient(#F87171, #FBBF24, #A3E635, #34D399, #38BDF8, #5B7CFA, #A78BFA, #F472B6, #F87171); background: var(--wheel); }
+/* a colour of your own: the wheel stays, with the colour in its middle */
+.fa-swatches button.any[aria-pressed="true"] { background: radial-gradient(circle, var(--pick, transparent) 0 44%, transparent 48%), var(--wheel); }
 /* any colour: a square for shade, a strip for colour, a box for a hex code */
 .fa-paint { flex: 1; min-width: 0; }
 .fa-spectrum { margin-top: 12px; max-width: 320px; }

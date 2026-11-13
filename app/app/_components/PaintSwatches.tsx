@@ -56,7 +56,7 @@ export default function PaintSwatches({
             style={{ background: p.hex }} onClick={() => onPick(p.hex)} />
         ))}
         <button type="button" className="any" title="Any colour" aria-label={`Pick any colour for ${name}`} aria-expanded={open} aria-pressed={custom}
-          style={custom ? { background: value } : undefined} onClick={() => setOpen((v) => !v)} />
+          style={custom ? ({ "--pick": value } as React.CSSProperties) : undefined} onClick={() => setOpen((v) => !v)} />
       </div>
       {open && <Spectrum value={value} onPick={onPick} onDone={() => setOpen(false)} />}
     </div>
