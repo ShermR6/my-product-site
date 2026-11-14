@@ -57,6 +57,8 @@ const REFRESH_PER_CALL = 8;          // regions asked for per call, oldest first
 const REGION_MAX_AGE_MS = 6 * 60_000; // drop a region's aircraft after this
 const PER_REGION = 30;               // aircraft kept per region (from the one request: no extra load)
 const ROUTES_PER_REGION = 30;        // all of them are looked up for a route (cached for hours)
+const NEW_LOOKUPS_PER_CALL = 60;     // route files fetched per call; the rest wait for later calls
+const LOOKUP_CONCURRENCY = 10;       // at once: hundreds together get throttled
 const MIN_ALT_FT = 10_000;
 
 // dbFlags bits: 1 military, 4 PIA (privacy address), 8 LADD
@@ -160,7 +162,7 @@ function plausibleLeg(f: GlobeFlight, airports: VrsAirport[]): GlobeFlight["rout
   return null;
 }
 
-async function routeFor(f: GlobeFlight): Promise<GlobeFlight["route"] | null> {
+async function routeFor(f: GlobeFlight, budget: { left: number }): Promise<GlobeFlight["route"] | null> {
   const hit = routeCache.get(f.cs);
   if (hit && Date.now() - hit.at < ROUTE_TTL_MS) {
     // A cached route still has to fit where the aircraft is now.
@@ -169,19 +171,42 @@ async function routeFor(f: GlobeFlight): Promise<GlobeFlight["route"] | null> {
       { iata: hit.route.to.iata, location: hit.route.to.city, lat: hit.route.to.lat, lon: hit.route.to.lon },
     ]) : null;
   }
+  if (budget.left <= 0) return null;   // looked up on a later call
+  budget.left--;
   let airports: VrsAirport[] = [];
   try {
     const res = await fetch(`https://vrs-standing-data.adsb.lol/routes/${f.cs.slice(0, 2)}/${f.cs}.json`, {
       next: { revalidate: 21600 },
       signal: AbortSignal.timeout(4000),
     });
-    if (res.ok) airports = ((await res.json()) as { _airports?: VrsAirport[] })._airports ?? [];
+    // Only a missing file means "no route". Anything else (throttled, an
+    // outage) is not remembered, so the flight is tried again later.
+    if (res.status === 404) {
+      routeCache.set(f.cs, { at: Date.now(), route: null });
+      return null;
+    }
+    if (!res.ok) return null;
+    airports = ((await res.json()) as { _airports?: VrsAirport[] })._airports ?? [];
   } catch {
-    return null;   // not cached: try again on a later call
+    return null;
   }
   const route = plausibleLeg(f, airports);
   routeCache.set(f.cs, { at: Date.now(), route });
   return route;
+}
+
+/** fn over items, at most `limit` at a time, results in order. */
+async function mapLimited<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
 }
 
 // ── handler ──────────────────────────────────────────────────────────────────
@@ -214,7 +239,10 @@ export async function GET() {
     }
   }
   // Routes, so the globe can draw each flight between its two cities.
-  const routes = await Promise.all(picks.map(routeFor));
+  // Flights with a remembered route first, then new lookups, a few at a time.
+  picks.sort((a, b) => Number(routeCache.has(b.cs)) - Number(routeCache.has(a.cs)));
+  const budget = { left: NEW_LOOKUPS_PER_CALL };
+  const routes = await mapLimited(picks, LOOKUP_CONCURRENCY, (f) => routeFor(f, budget));
   picks.forEach((f, i) => { if (routes[i]) f.route = routes[i]!; });
 
   // The globe draws flights between their two cities, so only those with a
