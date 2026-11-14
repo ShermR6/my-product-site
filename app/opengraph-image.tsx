@@ -7,8 +7,13 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  const logoData = readFileSync(join(process.cwd(), "public", "finalping-1024.png"));
-  const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
+  // The current mark, as in the navbar: sky-blue ring, white jet, no tile.
+  const mark =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 8 104 104">' +
+    '<circle cx="60" cy="60" r="40" fill="none" stroke="#0EA5E9" stroke-width="8" stroke-dasharray="195.4 48.9" stroke-linecap="round"/>' +
+    '<path fill="#FAFAFA" transform="translate(87.5,32.5) rotate(225) scale(1.32)" d="M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z"/>' +
+    "</svg>";
+  const logoSrc = `data:image/svg+xml;base64,${Buffer.from(mark).toString("base64")}`;
 
   const interBlack = readFileSync(join(process.cwd(), "public", "fonts", "Inter-Black.woff"));
 
@@ -112,7 +117,7 @@ export default async function Image() {
         {/* Right: logo icon */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: "1" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoSrc} width={240} height={240} alt="" style={{ borderRadius: 54, opacity: 0.97 }} />
+          <img src={logoSrc} width={260} height={260} alt="" />
         </div>
       </div>
     ),

@@ -40,7 +40,7 @@ export const metadata: Metadata = {
       { url: "/favicon.ico?v=7" },
       { url: "/favicon-96x96.png?v=7", sizes: "96x96", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png?v=7" }],
+    apple: [{ url: "/apple-touch-icon.png?v=8" }],
   },
   manifest: "/site.webmanifest",
   openGraph: {
