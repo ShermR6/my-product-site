@@ -1,57 +1,83 @@
 "use client";
 
-// The homepage globe: live airliners from adsb.lol, refreshed every minute.
-// A few flights at a time are highlighted with their route and a label,
-// chosen from the side of the globe facing the viewer and changed every few
-// seconds, so the highlights move around the world as it turns. Hovering or
-// tapping any dot shows that flight. Until live data arrives, or if it cannot
-// be had, the globe shows the original city routes.
+// The homepage globe: six real airline flights at a time, each drawn as a
+// line between its two cities with a plane flying along it. The plane starts
+// where the real aircraft is now and flies on to its destination, faster than
+// life; when it arrives, that flight is taken off and a different one put on,
+// so the flights are always rotating. Flights come from /api/globe-flights
+// (live adsb.lol positions with routes). Until those arrive, or if they cannot
+// be had, the planes fly the original city routes. Hover or tap a plane to
+// see the flight.
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { aircraftTypeName, airlineName } from "@/lib/flightNames";
-import type { GlobeFlight } from "@/app/api/globe-flights/route";
+import type { GlobeAirport, GlobeFlight } from "@/app/api/globe-flights/route";
 
 const Globe = dynamic(() => import("./ui/cobe-globe").then((m) => m.Globe), { ssr: false });
 
 type RGB = [number, number, number];
+type V3 = [number, number, number];
 const SKY: RGB = [0.22, 0.74, 0.97];
-const DIM: RGB = [0.62, 0.78, 0.9];
 
+const SLOTS = 6;
 const REFRESH_MS = 60_000;
-const ROTATE_MS = 9_000;
-const FEATURED = 3;
-const ELEVATION = 0.01;   // must match markerElevation below
+const ELEVATION = 0.01;       // markerElevation passed to cobe
+const ARC_HEIGHT = 0.3;       // arcHeight passed to cobe
+const SECONDS_PER_ROUTE = 30; // a whole route, gate to gate, takes this long on screen
+const MIN_FLIGHT_S = 9;
+const MIN_ROUTE_NM = 400;     // short hops barely show as a line
+const PLANE =
+  "M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z";
 
-// The original globe, used until live data arrives.
-const CITY_MARKERS = [
-  { location: [40.7128, -74.006] as [number, number] },
-  { location: [51.5074, -0.1278] as [number, number] },
-  { location: [25.2048, 55.2708] as [number, number] },
-  { location: [35.6762, 139.6503] as [number, number] },
-  { location: [-33.8688, 151.2093] as [number, number] },
-  { location: [25.7617, -80.1918] as [number, number] },
-  { location: [-23.5505, -46.6333] as [number, number] },
-  { location: [34.0522, -118.24] as [number, number] },
-];
-const CITY_ARCS = [
-  { from: [40.7128, -74.006] as [number, number], to: [51.5074, -0.1278] as [number, number] },
-  { from: [25.7617, -80.1918] as [number, number], to: [40.7128, -74.006] as [number, number] },
-  { from: [34.0522, -118.24] as [number, number], to: [35.6762, 139.65] as [number, number] },
-  { from: [25.2048, 55.27] as [number, number], to: [-33.8688, 151.21] as [number, number] },
-  { from: [25.7617, -80.1918] as [number, number], to: [-23.5505, -46.6333] as [number, number] },
+// The original globe's routes, flown until live flights arrive.
+const city = (iata: string, name: string, lat: number, lon: number): GlobeAirport => ({ iata, city: name, lat, lon });
+const NYC = city("JFK", "New York", 40.6413, -73.7781), LON = city("LHR", "London", 51.47, -0.4543);
+const MIA = city("MIA", "Miami", 25.7959, -80.287), LAX = city("LAX", "Los Angeles", 33.9416, -118.4085);
+const TYO = city("HND", "Tokyo", 35.5494, 139.7798), DXB = city("DXB", "Dubai", 25.2532, 55.3657);
+const SYD = city("SYD", "Sydney", -33.9399, 151.1753), GRU = city("GRU", "São Paulo", -23.4356, -46.4731);
+const SAMPLE_ROUTES: [GlobeAirport, GlobeAirport][] = [
+  [NYC, LON], [MIA, NYC], [LAX, TYO], [DXB, SYD], [MIA, GRU], [LON, DXB], [TYO, SYD], [GRU, LON],
 ];
 
-/**
- * Where cobe draws a location, as fractions of the canvas, and whether it is
- * on the near side. The same math cobe uses for its own marker anchors.
- */
-function project(lat: number, lon: number, phi: number, theta: number) {
+type Slot = {
+  key: string;
+  flight: GlobeFlight | null;   // null: a sample route, no flight details
+  from: GlobeAirport;
+  to: GlobeAirport;
+  s0: number;                   // progress along the route when it started
+  start: number;                // performance.now() when it started
+  dur: number;                  // ms to reach the destination
+};
+
+// ── geometry: the same math cobe uses ────────────────────────────────────────
+
+function unit(lat: number, lon: number): V3 {
   const r = (lat * Math.PI) / 180;
   const a = (lon * Math.PI) / 180 - Math.PI;
   const o = Math.cos(r);
-  const k = 0.8 + ELEVATION;
-  const x = -o * Math.cos(a) * k, y = Math.sin(r) * k, z = o * Math.sin(a) * k;
+  return [-o * Math.cos(a), Math.sin(r), o * Math.sin(a)];
+}
+
+/** A point on cobe's arc: a quadratic curve lifted ARC_HEIGHT above the midpoint. */
+function arcPoint(from: GlobeAirport, to: GlobeAirport, s: number): V3 | null {
+  const a = unit(from.lat, from.lon), b = unit(to.lat, to.lon);
+  const m: V3 = [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+  const len = Math.hypot(m[0], m[1], m[2]);
+  if (len < 1e-3) return null;
+  const r0 = 0.8 + ELEVATION, r1 = (0.8 + ARC_HEIGHT + ELEVATION) / len;
+  const u = 1 - s, w0 = u * u * r0, w1 = 2 * s * u * r1, w2 = s * s * r0;
+  return [a[0] * w0 + m[0] * w1 + b[0] * w2, a[1] * w0 + m[1] * w1 + b[1] * w2, a[2] * w0 + m[2] * w1 + b[2] * w2];
+}
+
+/** A point on the globe's surface, lifted like cobe's markers. */
+function surface(lat: number, lon: number): V3 {
+  const u = unit(lat, lon), k = 0.8 + ELEVATION;
+  return [u[0] * k, u[1] * k, u[2] * k];
+}
+
+/** Where cobe draws a 3D point, as fractions of the canvas, and if it is in front. */
+function project([x, y, z]: V3, phi: number, theta: number) {
   const ct = Math.cos(theta), cp = Math.cos(phi), st = Math.sin(theta), sp = Math.sin(phi);
   const c = cp * x + sp * z;
   const s = sp * st * x + ct * y - cp * st * z;
@@ -59,26 +85,54 @@ function project(lat: number, lon: number, phi: number, theta: number) {
   return { x: (c + 1) / 2, y: (1 - s) / 2, front };
 }
 
-function flightLine(f: GlobeFlight) {
-  return f.route ? `${f.cs} · ${f.route.from.iata} → ${f.route.to.iata}` : f.cs;
+function nm(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
+  const R = 3440.065;
+  const p1 = (a.lat * Math.PI) / 180, p2 = (b.lat * Math.PI) / 180;
+  const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin((((b.lon - a.lon) * Math.PI) / 180) / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** The middle of a route, as a direction from the globe's centre. */
+function midDir(from: GlobeAirport, to: GlobeAirport): V3 {
+  const a = unit(from.lat, from.lon), b = unit(to.lat, to.lon);
+  const m: V3 = [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+  const len = Math.hypot(m[0], m[1], m[2]) || 1;
+  return [m[0] / len, m[1] / len, m[2] / len];
+}
+
+/** Degrees between two directions. */
+function apart(a: V3, b: V3) {
+  return (Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))) * 180) / Math.PI;
+}
+
+/** How far along its route a live flight is now, 0..1. */
+function progressOf(f: GlobeFlight) {
+  if (!f.route) return 0;
+  const done = nm(f.route.from, f), left = nm(f.route.to, f);
+  return done + left > 0 ? done / (done + left) : 0;
 }
 
 export default function HeroGlobe() {
-  const [flights, setFlights] = useState<GlobeFlight[] | null>(null);
-  const [featured, setFeatured] = useState<string[]>([]);
-  const [hover, setHover] = useState<{ id: string; pinned: boolean } | null>(null);
+  const [pool, setPool] = useState<GlobeFlight[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [hover, setHover] = useState<{ key: string; pinned: boolean } | null>(null);
 
   const boxRef = useRef<HTMLDivElement>(null);
   const view = useRef({ phi: 0, theta: 0.25 });
   const recent = useRef<string[]>([]);
-  const labelEls = useRef(new Map<string, HTMLDivElement>());
+  const planeEls = useRef(new Map<string, HTMLDivElement>());
+  const cityEls = useRef(new Map<string, HTMLDivElement>());
   const cardEl = useRef<HTMLDivElement>(null);
   const down = useRef<{ x: number; y: number } | null>(null);
+  const slotsRef = useRef<Slot[]>([]);
+  const poolRef = useRef<GlobeFlight[]>([]);
+  useEffect(() => { slotsRef.current = slots; }, [slots]);
+  useEffect(() => { poolRef.current = pool; }, [pool]);
 
-  // Still for anyone who has asked for less motion; it can still be dragged.
+  // Still for anyone who has asked for less motion: no spin, no flying.
   const still = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // ── live data, once a minute while the page is visible ──────────────────
+  // ── live flights with routes, once a minute while the page is visible ───
   useEffect(() => {
     let live = true;
     const load = async () => {
@@ -87,7 +141,8 @@ export default function HeroGlobe() {
         const res = await fetch("/api/globe-flights");
         if (!res.ok) return;
         const body = (await res.json()) as { flights?: GlobeFlight[] };
-        if (live && body.flights?.length) setFlights(body.flights);
+        const routed = (body.flights ?? []).filter((f) => f.route && nm(f.route.from, f.route.to) >= MIN_ROUTE_NM);
+        if (live && routed.length) setPool(routed);
       } catch { /* keep what is shown */ }
     };
     load();
@@ -95,119 +150,186 @@ export default function HeroGlobe() {
     return () => { live = false; clearInterval(id); };
   }, []);
 
-  const byId = useMemo(() => new Map((flights ?? []).map((f) => [f.id, f])), [flights]);
-
-  // ── rotate the highlighted flights ──────────────────────────────────────
-  const pickFeatured = useCallback(() => {
-    if (!flights) return;
+  // ── choosing the next flight for a slot ─────────────────────────────────
+  const nextSlot = useCallback((taken: Slot[], now: number, stagger = 0): Slot | null => {
+    const busy = new Set(taken.map((s) => s.key));
     const { phi, theta } = view.current;
-    const candidates = flights
-      .filter((f) => f.route)
-      .map((f) => ({ f, p: project(f.lat, f.lon, phi, theta) }))
-      // on the near side and well inside the disc, so the label stays readable
-      .filter(({ p }) => p.front && Math.abs(p.x - 0.5) < 0.3 && Math.abs(p.y - 0.5) < 0.3);
-    const fresh = candidates.filter(({ f }) => !recent.current.includes(f.id));
-    const pool = fresh.length >= FEATURED ? fresh : candidates;
-    // shuffle, then take a few that are far enough apart for their labels
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    const chosen: typeof pool = [];
-    for (const c of pool) {
-      if (chosen.length >= FEATURED) break;
-      if (chosen.every((o) => Math.abs(o.p.x - c.p.x) > 0.22 || Math.abs(o.p.y - c.p.y) > 0.08)) chosen.push(c);
-    }
-    const next = chosen.map(({ f }) => f.id);
-    if (!next.length) return;
-    recent.current = [...next, ...recent.current].slice(0, 18);
-    setFeatured(next);
-  }, [flights]);
+    const facing = (from: GlobeAirport, to: GlobeAirport) => {
+      const mid = arcPoint(from, to, 0.5);
+      return mid ? project(mid, phi, theta).front : false;
+    };
+    // Spread around the world: how far this route is from the ones flying.
+    const mids = taken.map((s) => midDir(s.from, s.to));
+    const room = (from: GlobeAirport, to: GlobeAirport) => {
+      const m = midDir(from, to);
+      return mids.length ? Math.min(...mids.map((o) => apart(m, o))) : 180;
+    };
+    const live = poolRef.current;
+    let slot: Slot | null = null;
 
+    if (live.length) {
+      const fresh = live.filter((f) => !busy.has(f.cs) && !recent.current.includes(f.cs));
+      const options = fresh.length ? fresh : live.filter((f) => !busy.has(f.cs));
+      // Well apart from the others first (about 2,000 nm, then 1,000), longer
+      // routes before short ones, and the side facing the viewer if possible.
+      let list = options;
+      for (const deg of [33, 16]) {
+        const spaced = options.filter((f) => room(f.route!.from, f.route!.to) >= deg);
+        if (spaced.length) { list = spaced; break; }
+      }
+      const long = list.filter((f) => nm(f.route!.from, f.route!.to) >= 1500);
+      if (long.length >= 2) list = long;
+      const near = list.filter((f) => facing(f.route!.from, f.route!.to));
+      if (near.length && Math.random() < 0.6) list = near;
+      const f = list[Math.floor(Math.random() * list.length)];
+      if (f?.route) {
+        const s0 = Math.min(progressOf(f), 0.75);
+        slot = { key: f.cs, flight: f, from: f.route.from, to: f.route.to, s0, start: now, dur: 0 };
+      }
+    }
+    if (!slot) {
+      const used = new Set(taken.map((s) => `${s.from.iata}-${s.to.iata}`));
+      const open = SAMPLE_ROUTES.filter(([a, b]) => !used.has(`${a.iata}-${b.iata}`));
+      const [from, to] = open[Math.floor(Math.random() * open.length)] ?? SAMPLE_ROUTES[0];
+      slot = { key: `${from.iata}-${to.iata}`, flight: null, from, to, s0: Math.random() * 0.3, start: now, dur: 0 };
+    }
+    slot.dur = Math.max(MIN_FLIGHT_S, (1 - slot.s0) * SECONDS_PER_ROUTE) * 1000 + stagger;
+    recent.current = [slot.key, ...recent.current].slice(0, 24);
+    return slot;
+  }, []);
+
+  // Fill the slots when the globe starts, and again once when live flights
+  // first arrive (replacing the sample routes).
+  const hadLive = useRef(false);
   useEffect(() => {
-    if (!flights) return;
-    // First pick once the globe has drawn a frame, so the facing side is known.
-    const first = setTimeout(pickFeatured, 800);
-    const id = setInterval(pickFeatured, ROTATE_MS);
-    return () => { clearTimeout(first); clearInterval(id); };
-  }, [flights, pickFeatured]);
+    const live = pool.length > 0;
+    if (slotsRef.current.length && (hadLive.current || !live)) return;
+    hadLive.current = live;
+    const timer = setTimeout(() => {
+      const now = performance.now();
+      const filled: Slot[] = [];
+      for (let i = 0; i < SLOTS; i++) {
+        // Staggered, so the flights do not all land together.
+        const s = nextSlot(filled, now, i * 2500);
+        if (s) filled.push(s);
+      }
+      setSlots(filled);
+    }, 600);   // after the globe's first frame, so the facing side is known
+    return () => clearTimeout(timer);
+  }, [pool, nextSlot]);
 
-  // ── what the globe draws ────────────────────────────────────────────────
-  const markers = useMemo(() => {
-    if (!flights) return CITY_MARKERS;
-    const on = new Set(featured);
-    return flights.map((f) => ({
-      location: [f.lat, f.lon] as [number, number],
-      size: on.has(f.id) || hover?.id === f.id ? 0.035 : 0.014,
-      color: on.has(f.id) || hover?.id === f.id ? SKY : DIM,
-    }));
-  }, [flights, featured, hover]);
+  // Replace each flight as it arrives.
+  useEffect(() => {
+    if (still || !slots.length) return;
+    const id = setInterval(() => {
+      const now = performance.now();
+      const current = slotsRef.current;
+      if (!current.some((s) => now - s.start >= s.dur)) return;
+      const kept = current.filter((s) => now - s.start < s.dur);
+      const next = [...kept];
+      for (let i = kept.length; i < SLOTS; i++) {
+        const s = nextSlot(next, now);
+        if (s) next.push(s);
+      }
+      setHover((h) => (h && next.some((s) => s.key === h.key) ? h : null));
+      setSlots(next);
+    }, 250);
+    return () => clearInterval(id);
+  }, [slots.length, still, nextSlot]);
 
-  const arcs = useMemo(() => {
-    if (!flights) return CITY_ARCS;
-    const ids = hover && !featured.includes(hover.id) ? [...featured, hover.id] : featured;
-    return ids
-      .map((id) => byId.get(id)?.route)
-      .filter((r): r is NonNullable<GlobeFlight["route"]> => !!r)
-      .map((r) => ({ from: [r.from.lat, r.from.lon] as [number, number], to: [r.to.lat, r.to.lon] as [number, number] }));
-  }, [flights, featured, hover, byId]);
+  // ── what cobe draws: the lines and their two cities ─────────────────────
+  const cities = useMemo(() => {
+    const m = new Map<string, GlobeAirport>();
+    for (const s of slots) { m.set(s.from.iata, s.from); m.set(s.to.iata, s.to); }
+    return [...m.values()];
+  }, [slots]);
+  const markers = useMemo(() => cities.map((c) => ({ location: [c.lat, c.lon] as [number, number] })), [cities]);
+  const arcs = useMemo(
+    () => slots.map((s) => ({ from: [s.from.lat, s.from.lon] as [number, number], to: [s.to.lat, s.to.lon] as [number, number] })),
+    [slots]
+  );
 
-  // ── keep labels and the card on their dots, every frame ─────────────────
+  // ── every frame: planes along their lines, city labels, the card ────────
+  const progress = useCallback((s: Slot, now: number) => {
+    if (still) return s.s0;
+    return Math.min(1, s.s0 + (1 - s.s0) * ((now - s.start) / s.dur));
+  }, [still]);
+
   const onFrame = useCallback((phi: number, theta: number) => {
     view.current = { phi, theta };
     const box = boxRef.current;
     if (!box) return;
     const size = box.clientWidth;
-    // `half`: keep something that wide either side of the point inside the
-    // globe, so a card near the edge never runs off a phone screen.
-    const place = (el: HTMLElement | null | undefined, f: GlobeFlight | undefined, half = 0) => {
-      if (!el || !f) return;
-      const p = project(f.lat, f.lon, phi, theta);
-      const x = Math.min(Math.max(p.x * size, half), size - half);
-      el.style.transform = `translate(${x.toFixed(1)}px, ${(p.y * size).toFixed(1)}px)`;
-      el.style.opacity = p.front ? "1" : "0";
-    };
-    for (const [id, el] of labelEls.current) place(el, byId.get(id));
-    if (hover) {
-      const card = cardEl.current;
-      const w = (card?.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
-      place(card, byId.get(hover.id), Math.min(w / 2, size / 2));
-    }
-  }, [byId, hover]);
+    const now = performance.now();
 
-  // ── hover and tap ───────────────────────────────────────────────────────
+    for (const s of slotsRef.current) {
+      const el = planeEls.current.get(s.key);
+      if (!el) continue;
+      const t = progress(s, now);
+      const at = arcPoint(s.from, s.to, t);
+      const ahead = arcPoint(s.from, s.to, Math.min(1, t + 0.01));
+      const behind = arcPoint(s.from, s.to, Math.max(0, t - 0.01));
+      if (!at || !ahead || !behind) continue;
+      const p = project(at, phi, theta), p2 = project(ahead, phi, theta), p1 = project(behind, phi, theta);
+      const angle = (Math.atan2((p2.y - p1.y) * size, (p2.x - p1.x) * size) * 180) / Math.PI + 90;
+      // Fade in as it appears and out on the final stretch.
+      const fade = Math.max(0, Math.min(1, (1 - t) / 0.04, (now - s.start) / 400));
+      el.style.transform = `translate(${(p.x * size).toFixed(1)}px, ${(p.y * size).toFixed(1)}px) rotate(${angle.toFixed(1)}deg)`;
+      el.style.opacity = p.front ? String(fade) : "0";
+      if (hover?.key === s.key && cardEl.current) {
+        const w = (cardEl.current.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
+        const half = Math.min(w / 2, size / 2);
+        const x = Math.min(Math.max(p.x * size, half), size - half);
+        cardEl.current.style.transform = `translate(${x.toFixed(1)}px, ${(p.y * size).toFixed(1)}px)`;
+        cardEl.current.style.opacity = p.front ? "1" : "0";
+      }
+    }
+    for (const c of cities) {
+      const el = cityEls.current.get(c.iata);
+      if (!el) continue;
+      const p = project(surface(c.lat, c.lon), phi, theta);
+      el.style.transform = `translate(${(p.x * size).toFixed(1)}px, ${(p.y * size).toFixed(1)}px)`;
+      el.style.opacity = p.front ? "1" : "0";
+    }
+  }, [cities, hover, progress]);
+
+  // ── hover and tap on a plane ────────────────────────────────────────────
   const nearest = useCallback((clientX: number, clientY: number, radius: number) => {
     const box = boxRef.current;
-    if (!box || !flights) return null;
+    if (!box) return null;
     const rect = box.getBoundingClientRect();
     const { phi, theta } = view.current;
-    let best: { id: string; d: number } | null = null;
-    for (const f of flights) {
-      const p = project(f.lat, f.lon, phi, theta);
+    const now = performance.now();
+    let best: { key: string; d: number } | null = null;
+    for (const s of slotsRef.current) {
+      if (!s.flight) continue;
+      const at = arcPoint(s.from, s.to, progress(s, now));
+      if (!at) continue;
+      const p = project(at, phi, theta);
       if (!p.front) continue;
       const d = Math.hypot(rect.left + p.x * rect.width - clientX, rect.top + p.y * rect.height - clientY);
-      if (d <= radius && (!best || d < best.d)) best = { id: f.id, d };
+      if (d <= radius && (!best || d < best.d)) best = { key: s.key, d };
     }
-    return best?.id ?? null;
-  }, [flights]);
+    return best?.key ?? null;
+  }, [progress]);
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse" || e.buttons) return;
-    if (hover?.pinned) return;
-    const id = nearest(e.clientX, e.clientY, 12);
-    setHover((h) => (id ? (h?.id === id ? h : { id, pinned: false }) : null));
+    if (e.pointerType !== "mouse" || e.buttons || hover?.pinned) return;
+    const key = nearest(e.clientX, e.clientY, 16);
+    setHover((h) => (key ? (h?.key === key ? h : { key, pinned: false }) : null));
   };
   const onPointerDown = (e: React.PointerEvent) => { down.current = { x: e.clientX, y: e.clientY }; };
   const onPointerUp = (e: React.PointerEvent) => {
     const start = down.current;
     down.current = null;
     if (!start || Math.hypot(e.clientX - start.x, e.clientY - start.y) > 6) return;   // a drag
-    const id = nearest(e.clientX, e.clientY, e.pointerType === "mouse" ? 12 : 24);
-    setHover((h) => (id ? (h?.id === id && h.pinned ? null : { id, pinned: true }) : null));
+    const key = nearest(e.clientX, e.clientY, e.pointerType === "mouse" ? 16 : 28);
+    setHover((h) => (key ? (h?.key === key && h.pinned ? null : { key, pinned: true }) : null));
   };
   const onPointerLeave = () => setHover((h) => (h?.pinned ? h : null));
 
-  const shown = hover ? byId.get(hover.id) : undefined;
+  const shown = hover ? slots.find((s) => s.key === hover.key)?.flight : null;
+  const live = pool.length > 0;
 
   return (
     <div className="fh-globe">
@@ -228,8 +350,9 @@ export default function HeroGlobe() {
           arcColor={SKY}
           glowColor={[0.09, 0.09, 0.09]}
           mapBrightness={5}
-          markerSize={0.014}
+          markerSize={0.04}
           markerElevation={ELEVATION}
+          arcHeight={ARC_HEIGHT}
           speed={still ? 0 : 0.001}
           theta={0.25}
           diffuse={1.5}
@@ -237,20 +360,27 @@ export default function HeroGlobe() {
           onFrame={onFrame}
         />
 
-        {featured.map((id) => {
-          const f = byId.get(id);
-          if (!f || hover?.id === id) return null;
-          return (
-            <div
-              key={id}
-              className="fh-globe-label"
-              aria-hidden="true"
-              ref={(el) => { if (el) labelEls.current.set(id, el); else labelEls.current.delete(id); }}
-            >
-              <span>{flightLine(f)}</span>
-            </div>
-          );
-        })}
+        {cities.map((c) => (
+          <div
+            key={c.iata}
+            className="fh-globe-label"
+            aria-hidden="true"
+            ref={(el) => { if (el) cityEls.current.set(c.iata, el); else cityEls.current.delete(c.iata); }}
+          >
+            <span>{c.city || c.iata}</span>
+          </div>
+        ))}
+
+        {slots.map((s) => (
+          <div
+            key={s.key}
+            className="fh-globe-plane"
+            aria-hidden="true"
+            ref={(el) => { if (el) planeEls.current.set(s.key, el); else planeEls.current.delete(s.key); }}
+          >
+            <svg width="18" height="18" viewBox="-18 -18 36 36"><path d={PLANE} /></svg>
+          </div>
+        ))}
 
         {shown && (
           <div ref={cardEl} className="fh-globe-card" role="status">
@@ -274,8 +404,8 @@ export default function HeroGlobe() {
       </div>
 
       <p className="fh-globe-credit">
-        {flights
-          ? <>Live airliners from <a href="https://adsb.lol" target="_blank" rel="noopener noreferrer">adsb.lol</a> (ODbL). Routes from Virtual Radar Server standing data. Hover or tap a flight.</>
+        {live
+          ? <>Real flights in the air now, from <a href="https://adsb.lol" target="_blank" rel="noopener noreferrer">adsb.lol</a> (ODbL), shown faster than life. Routes from Virtual Radar Server standing data. Hover or tap a plane.</>
           : <>Loading live flights…</>}
       </p>
     </div>

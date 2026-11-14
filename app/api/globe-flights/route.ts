@@ -57,7 +57,7 @@ const REFRESH_PER_CALL = 8;          // regions asked for per call, oldest first
 const REGION_MAX_AGE_MS = 6 * 60_000; // drop a region's aircraft after this
 const PER_REGION = 12;               // aircraft kept per region
 const MAX_FLIGHTS = 220;             // the globe draws every one as a dot
-const ROUTE_LOOKUPS = 40;            // flights given a route per call
+const ROUTES_PER_REGION = 4;         // flights per region given a route, so every region has some
 const MIN_ALT_FT = 10_000;
 
 // dbFlags bits: 1 military, 4 PIA (privacy address), 8 LADD
@@ -201,20 +201,22 @@ export async function GET() {
 
   const seen = new Set<string>();
   const flights: GlobeFlight[] = [];
+  const picks: GlobeFlight[] = [];   // looked up for a route: a few from every region
   for (const r of REGIONS) {
     const entry = regionCache.get(r.name);
     if (!entry || now - entry.at > REGION_MAX_AGE_MS) continue;
+    let picked = 0;
     for (const f of entry.flights) {
       if (seen.has(f.id)) continue;
       seen.add(f.id);
-      flights.push({ ...f });
+      const copy = { ...f };
+      flights.push(copy);
+      if (picked < ROUTES_PER_REGION) { picks.push(copy); picked++; }
     }
   }
   flights.splice(MAX_FLIGHTS);
 
-  // Routes for a spread of flights, so arcs can be drawn and labelled.
-  const step = Math.max(1, Math.floor(flights.length / ROUTE_LOOKUPS));
-  const picks = flights.filter((_, i) => i % step === 0).slice(0, ROUTE_LOOKUPS);
+  // Routes, so the globe can draw each flight between its two cities.
   const routes = await Promise.all(picks.map(routeFor));
   picks.forEach((f, i) => { if (routes[i]) f.route = routes[i]!; });
 

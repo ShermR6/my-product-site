@@ -114,6 +114,19 @@
   letter-spacing: 0.04em;
 }
 .fh-globe-card { z-index: 2; }
+/* A plane on its route line; HeroGlobe sets its position and heading. */
+.fh-globe-plane {
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.fh-globe-plane svg {
+  position: absolute; left: -9px; top: -9px;
+  fill: var(--fh-text);
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.9));
+}
+.fh-globe-label span { text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
 .fh-globe-card-in {
   position: absolute;
   transform: translate(-50%, calc(-100% - 14px));
