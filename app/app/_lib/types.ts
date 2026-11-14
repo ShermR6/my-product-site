@@ -120,7 +120,8 @@ export type GroundStatus = {
   online: boolean;
   last_seen: string | null;
   last_seen_seconds: number | null;
-  gs_device_key: string | null;
+  /** Last four characters of the device key. The key itself: /api/ground/key. */
+  gs_key_hint: string | null;
   stats: GroundStats | null;
 };
 

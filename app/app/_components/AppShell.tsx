@@ -64,7 +64,7 @@ function usePreviewLock(active: boolean) {
 
     const controlOf = (e: Event) => {
       const target = e.target instanceof Element ? e.target : null;
-      if (!target) return null;
+      if (!target || target.closest("[data-preview-ok]")) return null;
       const link = target.closest(SETUP_LINKS);
       if (link && root.contains(link)) return link;
       const el = target.closest(CONTROLS);

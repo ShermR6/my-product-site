@@ -5,18 +5,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Copy, Eye, EyeOff } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api } from "../_lib/tracker";
 import { ago, duration, parseUtc } from "../_lib/format";
 import type { GroundRange } from "../_lib/types";
-import { Btn, Card, PageHead } from "../_components/kit";
+import { Card, PageHead } from "../_components/kit";
+import DeviceKey from "../_components/DeviceKey";
 
 export default function GroundStationPage() {
   const t = useTracker();
   const [range, setRange] = useState<GroundRange | null>(null);
-  const [showKey, setShowKey] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (t.groundEnabled !== true) return;
@@ -40,7 +38,7 @@ export default function GroundStationPage() {
               A small receiver and antenna at your airport hears your aircraft&apos;s transponder directly, so alerts keep coming on short final where public coverage often drops out.
             </p>
           </Card>
-          <Card title="Not on this account yet">
+          <Card title="Set one up">
             <p className="fa-note" style={{ lineHeight: 1.6, marginBottom: 16 }}>
               Ground Station is included in the plan. The kit arrives ready to plug in, and this page lights up as soon as it starts reporting.
             </p>
@@ -50,6 +48,7 @@ export default function GroundStationPage() {
             </div>
           </Card>
         </div>
+        <div style={{ marginTop: 16 }}><DeviceKey /></div>
       </div>
     );
   }
@@ -65,15 +64,6 @@ export default function GroundStationPage() {
   const worstIdx = bearings && minRange != null ? bearings.indexOf(minRange) : -1;
   const deg = (i: number) => `${String(Math.round(i * step)).padStart(3, "0")}°`;
   const rangeAt = parseUtc(range?.updated_at);
-
-  async function copyKey() {
-    if (!g?.gs_device_key) return;
-    try {
-      await navigator.clipboard.writeText(g.gs_device_key);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch { /* clipboard blocked: the key is still visible to copy by hand */ setShowKey(true); }
-  }
 
   return (
     <div className="fa-page">
@@ -121,23 +111,10 @@ export default function GroundStationPage() {
           <div className="fa-kv"><span>Messages per second</span><span className="mono">{stats?.msg_rate != null ? Math.round(stats.msg_rate) : "—"}</span></div>
           <div className="fa-kv"><span>Feeding</span><span>{[t.airport?.airport_code, t.airport?.airport_name].filter(Boolean).join(" · ") || "—"}</span></div>
           {!stats && g?.online && <p className="fa-note" style={{ marginTop: 10 }}>Version, uptime and message rate appear once the receiver updates itself to software 3.7.</p>}
-
-          {g?.gs_device_key && (
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1E1E1E" }}>
-              <div className="fa-label">Device key</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input className="fa-input mono fa-key" readOnly aria-label="Device key"
-                  value={showKey ? g.gs_device_key : "•".repeat(Math.min(28, g.gs_device_key.length))} onFocus={(e) => e.currentTarget.select()} />
-                <Btn square aria-label={showKey ? "Hide device key" : "Show device key"} onClick={() => setShowKey((v) => !v)} style={{ padding: "0 12px" }}>
-                  {showKey ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
-                </Btn>
-                <Btn square aria-label="Copy device key" onClick={copyKey} style={{ padding: "0 12px" }}><Copy size={15} aria-hidden="true" /></Btn>
-              </div>
-              <p className="fa-note" style={{ marginTop: 8 }} role="status">{copied ? "Copied." : "The receiver uses this to sign in. Treat it like a password."}</p>
-            </div>
-          )}
         </Card>
       </div>
+
+      <div style={{ marginTop: 16 }}><DeviceKey /></div>
     </div>
   );
 }

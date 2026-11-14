@@ -35,6 +35,8 @@ const ALLOWED: { prefix: string; methods: Method[]; exact?: boolean }[] = [
   { prefix: "notifications", methods: ["GET"] },
   { prefix: "ground/status", methods: ["GET"], exact: true },
   { prefix: "ground/range", methods: ["GET"], exact: true },
+  { prefix: "ground/key", methods: ["GET"], exact: true },
+  { prefix: "ground/key/rotate", methods: ["POST"], exact: true },
 ];
 
 const SEGMENT = /^[A-Za-z0-9._~-]+$/;
@@ -124,7 +126,10 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
 
     // Changes need a plan. The backend's own answer decides, so this always
     // agrees with what the app shows.
-    if (method !== "GET") {
+    // The one exception is replacing the Ground Station device key: someone
+    // without a plan may run a receiver (to feed) and must be able to revoke
+    // a key that has been seen.
+    if (method !== "GET" && path !== "ground/key/rotate") {
       const who = await send("GET", "user/me", "", undefined);
       if (who === "expired") return json({ detail: "license_expired" }, 402);
       if (who.ok) {

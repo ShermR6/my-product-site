@@ -11,8 +11,10 @@ export class ApiError extends Error {
 export const PAYWALL_EVENT = "fp-paywall";
 const NO_PLAN_TEXT = "Start your free trial to make changes.";
 
-// Accounts without a plan can look around the app but not change anything.
+// Accounts without a plan can look around the app but not change anything,
+// except their Ground Station device key: a receiver is set up before a plan.
 let preview = false;
+const PREVIEW_WRITES = new Set(["ground/key/rotate"]);
 export function setPreview(on: boolean) {
   preview = on;
 }
@@ -40,7 +42,7 @@ function detailOf(body: unknown, fallback: string): string {
  */
 export async function api<T>(path: string, init: { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: unknown } = {}): Promise<T> {
   const method = init.method ?? "GET";
-  if (preview && method !== "GET") throw askToSubscribe();
+  if (preview && method !== "GET" && !PREVIEW_WRITES.has(path)) throw askToSubscribe();
   let res: Response;
   try {
     res = await fetch(`/api/tracker/${path}`, {
