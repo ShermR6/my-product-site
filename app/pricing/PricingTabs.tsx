@@ -69,7 +69,7 @@ export default function PricingTabs() {
       <div className="pricing-head">
         <h1>One plan. Everything included.</h1>
         <p className="pricing-sub">
-          Try it free for {PLAN.trialDays} days. 30-day money-back guarantee. Cancel anytime.
+          Try it free for {PLAN.trialDays} days. {PLAN.refundDays}-day money-back guarantee. Cancel anytime.
         </p>
 
         <div style={{ display: "flex", justifyContent: "center", marginTop: 22 }}>
@@ -175,7 +175,7 @@ export default function PricingTabs() {
           )}
 
           <div className="pt-tagline" style={{ marginTop: 14, lineHeight: 1.6 }}>
-            The trial needs a card, and nothing is charged until it ends. Refundable for 30 days after that.
+            The trial needs a card, and nothing is charged until it ends. Your first payment is refundable for {PLAN.refundDays} days.
           </div>
         </div>
 

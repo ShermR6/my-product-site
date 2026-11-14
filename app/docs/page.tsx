@@ -97,11 +97,11 @@ const sections: Section[] = [
       },
       {
         q: "How do I cancel my subscription?",
-        a: "You can cancel from the Billing tab in Account, which opens the Stripe customer portal. You will keep access until the end of your current billing period. No partial refunds are issued for unused time after the 30-day window.",
+        a: "You can cancel from the Billing tab in Account, which opens the Stripe customer portal. You will keep access until the end of your current billing period. No partial refunds are issued for unused time after the 14-day window.",
       },
       {
         q: "What is the refund policy?",
-        a: "All plans include a 30-day money-back guarantee. If you are not satisfied within the first 30 days of your billing period, contact support at aircraftalerts@finalpingapp.com and we will issue a full refund, no questions asked.",
+        a: "Your first payment comes with a 14-day money-back guarantee. If you are not satisfied within 14 days of that payment, contact support at aircraftalerts@finalpingapp.com and we will issue a full refund, no questions asked. Renewals are not refundable.",
       },
       {
         q: "What happens when my subscription renews?",

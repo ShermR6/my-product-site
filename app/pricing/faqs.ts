@@ -1,6 +1,8 @@
 // app/pricing/faqs.ts
 // Shared between the pricing UI (PricingTabs) and the FAQPage JSON-LD in page.tsx.
 
+import { PLAN } from "@/lib/plan";
+
 export const faqs = [
   {
     q: "How does the free trial work?",
@@ -23,8 +25,8 @@ export const faqs = [
     a: "Contact us. Flight schools, FBOs and fleet operators are better served by FinalPing for Teams, which is in development, and we can arrange something in the meantime.",
   },
   {
-    q: "How does the 30-day refund work?",
-    a: "If you're not satisfied for any reason within the first 30 days, contact us and we'll issue a full refund, no questions asked.",
+    q: `How does the ${PLAN.refundDays}-day refund work?`,
+    a: `If you're not satisfied for any reason, contact us within ${PLAN.refundDays} days of your first payment and we'll refund it in full, no questions asked. Renewals aren't refundable, but you can cancel anytime and keep access until the end of the period you've paid for.`,
   },
   {
     q: "Do I need to install anything?",

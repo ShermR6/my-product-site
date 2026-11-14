@@ -15,6 +15,8 @@ export const PLAN = {
   yearlyPerMonth: 8.99,
   yearlySaving: 40,
   trialDays: 7,
+  /** Money-back window on the first payment. Renewals are not refundable. */
+  refundDays: 14,
   aircraft: 15,
   smsPerMonth: 100,
 } as const;

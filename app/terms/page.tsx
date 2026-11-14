@@ -9,7 +9,7 @@ export default function TermsPage() {
   return (
     <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px 80px" }}>
       <h1 style={{ fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>Terms of Service</h1>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "48px" }}>Last Updated: May 12, 2026</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "48px" }}>Last Updated: November 14, 2026</p>
 
       <div className="legal-body">
 
@@ -29,7 +29,7 @@ export default function TermsPage() {
         <p>Access to the Software requires a valid license key purchased through FinalPingApp's authorized checkout. Your 30-day access period begins upon first activation in the desktop application, not at the time of purchase.</p>
         <p>License keys are personal to you and may not be sold, transferred, sublicensed, or shared with any third party. FinalPingApp reserves the right to revoke license keys used in violation of these Terms without refund.</p>
         <p>Subscriptions renew automatically at the end of each billing period unless canceled prior to the renewal date. You are responsible for canceling your subscription before renewal if you do not wish to be charged. FinalPingApp is not liable for charges resulting from failure to cancel.</p>
-        <p>FinalPingApp offers a 30-day money-back guarantee for first-time purchases. Refund requests must be submitted within 30 days of initial purchase by contacting support. After 30 days, all fees are non-refundable. Renewal charges are not eligible for refund.</p>
+        <p>FinalPingApp offers a 14-day money-back guarantee on your first subscription payment. Refund requests must be submitted within 14 days of that payment by contacting support. After 14 days, all fees are non-refundable. Renewal charges are not eligible for refund. This applies to subscriptions that begin on or after November 14, 2026; earlier purchases keep the 30-day guarantee they were sold with.</p>
 
         <h2>4. Acceptable Use</h2>
         <p>You agree not to:</p>
@@ -97,7 +97,7 @@ export default function TermsPage() {
 
         <h2>17. Termination</h2>
         <p>FinalPingApp may suspend or terminate your access to the Software at any time, with or without cause, with or without notice. Upon termination for cause (including violation of these Terms), you are not entitled to a refund. Upon termination, all rights granted to you under these Terms immediately cease, and you must stop using the Software and delete all copies in your possession.</p>
-        <p>You may terminate your use of the Software at any time by canceling your subscription and uninstalling the Software. Termination does not entitle you to a refund except as provided in the 30-day money-back guarantee.</p>
+        <p>You may terminate your use of the Software at any time by canceling your subscription and uninstalling the Software. Termination does not entitle you to a refund except as provided in the 14-day money-back guarantee.</p>
 
         <h2>18. Governing Law and Jurisdiction</h2>
         <p>These Terms shall be governed by and construed in accordance with the laws of the State of Texas, United States, without regard to its conflict of law provisions. To the extent that any Dispute proceeds in court (rather than arbitration), you consent to exclusive personal jurisdiction and venue in the state and federal courts located in Denton County, Texas.</p>

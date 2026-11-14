@@ -3,10 +3,10 @@
 > FinalPing is a real-time aircraft tracking and alert platform for aircraft owners, pilots, FBOs, fuel services, and flight schools. It sends proximity, landing, and takeoff alerts for tracked aircraft via Discord, Slack, Microsoft Teams, SMS, Telegram, webhooks, and email. Desktop app for Windows with a cloud-backed alert engine.
 
 Key facts:
-- Personal plans: Starter $14.99/mo (3 aircraft), Premium $24.99/mo (7 aircraft, most popular), Pro $49.99/mo (15 aircraft, Ground Station included). Yearly billing saves 17% ($149/$249/$499 per year).
+- One plan with everything included: $14.99/mo, or $107.88/yr ($8.99/mo, 40% off). Up to 15 aircraft, every alert channel, Ground Station support included.
 - Team plans for FBOs, fuel services, and flight schools with multi-seat access, shared live maps, duty scheduling, and alert routing (coming soon).
-- 7-day free trial on Starter, 30-day money-back guarantee on all plans.
-- Ground Station add-on ($29.99 one-time, free with Pro): connect your own ADS-B receiver for sub-10-second local landing/takeoff detection instead of ~30-second cloud latency.
+- 7-day free trial, then a 14-day money-back guarantee on the first payment.
+- Ground Station (included in the plan): connect your own ADS-B receiver for sub-10-second local landing/takeoff detection instead of ~30-second cloud latency.
 - Ground Station Kit: pre-configured ADS-B receiver hardware bundles sold at finalpingapp.com/groundstationkit.
 
 ## Pages
@@ -24,4 +24,4 @@ Key facts:
 
 - [Privacy Policy](https://finalpingapp.com/privacy)
 - [Terms of Service](https://finalpingapp.com/terms)
-- [Refund Policy](https://finalpingapp.com/refund-policy): 30-day money-back guarantee
+- [Refund Policy](https://finalpingapp.com/refund-policy): 14-day money-back guarantee on the first plan payment; 30-day hardware returns
