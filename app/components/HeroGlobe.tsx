@@ -21,14 +21,14 @@ type V3 = [number, number, number];
 const SKY: RGB = [0.22, 0.74, 0.97];
 
 const SLOTS = 10;
-const PER_ZONE = 3;           // flights per part of the world
+const PER_ZONE = 4;           // flights per part of the world
 const REFRESH_MS = 60_000;
 const ELEVATION = 0.01;       // markerElevation passed to cobe
 const ARC_HEIGHT = 0.3;       // arcHeight passed to cobe
 const ARRIVED = 0.995;        // progress at which a flight counts as landed
 const SAMPLE_ROUTE_MS = 10 * 60_000;   // sample routes, before live data, take this long
 const DEFAULT_GS_KT = 450;   // when a flight's ground speed is unknown
-const MIN_ROUTE_NM = 800;     // long enough to read as a line
+const MIN_ROUTE_NM = 500;     // long enough to read as a line
 const CITY_GAP_DEG = 6;       // about 360 nm between any two flights' airports: room for their codes
 const MID_GAP_DEG = 10;       // about 600 nm between the middles of any two lines
 const SPIN = 0.0004;          // radians a frame: slow enough to read a flight card
@@ -125,14 +125,20 @@ function topUp(current: Slot[], pool: GlobeFlight[], recent: { current: string[]
     if (!ok.length) break;
     const unseen = ok.filter((f) => !recent.current.includes(f.cs));
     const choices = unseen.length ? unseen : ok;
-    // A random part of the world, then one of its longer routes.
+    // A random part of the world, then, of a sample of its flights, the one
+    // that leaves the most others still able to fit: more flights end up on
+    // the globe than taking the longest routes, which block the most room.
     const zones = [...new Set(choices.map((f) => zoneOf(f.route!.from, f.route!.to)))];
     const zone = zones[Math.floor(Math.random() * zones.length)];
-    const inZone = choices
-      .filter((f) => zoneOf(f.route!.from, f.route!.to) === zone)
-      .sort((a, b) => nm(b.route!.from, b.route!.to) - nm(a.route!.from, a.route!.to))
-      .slice(0, 5);
-    const f = inZone[Math.floor(Math.random() * inZone.length)];
+    const inZone = choices.filter((f) => zoneOf(f.route!.from, f.route!.to) === zone);
+    const sample = [...inZone].sort(() => Math.random() - 0.5).slice(0, 20);
+    let f = sample[0];
+    let bestRoom = -1;
+    for (const c of sample) {
+      const trial: Slot = { key: c.cs, flight: c, from: c.route!.from, to: c.route!.to, s0: 0, start: now, rate: 0, born: now };
+      const room = ok.filter((g) => g !== c && fits(g.route!.from, g.route!.to, [...next, trial])).length;
+      if (room > bestRoom) { bestRoom = room; f = c; }
+    }
     next.push({ key: f.cs, flight: f, from: f.route!.from, to: f.route!.to, s0: progressOf(f), start: now, rate: rateOf(f), born: now });
     recent.current = [f.cs, ...recent.current].slice(0, 24);
   }

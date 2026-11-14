@@ -59,6 +59,7 @@ const PER_REGION = 30;               // aircraft kept per region (from the one r
 const ROUTES_PER_REGION = 30;        // all of them are looked up for a route (cached for hours)
 const NEW_LOOKUPS_PER_CALL = 60;     // route files fetched per call; the rest wait for later calls
 const LOOKUP_CONCURRENCY = 10;       // at once: hundreds together get throttled
+const CACHED_FETCH_MS = 60;          // a route file faster than this came from the shared cache
 const MIN_ALT_FT = 10_000;
 
 // dbFlags bits: 1 military, 4 PIA (privacy address), 8 LADD
@@ -172,13 +173,16 @@ async function routeFor(f: GlobeFlight, budget: { left: number }): Promise<Globe
     ]) : null;
   }
   if (budget.left <= 0) return null;   // looked up on a later call
-  budget.left--;
   let airports: VrsAirport[] = [];
+  const t0 = Date.now();
   try {
     const res = await fetch(`https://vrs-standing-data.adsb.lol/routes/${f.cs.slice(0, 2)}/${f.cs}.json`, {
       next: { revalidate: 21600 },
       signal: AbortSignal.timeout(4000),
     });
+    // A file served from the shared data cache (another instance fetched it)
+    // answers almost at once and costs nothing, so only real fetches count.
+    if (Date.now() - t0 > CACHED_FETCH_MS) budget.left--;
     // Only a missing file means "no route". Anything else (throttled, an
     // outage) is not remembered, so the flight is tried again later.
     if (res.status === 404) {
@@ -225,21 +229,26 @@ export async function GET() {
 
   const seen = new Set<string>();
   const flights: GlobeFlight[] = [];
-  const picks: GlobeFlight[] = [];   // looked up for a route: a few from every region
+  const perRegion: GlobeFlight[][] = [];
   for (const r of REGIONS) {
     const entry = regionCache.get(r.name);
     if (!entry || now - entry.at > REGION_MAX_AGE_MS) continue;
-    let picked = 0;
+    const mine: GlobeFlight[] = [];
     for (const f of entry.flights) {
       if (seen.has(f.id)) continue;
       seen.add(f.id);
       const copy = { ...f };
       flights.push(copy);
-      if (picked < ROUTES_PER_REGION) { picks.push(copy); picked++; }
+      if (mine.length < ROUTES_PER_REGION) mine.push(copy);
     }
+    perRegion.push(mine);
   }
-  // Routes, so the globe can draw each flight between its two cities.
-  // Flights with a remembered route first, then new lookups, a few at a time.
+  // Routes, so the globe can draw each flight between its two cities. The
+  // lookups take turns across the regions, so the budget is not spent on the
+  // first regions in the list (the Americas) before Europe and Asia get any.
+  // Flights whose route is already known go first.
+  const picks: GlobeFlight[] = [];
+  for (let i = 0; i < ROUTES_PER_REGION; i++) for (const mine of perRegion) if (mine[i]) picks.push(mine[i]);
   picks.sort((a, b) => Number(routeCache.has(b.cs)) - Number(routeCache.has(a.cs)));
   const budget = { left: NEW_LOOKUPS_PER_CALL };
   const routes = await mapLimited(picks, LOOKUP_CONCURRENCY, (f) => routeFor(f, budget));
