@@ -40,6 +40,8 @@ interface GlobeProps {
   mapSamples?: number
   /** Called every frame with the rotation just drawn, for placing overlays. */
   onFrame?: (phi: number, theta: number) => void
+  /** Stops the automatic spin (dragging still works). */
+  paused?: boolean
 }
 
 export function Globe({
@@ -61,11 +63,14 @@ export function Globe({
   diffuse = 1.5,
   mapSamples = 16000,
   onFrame,
+  paused = false,
 }: GlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const globeRef = useRef<ReturnType<typeof createGlobe> | null>(null)
   const onFrameRef = useRef(onFrame)
   useEffect(() => { onFrameRef.current = onFrame }, [onFrame])
+  const spinPausedRef = useRef(paused)
+  useEffect(() => { spinPausedRef.current = paused }, [paused])
 
   const toCobe = useCallback((ms: Marker[], as: Arc[]) => ({
     markers: ms.map((m) => ({ location: m.location, size: m.size ?? markerSize, ...(m.id ? { id: m.id } : {}), ...(m.color ? { color: m.color } : {}) })),
@@ -164,7 +169,7 @@ export function Globe({
 
       function tick() {
         if (!isPausedRef.current) {
-          phi += speed
+          if (!spinPausedRef.current) phi += speed
           if (Math.abs(velocity.current.phi) > 0.0001 || Math.abs(velocity.current.theta) > 0.0001) {
             phiOffsetRef.current += velocity.current.phi
             thetaOffsetRef.current += velocity.current.theta

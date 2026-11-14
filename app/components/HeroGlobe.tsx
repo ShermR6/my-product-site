@@ -20,16 +20,18 @@ type RGB = [number, number, number];
 type V3 = [number, number, number];
 const SKY: RGB = [0.22, 0.74, 0.97];
 
-const SLOTS = 6;
+const SLOTS = 10;
+const PER_ZONE = 3;           // flights per part of the world
 const REFRESH_MS = 60_000;
 const ELEVATION = 0.01;       // markerElevation passed to cobe
 const ARC_HEIGHT = 0.3;       // arcHeight passed to cobe
 const ARRIVED = 0.995;        // progress at which a flight counts as landed
 const SAMPLE_ROUTE_MS = 10 * 60_000;   // sample routes, before live data, take this long
 const DEFAULT_GS_KT = 450;   // when a flight's ground speed is unknown
-const MIN_ROUTE_NM = 1200;    // long routes only: a few big lines, not many short ones
-const CITY_GAP_DEG = 10;      // about 600 nm between any two flights' cities, so labels never overlap
-const MID_GAP_DEG = 15;       // about 900 nm between the middles of any two lines
+const MIN_ROUTE_NM = 800;     // long enough to read as a line
+const CITY_GAP_DEG = 6;       // about 360 nm between any two flights' airports: room for their codes
+const MID_GAP_DEG = 10;       // about 600 nm between the middles of any two lines
+const SPIN = 0.0004;          // radians a frame: slow enough to read a flight card
 const PLANE =
   "M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z";
 
@@ -101,7 +103,7 @@ function zoneOf(from: GlobeAirport, to: GlobeAirport): string {
  */
 function fits(from: GlobeAirport, to: GlobeAirport, taken: Slot[]) {
   const zone = zoneOf(from, to);
-  if (taken.some((s) => zoneOf(s.from, s.to) === zone)) return false;
+  if (taken.filter((s) => zoneOf(s.from, s.to) === zone).length >= PER_ZONE) return false;
   const cities = [unit(from.lat, from.lon), unit(to.lat, to.lon)];
   const mid = midDir(from, to);
   return taken.every((s) =>
@@ -402,7 +404,8 @@ export default function HeroGlobe() {
           markerSize={0.04}
           markerElevation={ELEVATION}
           arcHeight={ARC_HEIGHT}
-          speed={still ? 0 : 0.001}
+          speed={still ? 0 : SPIN}
+          paused={!!hover}
           theta={0.25}
           diffuse={1.5}
           mapSamples={16000}
@@ -416,7 +419,7 @@ export default function HeroGlobe() {
             aria-hidden="true"
             ref={(el) => { if (el) cityEls.current.set(c.iata, el); else cityEls.current.delete(c.iata); }}
           >
-            <span>{c.city || c.iata}</span>
+            <span>{c.iata || c.city}</span>
           </div>
         ))}
 

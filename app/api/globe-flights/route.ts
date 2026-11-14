@@ -1,6 +1,6 @@
 // app/api/globe-flights/route.ts
 //
-// Live airliners for the homepage globe.
+// Live airliners with routes for the homepage globe.
 //
 // Positions come from adsb.lol's open API (ODbL 1.0), which answers for a
 // circle of up to 250 nm, so a set of busy regions around the world is
@@ -55,9 +55,8 @@ const REGIONS: Region[] = [
 const REGION_RADIUS_NM = 250;
 const REFRESH_PER_CALL = 8;          // regions asked for per call, oldest first
 const REGION_MAX_AGE_MS = 6 * 60_000; // drop a region's aircraft after this
-const PER_REGION = 12;               // aircraft kept per region
-const MAX_FLIGHTS = 220;             // the globe draws every one as a dot
-const ROUTES_PER_REGION = 6;         // flights per region given a route, so every region has some
+const PER_REGION = 30;               // aircraft kept per region (from the one request: no extra load)
+const ROUTES_PER_REGION = 30;        // all of them are looked up for a route (cached for hours)
 const MIN_ALT_FT = 10_000;
 
 // dbFlags bits: 1 military, 4 PIA (privacy address), 8 LADD
@@ -214,15 +213,16 @@ export async function GET() {
       if (picked < ROUTES_PER_REGION) { picks.push(copy); picked++; }
     }
   }
-  flights.splice(MAX_FLIGHTS);
-
   // Routes, so the globe can draw each flight between its two cities.
   const routes = await Promise.all(picks.map(routeFor));
   picks.forEach((f, i) => { if (routes[i]) f.route = routes[i]!; });
 
-  const ok = flights.length > 0;
+  // The globe draws flights between their two cities, so only those with a
+  // route are sent.
+  const routed = flights.filter((f) => f.route);
+  const ok = routed.length > 0;
   return NextResponse.json(
-    { updated: new Date(now).toISOString(), flights },
+    { updated: new Date(now).toISOString(), flights: routed },
     {
       headers: {
         // One shared copy a minute; a short one while adsb.lol is unavailable.
