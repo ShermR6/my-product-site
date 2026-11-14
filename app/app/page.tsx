@@ -254,7 +254,7 @@ export default function DashboardPage() {
 
         <Card
           title="Ground Station"
-          note={t.groundEnabled === false ? "Add-on" : (
+          note={t.groundEnabled === false ? "Included in the plan" : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: "var(--text-2)" }}>
               <span className={`fa-dot ${t.ground?.online ? "" : "hollow"}`} style={{ width: 6, height: 6 }} />{t.ground?.online ? "Online" : "Offline"}
             </span>

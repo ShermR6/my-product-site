@@ -47,8 +47,8 @@
 .fa-strip-tag { display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1.2px; color: var(--accent); text-transform: uppercase; }
 .fa-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18); flex: none; }
 .fa-strip-spacer { flex: 1; }
-.fa-preview { color: var(--text-2); }
-.fa-preview-tag { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-strong); }
+.fa-trialbar { position: sticky; top: 64px; z-index: 490; color: var(--text-2); }
+.fa-trialbar-tag { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-strong); }
 
 /* ── page ────────────────────────────────────────────────────────────────── */
 .fa-main { flex: 1; min-width: 0; }
@@ -315,6 +315,7 @@ b .fa-token, strong .fa-token, .fa-token:has(b, strong) { font-weight: 700; bord
   .fa-top { height: 54px; padding: 0 16px; justify-content: space-between; }
   .fa-menu { right: 12px; top: 50px; }
   .fa-strip { padding: 8px 16px; gap: 10px 14px; }
+  .fa-trialbar { position: static; }
   .fa-page { padding: 18px 16px 110px; }
   .fa-title { font-size: 26px; }
   .fa-hero-title { font-size: 32px; letter-spacing: -1.3px; }

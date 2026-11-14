@@ -41,9 +41,67 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Preview lock. These are the things a person can operate on a page...
+const CONTROLS = "button, input, select, textarea, label, summary, [role='button'], [role='switch'], [role='checkbox'], [role='tab'], [contenteditable='true']";
+// ...and these are the places where operating them only changes the view.
+const VIEW_ONLY = ".fa-mapcard, .fa-map-full";
+
+/**
+ * In preview the page can be read, scrolled and navigated, but its controls do
+ * nothing except open the trial prompt. Links still work. The listeners sit in
+ * the capture phase, so the page's own handlers never see the event.
+ */
+function usePreviewLock(active: boolean) {
+  const [root, setRoot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!active || !root) return;
+
+    const controlOf = (e: Event) => {
+      const el = e.target instanceof Element ? e.target.closest(CONTROLS) : null;
+      return el && root.contains(el) && !el.closest(VIEW_ONLY) ? el : null;
+    };
+    const ask = () => window.dispatchEvent(new Event(PAYWALL_EVENT));
+    const refuse = (e: Event, el: Element) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (el instanceof HTMLElement) el.blur();
+    };
+
+    // Stops focus, and a dropdown opening, before the click arrives.
+    const onDown = (e: Event) => { const el = controlOf(e); if (el) refuse(e, el); };
+    const onClick = (e: Event) => { const el = controlOf(e); if (el) { refuse(e, el); ask(); } };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab" || e.key === "Escape") return;
+      const el = controlOf(e);
+      if (el) { refuse(e, el); ask(); }
+    };
+    // A field reached by Tab, or by a tap on a phone.
+    const onFocus = (e: Event) => {
+      const el = controlOf(e);
+      if (el && el.matches("input, select, textarea, [contenteditable='true']")) { refuse(e, el); ask(); }
+    };
+
+    root.addEventListener("mousedown", onDown, true);
+    root.addEventListener("click", onClick, true);
+    root.addEventListener("keydown", onKey, true);
+    root.addEventListener("focusin", onFocus, true);
+    return () => {
+      root.removeEventListener("mousedown", onDown, true);
+      root.removeEventListener("click", onClick, true);
+      root.removeEventListener("keydown", onKey, true);
+      root.removeEventListener("focusin", onFocus, true);
+    };
+  }, [active, root]);
+
+  return setRoot;
+}
+
 function Frame({ children }: { children: React.ReactNode }) {
   const t = useTracker();
   const pathname = usePathname() ?? "/app";
+  const preview = t.me?.license_tier === "free";
+  const lockRef = usePreviewLock(preview);
 
   useEffect(() => {
     if (t.blocked === "signedout") {
@@ -83,8 +141,8 @@ function Frame({ children }: { children: React.ReactNode }) {
   return (
     <>
       <TopBar pathname={pathname} />
-      {t.me?.license_tier === "free" ? <Preview /> : <LiveStrip />}
-      <main className="fa-main">
+      {preview ? <Preview /> : <LiveStrip />}
+      <main className="fa-main" ref={lockRef}>
         {t.offline && (
           <div className="fa-page" style={{ paddingBottom: 0 }}>
             <div className="fa-banner warn" role="status">Can&apos;t reach the tracker right now. Showing the last data received; retrying.</div>
@@ -148,9 +206,9 @@ function Preview() {
 
   return (
     <>
-      <div className="fa-strip fa-preview" role="status">
-        <span className="fa-preview-tag">Preview</span>
-        <span>You&apos;re looking around. Start your {OFFER.trialDays}-day free trial to add aircraft and get alerts.</span>
+      <div className="fa-strip fa-trialbar" role="status">
+        <span className="fa-trialbar-tag">Preview</span>
+        <span>You can look around, but nothing can be changed.<span className="fa-hide-phone"> Start your {OFFER.trialDays}-day free trial to add aircraft and get alerts.</span></span>
         <span className="fa-strip-spacer" />
         <Btn small variant="primary" disabled={trial.busy} onClick={trial.start}>{trial.busy ? "Loading…" : "Start free trial"}</Btn>
       </div>
