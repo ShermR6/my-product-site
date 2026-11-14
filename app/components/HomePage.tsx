@@ -1,11 +1,12 @@
 // The homepage: what FinalPing does, one section per feature.
-// Static markup only, so it renders on the server with no client script.
+// Static markup, rendered on the server; the hero globe is the one client piece.
 
 import Link from "next/link";
 import {
   ArrowRight, Check, Clock, Code, Hash, Mail, MessageCircle, MessageSquare, Moon, Plus, Send, Smartphone, Users,
 } from "lucide-react";
 import "../home.css";
+import HeroGlobe from "./HeroGlobe";
 
 const PLANE =
   "M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z";
@@ -81,56 +82,7 @@ export default function HomePage() {
             <Link href="/pricing" className="fh-btn ghost">View pricing</Link>
           </div>
 
-          <div className="fh-strip" role="img" aria-label="Example approach: N172AK inbound to KDTO, alerts sent at 10 and 5 nautical miles, 2 nautical miles next, landing alert waiting">
-            <div className="fh-strip-head">
-              <div className="fh-strip-id">
-                <span className="fh-tile">
-                  <svg width="22" height="22" viewBox="-18 -18 36 36" aria-hidden="true">
-                    <path fill="#FAFAFA" transform="rotate(180)" d={PLANE} />
-                  </svg>
-                </span>
-                <div>
-                  <div className="fh-strip-title">N172AK inbound to KDTO</div>
-                  <div className="fh-strip-sub">Runway 18L · watching since 10 nm</div>
-                </div>
-              </div>
-              <span className="fh-livepill">
-                <span className="fh-livedot" />
-                On final
-              </span>
-            </div>
-            <div className="fh-steps">
-              <div className="fh-step">
-                <span className="fh-bar"><span style={{ width: "100%" }} /></span>
-                <div className="fh-step-num">10 nm</div>
-                <div className="fh-step-state"><Check size={14} strokeWidth={3} aria-hidden="true" />Alert sent</div>
-                <div className="fh-step-note">Discord · Email</div>
-              </div>
-              <div className="fh-step">
-                <span className="fh-bar"><span style={{ width: "100%" }} /></span>
-                <div className="fh-step-num">5 nm</div>
-                <div className="fh-step-state"><Check size={14} strokeWidth={3} aria-hidden="true" />Alert sent</div>
-                <div className="fh-step-note">Discord · Email · SMS</div>
-              </div>
-              <div className="fh-step next">
-                <span className="fh-bar"><span style={{ width: "55%" }} /></span>
-                <div className="fh-step-num">2 nm</div>
-                <div className="fh-step-state">
-                  <svg width="15" height="15" viewBox="-18 -18 36 36" aria-hidden="true">
-                    <path fill="currentColor" transform="rotate(90)" d={PLANE} />
-                  </svg>
-                  Next up
-                </div>
-                <div className="fh-step-note">3.4 nm out right now</div>
-              </div>
-              <div className="fh-step waiting">
-                <span className="fh-bar" />
-                <div className="fh-step-num">Landed</div>
-                <div className="fh-step-state">Waiting</div>
-                <div className="fh-step-note">Fires on touchdown</div>
-              </div>
-            </div>
-          </div>
+          <HeroGlobe />
         </div>
       </section>
 
