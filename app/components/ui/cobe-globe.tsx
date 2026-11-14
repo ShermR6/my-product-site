@@ -8,6 +8,8 @@ interface Marker {
   location: [number, number]
   label?: string
   color?: [number, number, number]
+  /** Overrides markerSize for this marker. */
+  size?: number
 }
 
 interface Arc {
@@ -36,6 +38,8 @@ interface GlobeProps {
   theta?: number
   diffuse?: number
   mapSamples?: number
+  /** Called every frame with the rotation just drawn, for placing overlays. */
+  onFrame?: (phi: number, theta: number) => void
 }
 
 export function Globe({
@@ -56,8 +60,22 @@ export function Globe({
   theta = 0.2,
   diffuse = 1.5,
   mapSamples = 16000,
+  onFrame,
 }: GlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const globeRef = useRef<ReturnType<typeof createGlobe> | null>(null)
+  const onFrameRef = useRef(onFrame)
+  useEffect(() => { onFrameRef.current = onFrame }, [onFrame])
+
+  const toCobe = useCallback((ms: Marker[], as: Arc[]) => ({
+    markers: ms.map((m) => ({ location: m.location, size: m.size ?? markerSize, ...(m.id ? { id: m.id } : {}), ...(m.color ? { color: m.color } : {}) })),
+    arcs: as.map((a) => ({ from: a.from, to: a.to, ...(a.id ? { id: a.id } : {}), ...(a.color ? { color: a.color } : {}) })),
+  }), [markerSize])
+
+  // Markers and arcs can change after the globe is drawn (live data).
+  useEffect(() => {
+    globeRef.current?.update(toCobe(markers, arcs))
+  }, [markers, arcs, toCobe])
   const pointerInteracting = useRef<{ x: number; y: number } | null>(null)
   const lastPointer = useRef<{ x: number; y: number; t: number } | null>(null)
   const dragOffset = useRef({ phi: 0, theta: 0 })
@@ -137,12 +155,12 @@ export function Globe({
         markerColor,
         glowColor,
         markerElevation,
-        markers: markers.map((m) => ({ location: m.location, size: markerSize, ...(m.id ? { id: m.id } : {}), ...(m.color ? { color: m.color } : {}) })),
-        arcs: arcs.map((a) => ({ from: a.from, to: a.to, ...(a.id ? { id: a.id } : {}), ...(a.color ? { color: a.color } : {}) })),
+        ...toCobe(markers, arcs),
         arcColor,
         arcWidth,
         arcHeight,
       })
+      globeRef.current = globe
 
       function tick() {
         if (!isPausedRef.current) {
@@ -157,10 +175,10 @@ export function Globe({
           if (thetaOffsetRef.current < tMin) thetaOffsetRef.current += (tMin - thetaOffsetRef.current) * 0.1
           else if (thetaOffsetRef.current > tMax) thetaOffsetRef.current += (tMax - thetaOffsetRef.current) * 0.1
         }
-        globe!.update({
-          phi:   phi + phiOffsetRef.current + dragOffset.current.phi,
-          theta: theta + thetaOffsetRef.current + dragOffset.current.theta,
-        })
+        const p = phi + phiOffsetRef.current + dragOffset.current.phi
+        const t = theta + thetaOffsetRef.current + dragOffset.current.theta
+        globe!.update({ phi: p, theta: t })
+        onFrameRef.current?.(p, t)
         animId = requestAnimationFrame(tick)
       }
       tick()
@@ -180,6 +198,7 @@ export function Globe({
     return () => {
       cancelAnimationFrame(animId)
       globe?.destroy()
+      globeRef.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
