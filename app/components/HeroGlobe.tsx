@@ -181,16 +181,17 @@ export default function HeroGlobe() {
   // ── choosing the next flight for a slot ─────────────────────────────────
   const nextSlot = useCallback((taken: Slot[], now: number): Slot | null => {
     const busy = new Set(taken.map((s) => s.key));
-    const { phi, theta } = view.current;
-    const facing = (from: GlobeAirport, to: GlobeAirport) => {
-      const mid = arcPoint(from, to, 0.5);
-      return mid ? project(mid, phi, theta).front : false;
-    };
-    // Spread around the world: how far this route is from the ones flying.
-    const mids = taken.map((s) => midDir(s.from, s.to));
+    // Spread around the whole world: a route is judged by its two cities and
+    // its middle, against those of every route already flying, so neither the
+    // lines nor the city labels bunch up.
+    const pointsOf = (from: GlobeAirport, to: GlobeAirport): V3[] =>
+      [unit(from.lat, from.lon), midDir(from, to), unit(to.lat, to.lon)];
+    const placed = taken.flatMap((s) => pointsOf(s.from, s.to));
     const room = (from: GlobeAirport, to: GlobeAirport) => {
-      const m = midDir(from, to);
-      return mids.length ? Math.min(...mids.map((o) => apart(m, o))) : 180;
+      if (!placed.length) return 180;
+      let least = 180;
+      for (const p of pointsOf(from, to)) for (const q of placed) least = Math.min(least, apart(p, q));
+      return least;
     };
     const live = poolRef.current;
     let slot: Slot | null = null;
@@ -201,18 +202,14 @@ export default function HeroGlobe() {
       const source = flying.length ? flying : live;
       const fresh = source.filter((f) => !busy.has(f.cs) && !recent.current.includes(f.cs));
       const options = fresh.length ? fresh : source.filter((f) => !busy.has(f.cs));
-      // Well apart from the others first (about 2,000 nm, then 1,000), longer
-      // routes before short ones, and the side facing the viewer if possible.
-      let list = options;
-      for (const deg of [33, 16]) {
-        const spaced = options.filter((f) => room(f.route!.from, f.route!.to) >= deg);
-        if (spaced.length) { list = spaced; break; }
-      }
-      const long = list.filter((f) => nm(f.route!.from, f.route!.to) >= 1500);
-      if (long.length >= 2) list = long;
-      const near = list.filter((f) => facing(f.route!.from, f.route!.to));
-      if (near.length && Math.random() < 0.6) list = near;
-      const f = list[Math.floor(Math.random() * list.length)];
+      // As far from the others as the flights in the air allow: rank by room,
+      // with a small lead for long routes, and pick among the best few so the
+      // set still varies from visit to visit.
+      const ranked = options
+        .map((f) => ({ f, score: room(f.route!.from, f.route!.to) + (nm(f.route!.from, f.route!.to) >= 1500 ? 4 : 0) }))
+        .sort((a, b) => b.score - a.score);
+      const best = ranked.slice(0, placed.length ? 3 : Math.max(3, Math.ceil(ranked.length / 3)));
+      const f = best[Math.floor(Math.random() * best.length)]?.f;
       if (f?.route) {
         slot = { key: f.cs, flight: f, from: f.route.from, to: f.route.to, s0: progressOf(f), start: now, rate: rateOf(f), born: now };
       }

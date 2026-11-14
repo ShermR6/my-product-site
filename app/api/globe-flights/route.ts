@@ -57,7 +57,7 @@ const REFRESH_PER_CALL = 8;          // regions asked for per call, oldest first
 const REGION_MAX_AGE_MS = 6 * 60_000; // drop a region's aircraft after this
 const PER_REGION = 12;               // aircraft kept per region
 const MAX_FLIGHTS = 220;             // the globe draws every one as a dot
-const ROUTES_PER_REGION = 4;         // flights per region given a route, so every region has some
+const ROUTES_PER_REGION = 6;         // flights per region given a route, so every region has some
 const MIN_ALT_FT = 10_000;
 
 // dbFlags bits: 1 military, 4 PIA (privacy address), 8 LADD
