@@ -126,7 +126,7 @@ export default function GroundStationPage() {
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1E1E1E" }}>
               <div className="fa-label">Device key</div>
               <div style={{ display: "flex", gap: 8 }}>
-                <input className="fa-input mono" readOnly aria-label="Device key" style={{ fontSize: 12.5 }}
+                <input className="fa-input mono fa-key" readOnly aria-label="Device key"
                   value={showKey ? g.gs_device_key : "•".repeat(Math.min(28, g.gs_device_key.length))} onFocus={(e) => e.currentTarget.select()} />
                 <Btn square aria-label={showKey ? "Hide device key" : "Show device key"} onClick={() => setShowKey((v) => !v)} style={{ padding: "0 12px" }}>
                   {showKey ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}

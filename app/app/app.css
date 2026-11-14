@@ -362,4 +362,42 @@ b .fa-token, strong .fa-token, .fa-token:has(b, strong) { font-weight: 700; bord
   .fa-input, .fp-app select.fa-input, textarea.fa-input { font-size: 16px; }
   .fa-btn, .fa-btn.small { min-height: 40px; }
   .fp-app .maplibregl-ctrl-group { display: none; }
+  .fa-routing th.ch { font-size: 10.5px; }
+  .fa-vp-tag { font-size: 11px; }
+}
+
+/* ── touch ───────────────────────────────────────────────────────────────── */
+/* On a phone, or any screen worked by finger, small controls keep their look
+   but answer to a finger-sized area around them. */
+.fa-key { font-size: 12.5px; }
+@media (max-width: 860px), (pointer: coarse) {
+  .fa-check, .fa-chip button, button.fa-link, .fa-icon-btn, .fa-swatches button { position: relative; }
+  .fa-toggle::before, .fa-check::before, .fa-chip button::before, button.fa-link::before, .fa-icon-btn::before {
+    content: ""; position: absolute;
+  }
+  .fa-toggle::before { inset: -12px -6px; }
+  .fa-check::before { inset: -9px -10px; }
+  .fa-chip button::before { inset: -13px -11px; }
+  button.fa-link::before { inset: -12px -6px; }
+  .fa-icon-btn::before { inset: -8px; }
+  .fa-chip { height: 36px; }
+  .fa-msg-bar .fa-chip { height: 32px; }
+  .fa-map-chip { min-height: 38px; }
+  .fa-chip-btn { height: 40px; }
+  .fa-avatar { width: 40px; height: 40px; }
+  .fa-swatches { gap: 10px; }
+  .fa-swatches button { width: 32px; height: 32px; }
+  .fa-swatches.small { gap: 10px; }
+  .fa-swatches.small button { width: 28px; height: 28px; }
+  .fa-key { font-size: 16px; }
+  .fa-chip-btn { white-space: nowrap; }
+  /* Dialog buttons wrap instead of running off a narrow screen. */
+  .fa-modal-actions, .fa-modal-actions > span { flex-wrap: wrap; }
+  .fa-modal { padding: 20px; }
+  .fa-overlay { padding: 12px; }
+  .fa-modal { max-height: calc(100dvh - 24px); }
+}
+/* The narrowest phones: the logo mark alone, so the airport chip keeps one line. */
+@media (max-width: 380px) {
+  .fa-brand span { display: none; }
 }

@@ -310,7 +310,7 @@ export default function AirportPage() {
           </div>
 
           <div className="fa-mapcard fa-preview">
-            <MapGL center={center} code={draft.code} rings={sortedRings} runways={draft.runways} approach={draft.approachOnly ? draft.headings : []} fitSeq={fitSeq} />
+            <MapGL center={center} code={draft.code} rings={sortedRings} runways={draft.runways} approach={draft.approachOnly ? draft.headings : []} fitSeq={fitSeq} embedded />
             <div className="fa-map-layers">
               <span className="fa-map-chip">Updates as you edit</span>
               <button className="fa-map-chip" onClick={() => setFitSeq((n) => n + 1)} aria-label="Center on the airport">

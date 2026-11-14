@@ -141,7 +141,7 @@ export default function DashboardPage() {
             <MapGL
               center={center} code={t.airport?.airport_code} rings={focusRings} planes={planes}
               selected={focus?.tail_number ?? null} onSelect={setPicked} fitSeq={fitSeq} tilt={tilt}
-              runways={t.airport?.runway_info} approach={landing}
+              runways={t.airport?.runway_info} approach={landing} embedded
             />
             <div className="fa-map-chip" style={{ position: "absolute", zIndex: 450, left: 16, top: 16, maxWidth: "calc(100% - 190px)" }}>
               <span className={`fa-dot ${focusHot ? "live" : "hollow"}`} style={{ width: 6, height: 6, flex: "none" }} />

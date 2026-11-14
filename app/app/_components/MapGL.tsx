@@ -51,6 +51,10 @@ type Props = {
   fitSeq?: number;
   /** false = a still picture: no dragging, no zoom buttons. */
   interactive?: boolean;
+  /** The map sits inside a page that scrolls. On a touch screen one finger
+   *  then scrolls the page and two fingers move the map, so the map cannot
+   *  trap the scroll. */
+  embedded?: boolean;
   /** Tilt the map over for the 3D view. */
   tilt?: boolean;
   /** The home airport's runways, drawn brighter than the basemap's and named at each end. */
@@ -148,7 +152,7 @@ type Stage = {
 };
 
 export default function MapGL({
-  center, code, rings, planes = [], selected, onSelect, showRings = true, coverage, fitSeq = 0, interactive = true, tilt = false,
+  center, code, rings, planes = [], selected, onSelect, showRings = true, coverage, fitSeq = 0, interactive = true, embedded = false, tilt = false,
   runways, approach,
 }: Props) {
   const el = useRef<HTMLDivElement>(null);
@@ -169,6 +173,7 @@ export default function MapGL({
       center: [-98.35, 39.5],
       zoom: 3,
       interactive,
+      cooperativeGestures: embedded && window.matchMedia("(pointer: coarse)").matches,
       maxPitch: 75,
       attributionControl: { compact: true },
       canvasContextAttributes: { antialias: true },
@@ -381,7 +386,7 @@ export default function MapGL({
       setReady(false);
       map.remove();
     };
-  }, [interactive]);
+  }, [interactive, embedded]);
 
   const lat = center?.lat;
   const lon = center?.lon;
