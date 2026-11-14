@@ -303,7 +303,7 @@ function AircraftModal({
         <Field label="Nickname (optional)">
           <input className="fa-input" value={d.name} placeholder="Club Skyhawk" maxLength={60} onChange={(e) => setD({ ...d, name: e.target.value })} />
         </Field>
-        <Field label="Paint colour" hint="Shown on its model and its map marker. Saved in this browser.">
+        <Field group label="Paint colour" hint="Shown on its model and its map marker. Saved in this browser.">
           <PaintSwatches tail={d.tail} value={paint} onPick={(hex) => setD({ ...d, paint: hex })} />
         </Field>
 

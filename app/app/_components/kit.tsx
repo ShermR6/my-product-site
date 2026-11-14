@@ -117,7 +117,22 @@ export function Empty({ title, children }: { title: string; children?: React.Rea
   );
 }
 
-export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: React.ReactNode }) {
+/**
+ * A labelled form field. `group` is for a set of buttons or a custom control
+ * (the paint picker): inside a <label>, the browser turns any click that is
+ * not on a control into a click on the first button, so a click in the
+ * colour square picked the first swatch every time.
+ */
+export function Field({ label, children, hint, group }: { label: string; children: React.ReactNode; hint?: React.ReactNode; group?: boolean }) {
+  if (group) {
+    return (
+      <div className="fa-field" role="group" aria-label={label}>
+        <span className="fa-label">{label}</span>
+        {children}
+        {hint && <span className="fa-note" style={{ display: "block", marginTop: 6 }}>{hint}</span>}
+      </div>
+    );
+  }
   return (
     <label className="fa-field" style={{ display: "block" }}>
       <span className="fa-label">{label}</span>
