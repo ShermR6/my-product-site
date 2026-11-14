@@ -45,11 +45,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 const CONTROLS = "button, input, select, textarea, label, summary, [role='button'], [role='switch'], [role='checkbox'], [role='tab'], [contenteditable='true']";
 // ...and these are the places where operating them only changes the view.
 const VIEW_ONLY = ".fa-mapcard, .fa-map-full";
+// Links inside a page that exist to start setting something up ("Set up
+// airport", "Add one", "Connect a channel"). In preview they open the trial
+// prompt where they are instead of going to a screen that cannot be used.
+const SETUP_LINKS = "a[href^='/app/airport'], a[href^='/app/integrations'], a[href*='add=1']";
 
 /**
  * In preview the page can be read, scrolled and navigated, but its controls do
- * nothing except open the trial prompt. Links still work. The listeners sit in
- * the capture phase, so the page's own handlers never see the event.
+ * nothing except open the trial prompt, and neither do its setup links. Other
+ * links still work. The listeners sit in the capture phase, so the page's own
+ * handlers never see the event.
  */
 function usePreviewLock(active: boolean) {
   const [root, setRoot] = useState<HTMLElement | null>(null);
@@ -58,7 +63,11 @@ function usePreviewLock(active: boolean) {
     if (!active || !root) return;
 
     const controlOf = (e: Event) => {
-      const el = e.target instanceof Element ? e.target.closest(CONTROLS) : null;
+      const target = e.target instanceof Element ? e.target : null;
+      if (!target) return null;
+      const link = target.closest(SETUP_LINKS);
+      if (link && root.contains(link)) return link;
+      const el = target.closest(CONTROLS);
       return el && root.contains(el) && !el.closest(VIEW_ONLY) ? el : null;
     };
     const ask = () => window.dispatchEvent(new Event(PAYWALL_EVENT));
@@ -76,21 +85,22 @@ function usePreviewLock(active: boolean) {
       const el = controlOf(e);
       if (el) { refuse(e, el); ask(); }
     };
-    // A field reached by Tab, or by a tap on a phone.
-    const onFocus = (e: Event) => {
-      const el = controlOf(e);
-      if (el && el.matches("input, select, textarea, [contenteditable='true']")) { refuse(e, el); ask(); }
-    };
+    // Typing by any route (a phone keyboard, paste, drop) into a field that
+    // got focus on its own. Focus alone asks nothing: a page may focus a
+    // field as it opens, and that is not the person trying to change it.
+    const onInput = (e: Event) => { const el = controlOf(e); if (el) { refuse(e, el); ask(); } };
 
     root.addEventListener("mousedown", onDown, true);
     root.addEventListener("click", onClick, true);
     root.addEventListener("keydown", onKey, true);
-    root.addEventListener("focusin", onFocus, true);
+    root.addEventListener("auxclick", onClick, true);
+    root.addEventListener("beforeinput", onInput, true);
     return () => {
       root.removeEventListener("mousedown", onDown, true);
       root.removeEventListener("click", onClick, true);
       root.removeEventListener("keydown", onKey, true);
-      root.removeEventListener("focusin", onFocus, true);
+      root.removeEventListener("auxclick", onClick, true);
+      root.removeEventListener("beforeinput", onInput, true);
     };
   }, [active, root]);
 
@@ -278,7 +288,11 @@ function TopBar({ pathname, bare }: { pathname: string; bare?: boolean }) {
       </nav>
       <div className="fa-top-right">
         {!bare && (
-          <Link href="/app/airport" className="fa-chip-btn" title="Airport settings">
+          <Link href="/app/airport" className="fa-chip-btn" title="Airport settings"
+            onClick={(e) => {
+              // Preview with no airport: this is "set one up", which needs a plan.
+              if (t.me?.license_tier === "free" && !t.airport) { e.preventDefault(); window.dispatchEvent(new Event(PAYWALL_EVENT)); }
+            }}>
             <span className="mono">{t.airport?.airport_code || "Set airport"}</span>
             <ChevronDown size={13} color="var(--muted)" aria-hidden="true" />
           </Link>
