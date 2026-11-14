@@ -1,13 +1,13 @@
 "use client";
 
 // The homepage globe: six real airline flights at a time, each drawn as a
-// line between its two cities with a plane flying along it. The plane starts
-// where the real aircraft is now and flies on to its destination, faster than
-// life; when it arrives, that flight is taken off and a different one put on,
-// so the flights are always rotating. Flights come from /api/globe-flights
-// (live adsb.lol positions with routes). Until those arrive, or if they cannot
-// be had, the planes fly the original city routes. Hover or tap a plane to
-// see the flight.
+// line between its two cities with a plane on it, in real time. The plane is
+// where the aircraft actually is and moves at its real ground speed, corrected
+// each minute from fresh positions. The line stays until that flight lands;
+// then it is taken off and a different flight put on. Flights come from
+// /api/globe-flights (live adsb.lol positions with routes). Until those
+// arrive, or if they cannot be had, planes fly the original city routes
+// slowly. Hover or tap a plane to see the flight.
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -24,8 +24,9 @@ const SLOTS = 6;
 const REFRESH_MS = 60_000;
 const ELEVATION = 0.01;       // markerElevation passed to cobe
 const ARC_HEIGHT = 0.3;       // arcHeight passed to cobe
-const SECONDS_PER_ROUTE = 30; // a whole route, gate to gate, takes this long on screen
-const MIN_FLIGHT_S = 9;
+const ARRIVED = 0.995;        // progress at which a flight counts as landed
+const SAMPLE_ROUTE_MS = 10 * 60_000;   // sample routes, before live data, take this long
+const DEFAULT_GS_KT = 450;   // when a flight's ground speed is unknown
 const MIN_ROUTE_NM = 400;     // short hops barely show as a line
 const PLANE =
   "M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z";
@@ -45,10 +46,34 @@ type Slot = {
   flight: GlobeFlight | null;   // null: a sample route, no flight details
   from: GlobeAirport;
   to: GlobeAirport;
-  s0: number;                   // progress along the route when it started
-  start: number;                // performance.now() when it started
-  dur: number;                  // ms to reach the destination
+  s0: number;                   // progress along the route at `start`
+  start: number;                // performance.now() of the last position fix
+  rate: number;                 // progress per ms
+  born: number;                 // performance.now() when it was put on, for the fade-in
 };
+
+/**
+ * Puts each plane back where its aircraft really is, from a fresh set of
+ * positions. Flights not in this set (their region was not refreshed, or they
+ * have dropped below cruise) carry on at their last known speed.
+ */
+function withFreshPositions(current: Slot[], fresh: GlobeFlight[]): Slot[] {
+  const byCs = new Map(fresh.map((f) => [f.cs, f]));
+  let changed = false;
+  const next = current.map((s) => {
+    const f = s.flight && byCs.get(s.flight.cs);
+    if (!f?.route || f.route.from.iata !== s.from.iata || f.route.to.iata !== s.to.iata) return s;
+    changed = true;
+    return { ...s, flight: f, s0: progressOf(f), start: performance.now(), rate: rateOf(f) };
+  });
+  return changed ? next : current;
+}
+
+/** Progress per millisecond for a live flight at its ground speed. */
+function rateOf(f: GlobeFlight) {
+  const len = f.route ? nm(f.route.from, f.route.to) : 0;
+  return len > 0 ? (f.gs ?? DEFAULT_GS_KT) / len / 3_600_000 : 0;
+}
 
 // ── geometry: the same math cobe uses ────────────────────────────────────────
 
@@ -142,7 +167,10 @@ export default function HeroGlobe() {
         if (!res.ok) return;
         const body = (await res.json()) as { flights?: GlobeFlight[] };
         const routed = (body.flights ?? []).filter((f) => f.route && nm(f.route.from, f.route.to) >= MIN_ROUTE_NM);
-        if (live && routed.length) setPool(routed);
+        if (live && routed.length) {
+          setPool(routed);
+          setSlots((current) => withFreshPositions(current, routed));
+        }
       } catch { /* keep what is shown */ }
     };
     load();
@@ -151,7 +179,7 @@ export default function HeroGlobe() {
   }, []);
 
   // ── choosing the next flight for a slot ─────────────────────────────────
-  const nextSlot = useCallback((taken: Slot[], now: number, stagger = 0): Slot | null => {
+  const nextSlot = useCallback((taken: Slot[], now: number): Slot | null => {
     const busy = new Set(taken.map((s) => s.key));
     const { phi, theta } = view.current;
     const facing = (from: GlobeAirport, to: GlobeAirport) => {
@@ -168,8 +196,11 @@ export default function HeroGlobe() {
     let slot: Slot | null = null;
 
     if (live.length) {
-      const fresh = live.filter((f) => !busy.has(f.cs) && !recent.current.includes(f.cs));
-      const options = fresh.length ? fresh : live.filter((f) => !busy.has(f.cs));
+      // Not about to land: it should stay a while.
+      const flying = live.filter((f) => progressOf(f) < 0.9);
+      const source = flying.length ? flying : live;
+      const fresh = source.filter((f) => !busy.has(f.cs) && !recent.current.includes(f.cs));
+      const options = fresh.length ? fresh : source.filter((f) => !busy.has(f.cs));
       // Well apart from the others first (about 2,000 nm, then 1,000), longer
       // routes before short ones, and the side facing the viewer if possible.
       let list = options;
@@ -183,17 +214,15 @@ export default function HeroGlobe() {
       if (near.length && Math.random() < 0.6) list = near;
       const f = list[Math.floor(Math.random() * list.length)];
       if (f?.route) {
-        const s0 = Math.min(progressOf(f), 0.75);
-        slot = { key: f.cs, flight: f, from: f.route.from, to: f.route.to, s0, start: now, dur: 0 };
+        slot = { key: f.cs, flight: f, from: f.route.from, to: f.route.to, s0: progressOf(f), start: now, rate: rateOf(f), born: now };
       }
     }
     if (!slot) {
       const used = new Set(taken.map((s) => `${s.from.iata}-${s.to.iata}`));
       const open = SAMPLE_ROUTES.filter(([a, b]) => !used.has(`${a.iata}-${b.iata}`));
       const [from, to] = open[Math.floor(Math.random() * open.length)] ?? SAMPLE_ROUTES[0];
-      slot = { key: `${from.iata}-${to.iata}`, flight: null, from, to, s0: Math.random() * 0.3, start: now, dur: 0 };
+      slot = { key: `${from.iata}-${to.iata}`, flight: null, from, to, s0: Math.random() * 0.6, start: now, rate: 1 / SAMPLE_ROUTE_MS, born: now };
     }
-    slot.dur = Math.max(MIN_FLIGHT_S, (1 - slot.s0) * SECONDS_PER_ROUTE) * 1000 + stagger;
     recent.current = [slot.key, ...recent.current].slice(0, 24);
     return slot;
   }, []);
@@ -209,8 +238,7 @@ export default function HeroGlobe() {
       const now = performance.now();
       const filled: Slot[] = [];
       for (let i = 0; i < SLOTS; i++) {
-        // Staggered, so the flights do not all land together.
-        const s = nextSlot(filled, now, i * 2500);
+        const s = nextSlot(filled, now);
         if (s) filled.push(s);
       }
       setSlots(filled);
@@ -218,14 +246,15 @@ export default function HeroGlobe() {
     return () => clearTimeout(timer);
   }, [pool, nextSlot]);
 
-  // Replace each flight as it arrives.
+  // Replace each flight when it lands.
   useEffect(() => {
     if (still || !slots.length) return;
     const id = setInterval(() => {
       const now = performance.now();
       const current = slotsRef.current;
-      if (!current.some((s) => now - s.start >= s.dur)) return;
-      const kept = current.filter((s) => now - s.start < s.dur);
+      const landed = (s: Slot) => s.s0 + s.rate * (now - s.start) >= ARRIVED;
+      if (!current.some(landed)) return;
+      const kept = current.filter((s) => !landed(s));
       const next = [...kept];
       for (let i = kept.length; i < SLOTS; i++) {
         const s = nextSlot(next, now);
@@ -233,7 +262,7 @@ export default function HeroGlobe() {
       }
       setHover((h) => (h && next.some((s) => s.key === h.key) ? h : null));
       setSlots(next);
-    }, 250);
+    }, 1000);
     return () => clearInterval(id);
   }, [slots.length, still, nextSlot]);
 
@@ -252,7 +281,7 @@ export default function HeroGlobe() {
   // ── every frame: planes along their lines, city labels, the card ────────
   const progress = useCallback((s: Slot, now: number) => {
     if (still) return s.s0;
-    return Math.min(1, s.s0 + (1 - s.s0) * ((now - s.start) / s.dur));
+    return Math.min(1, s.s0 + s.rate * (now - s.start));
   }, [still]);
 
   const onFrame = useCallback((phi: number, theta: number) => {
@@ -273,7 +302,7 @@ export default function HeroGlobe() {
       const p = project(at, phi, theta), p2 = project(ahead, phi, theta), p1 = project(behind, phi, theta);
       const angle = (Math.atan2((p2.y - p1.y) * size, (p2.x - p1.x) * size) * 180) / Math.PI + 90;
       // Fade in as it appears and out on the final stretch.
-      const fade = Math.max(0, Math.min(1, (1 - t) / 0.04, (now - s.start) / 400));
+      const fade = Math.max(0, Math.min(1, (1 - t) / 0.005, (now - s.born) / 400));
       el.style.transform = `translate(${(p.x * size).toFixed(1)}px, ${(p.y * size).toFixed(1)}px) rotate(${angle.toFixed(1)}deg)`;
       el.style.opacity = p.front ? String(fade) : "0";
       if (hover?.key === s.key && cardEl.current) {
@@ -405,7 +434,7 @@ export default function HeroGlobe() {
 
       <p className="fh-globe-credit">
         {live
-          ? <>Real flights in the air now, from <a href="https://adsb.lol" target="_blank" rel="noopener noreferrer">adsb.lol</a> (ODbL), shown faster than life. Routes from Virtual Radar Server standing data. Hover or tap a plane.</>
+          ? <>Real flights in the air now, from <a href="https://adsb.lol" target="_blank" rel="noopener noreferrer">adsb.lol</a> (ODbL), where they are right now. Routes from Virtual Radar Server standing data. Hover or tap a plane.</>
           : <>Loading live flights…</>}
       </p>
     </div>
