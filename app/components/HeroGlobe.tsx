@@ -27,7 +27,9 @@ const ARC_HEIGHT = 0.3;       // arcHeight passed to cobe
 const ARRIVED = 0.995;        // progress at which a flight counts as landed
 const SAMPLE_ROUTE_MS = 10 * 60_000;   // sample routes, before live data, take this long
 const DEFAULT_GS_KT = 450;   // when a flight's ground speed is unknown
-const MIN_ROUTE_NM = 400;     // short hops barely show as a line
+const MIN_ROUTE_NM = 1200;    // long routes only: a few big lines, not many short ones
+const CITY_GAP_DEG = 10;      // about 600 nm between any two flights' cities, so labels never overlap
+const MID_GAP_DEG = 15;       // about 900 nm between the middles of any two lines
 const PLANE =
   "M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z";
 
@@ -67,6 +69,82 @@ function withFreshPositions(current: Slot[], fresh: GlobeFlight[]): Slot[] {
     return { ...s, flight: f, s0: progressOf(f), start: performance.now(), rate: rateOf(f) };
   });
   return changed ? next : current;
+}
+
+// ── spreading the flights out ──────────────────────────────────────────────
+
+/** Latitude and longitude of a direction from the globe's centre. */
+function latLonOf(v: V3) {
+  const lat = (Math.asin(Math.max(-1, Math.min(1, v[1]))) * 180) / Math.PI;
+  let lon = (Math.atan2(v[2], -v[0]) * 180) / Math.PI + 180;
+  if (lon > 180) lon -= 360;
+  return { lat, lon };
+}
+
+/** The part of the world a route's middle is over. One flight per part. */
+function zoneOf(from: GlobeAirport, to: GlobeAirport): string {
+  const { lat, lon } = latLonOf(midDir(from, to));
+  if (lon >= -170 && lon < -60 && lat >= 13) return "north-america";
+  if (lon >= -95 && lon < -30 && lat < 13) return "south-america";
+  if (lon >= -60 && lon < -15) return "atlantic";
+  if (lon >= -15 && lon < 45 && lat >= 35) return "europe";
+  if (lon >= -30 && lon < 65 && lat < 35) return "middle-east-africa";
+  if (lon >= 45 && lon < 150 && lat >= -10) return "asia";
+  if (lat < -10 && lon >= 100) return "oceania";
+  return "pacific";
+}
+
+/**
+ * Whether a route can join those on the globe without crowding them: its part
+ * of the world is free, its cities are well away from every other flight's
+ * cities, and its middle well away from every other line's middle.
+ */
+function fits(from: GlobeAirport, to: GlobeAirport, taken: Slot[]) {
+  const zone = zoneOf(from, to);
+  if (taken.some((s) => zoneOf(s.from, s.to) === zone)) return false;
+  const cities = [unit(from.lat, from.lon), unit(to.lat, to.lon)];
+  const mid = midDir(from, to);
+  return taken.every((s) =>
+    apart(mid, midDir(s.from, s.to)) >= MID_GAP_DEG &&
+    [unit(s.from.lat, s.from.lon), unit(s.to.lat, s.to.lon)].every((q) => cities.every((p) => apart(p, q) >= CITY_GAP_DEG))
+  );
+}
+
+/**
+ * Adds live flights until there are SLOTS or nothing more fits. A part of the
+ * world with no suitable flight is left empty rather than crowding another,
+ * so on a quiet hour there may be four flights, not six.
+ */
+function topUp(current: Slot[], pool: GlobeFlight[], recent: { current: string[] }, now: number): Slot[] {
+  const next = [...current];
+  while (next.length < SLOTS) {
+    const busy = new Set(next.map((s) => s.key));
+    const ok = pool.filter((f) => f.route && !busy.has(f.cs) && progressOf(f) < 0.9 && fits(f.route.from, f.route.to, next));
+    if (!ok.length) break;
+    const unseen = ok.filter((f) => !recent.current.includes(f.cs));
+    const choices = unseen.length ? unseen : ok;
+    // A random part of the world, then one of its longer routes.
+    const zones = [...new Set(choices.map((f) => zoneOf(f.route!.from, f.route!.to)))];
+    const zone = zones[Math.floor(Math.random() * zones.length)];
+    const inZone = choices
+      .filter((f) => zoneOf(f.route!.from, f.route!.to) === zone)
+      .sort((a, b) => nm(b.route!.from, b.route!.to) - nm(a.route!.from, a.route!.to))
+      .slice(0, 5);
+    const f = inZone[Math.floor(Math.random() * inZone.length)];
+    next.push({ key: f.cs, flight: f, from: f.route!.from, to: f.route!.to, s0: progressOf(f), start: now, rate: rateOf(f), born: now });
+    recent.current = [f.cs, ...recent.current].slice(0, 24);
+  }
+  return next;
+}
+
+/** The original city routes, spread the same way, flown slowly until live flights arrive. */
+function sampleSlots(now: number): Slot[] {
+  const out: Slot[] = [];
+  for (const [from, to] of [...SAMPLE_ROUTES].sort(() => Math.random() - 0.5)) {
+    if (out.length >= SLOTS || !fits(from, to, out)) continue;
+    out.push({ key: `${from.iata}-${to.iata}`, flight: null, from, to, s0: Math.random() * 0.6, start: now, rate: 1 / SAMPLE_ROUTE_MS, born: now });
+  }
+  return out;
 }
 
 /** Progress per millisecond for a live flight at its ground speed. */
@@ -167,10 +245,14 @@ export default function HeroGlobe() {
         if (!res.ok) return;
         const body = (await res.json()) as { flights?: GlobeFlight[] };
         const routed = (body.flights ?? []).filter((f) => f.route && nm(f.route.from, f.route.to) >= MIN_ROUTE_NM);
-        if (live && routed.length) {
-          setPool(routed);
-          setSlots((current) => withFreshPositions(current, routed));
-        }
+        if (!live || !routed.length) return;
+        poolRef.current = routed;
+        setPool(routed);
+        // Real positions for the flights up, the sample routes off, and any
+        // empty part of the world filled if a flight there now fits.
+        setSlots((current) =>
+          topUp(withFreshPositions(current.filter((x) => x.flight), routed), routed, recent, performance.now())
+        );
       } catch { /* keep what is shown */ }
     };
     load();
@@ -178,90 +260,31 @@ export default function HeroGlobe() {
     return () => { live = false; clearInterval(id); };
   }, []);
 
-  // ── choosing the next flight for a slot ─────────────────────────────────
-  const nextSlot = useCallback((taken: Slot[], now: number): Slot | null => {
-    const busy = new Set(taken.map((s) => s.key));
-    // Spread around the whole world: a route is judged by its two cities and
-    // its middle, against those of every route already flying, so neither the
-    // lines nor the city labels bunch up.
-    const pointsOf = (from: GlobeAirport, to: GlobeAirport): V3[] =>
-      [unit(from.lat, from.lon), midDir(from, to), unit(to.lat, to.lon)];
-    const placed = taken.flatMap((s) => pointsOf(s.from, s.to));
-    const room = (from: GlobeAirport, to: GlobeAirport) => {
-      if (!placed.length) return 180;
-      let least = 180;
-      for (const p of pointsOf(from, to)) for (const q of placed) least = Math.min(least, apart(p, q));
-      return least;
-    };
-    const live = poolRef.current;
-    let slot: Slot | null = null;
-
-    if (live.length) {
-      // Not about to land: it should stay a while.
-      const flying = live.filter((f) => progressOf(f) < 0.9);
-      const source = flying.length ? flying : live;
-      const fresh = source.filter((f) => !busy.has(f.cs) && !recent.current.includes(f.cs));
-      const options = fresh.length ? fresh : source.filter((f) => !busy.has(f.cs));
-      // As far from the others as the flights in the air allow: rank by room,
-      // with a small lead for long routes, and pick among the best few so the
-      // set still varies from visit to visit.
-      const ranked = options
-        .map((f) => ({ f, score: room(f.route!.from, f.route!.to) + (nm(f.route!.from, f.route!.to) >= 1500 ? 4 : 0) }))
-        .sort((a, b) => b.score - a.score);
-      const best = ranked.slice(0, placed.length ? 3 : Math.max(3, Math.ceil(ranked.length / 3)));
-      const f = best[Math.floor(Math.random() * best.length)]?.f;
-      if (f?.route) {
-        slot = { key: f.cs, flight: f, from: f.route.from, to: f.route.to, s0: progressOf(f), start: now, rate: rateOf(f), born: now };
-      }
-    }
-    if (!slot) {
-      const used = new Set(taken.map((s) => `${s.from.iata}-${s.to.iata}`));
-      const open = SAMPLE_ROUTES.filter(([a, b]) => !used.has(`${a.iata}-${b.iata}`));
-      const [from, to] = open[Math.floor(Math.random() * open.length)] ?? SAMPLE_ROUTES[0];
-      slot = { key: `${from.iata}-${to.iata}`, flight: null, from, to, s0: Math.random() * 0.6, start: now, rate: 1 / SAMPLE_ROUTE_MS, born: now };
-    }
-    recent.current = [slot.key, ...recent.current].slice(0, 24);
-    return slot;
-  }, []);
-
-  // Fill the slots when the globe starts, and again once when live flights
-  // first arrive (replacing the sample routes).
-  const hadLive = useRef(false);
+  // The sample routes, if live flights have not arrived by the first frames.
   useEffect(() => {
-    const live = pool.length > 0;
-    if (slotsRef.current.length && (hadLive.current || !live)) return;
-    hadLive.current = live;
     const timer = setTimeout(() => {
-      const now = performance.now();
-      const filled: Slot[] = [];
-      for (let i = 0; i < SLOTS; i++) {
-        const s = nextSlot(filled, now);
-        if (s) filled.push(s);
-      }
-      setSlots(filled);
-    }, 600);   // after the globe's first frame, so the facing side is known
+      if (!slotsRef.current.length && !poolRef.current.length) setSlots(sampleSlots(performance.now()));
+    }, 600);
     return () => clearTimeout(timer);
-  }, [pool, nextSlot]);
+  }, []);
 
   // Replace each flight when it lands.
   useEffect(() => {
-    if (still || !slots.length) return;
+    if (still) return;
     const id = setInterval(() => {
       const now = performance.now();
       const current = slotsRef.current;
-      const landed = (s: Slot) => s.s0 + s.rate * (now - s.start) >= ARRIVED;
+      const landed = (x: Slot) => x.s0 + x.rate * (now - x.start) >= ARRIVED;
       if (!current.some(landed)) return;
-      const kept = current.filter((s) => !landed(s));
-      const next = [...kept];
-      for (let i = kept.length; i < SLOTS; i++) {
-        const s = nextSlot(next, now);
-        if (s) next.push(s);
-      }
-      setHover((h) => (h && next.some((s) => s.key === h.key) ? h : null));
+      const kept = current.filter((x) => !landed(x));
+      const next = poolRef.current.length
+        ? topUp(kept, poolRef.current, recent, now)
+        : [...kept, ...sampleSlots(now).filter((x) => fits(x.from, x.to, kept))].slice(0, SLOTS);
+      setHover((h) => (h && next.some((x) => x.key === h.key) ? h : null));
       setSlots(next);
     }, 1000);
     return () => clearInterval(id);
-  }, [slots.length, still, nextSlot]);
+  }, [still]);
 
   // ── what cobe draws: the lines and their two cities ─────────────────────
   const cities = useMemo(() => {
