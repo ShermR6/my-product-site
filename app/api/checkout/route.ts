@@ -10,6 +10,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
 });
 
+// Payment methods are not listed in any session below: Stripe offers the ones
+// switched on in Dashboard > Settings > Payment methods that suit the purchase.
+
 // Hardware only. The subscription is one plan (lib/plan.ts), priced by
 // planLineItem. Ground Station support is part of that plan now, so the old
 // "ground-station" unlock is no longer sold.
@@ -130,7 +133,6 @@ export async function POST(req: NextRequest) {
       );
       const checkoutSession = await stripe.checkout.sessions.create({
         mode: "payment",
-        payment_method_types: ["card"],
         line_items: lineItems,
         success_url: `${process.env.NEXTAUTH_URL}/checkout/kit-success`,
         cancel_url: `${process.env.NEXTAUTH_URL}/groundstationkit`,
@@ -148,7 +150,6 @@ export async function POST(req: NextRequest) {
       const meta = { tier: PLAN.tier, billing, email: session.user.email };
       const planSession = await stripe.checkout.sessions.create({
         mode: "subscription",
-        payment_method_types: ["card"],
         line_items: [await planLineItem(stripe, billing)],
         success_url: `${process.env.NEXTAUTH_URL}/dashboard?tab=licenses&success=1&product=${PLAN.tier}`,
         cancel_url: `${process.env.NEXTAUTH_URL}/pricing?cancelled=1`,
@@ -182,7 +183,6 @@ export async function POST(req: NextRequest) {
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: isOneTime ? "payment" : "subscription",
-      payment_method_types: ["card"],
       line_items: lineItems,
       success_url: isHardware
         ? `${process.env.NEXTAUTH_URL}/checkout/kit-success`

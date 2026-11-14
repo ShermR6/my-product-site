@@ -108,8 +108,14 @@ export async function POST(req: NextRequest) {
   }
 
   // ── checkout.session.completed ─────────────────────────────────────────────
-  if (event.type === "checkout.session.completed") {
+  // A delayed payment method (a bank debit, for one) finishes the checkout
+  // before the money arrives: payment_status is "unpaid", and Stripe sends
+  // async_payment_succeeded once it clears. Nothing is handed over until then.
+  if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     const session = event.data.object as Stripe.Checkout.Session;
+    if (event.type === "checkout.session.completed" && session.payment_status === "unpaid") {
+      return NextResponse.json({ received: true, awaiting: "payment" });
+    }
 
     // ── Plan upgrade (one-time difference charge) ───────────────────────────
     // Must run before the license branch below, otherwise the paid upgrade
