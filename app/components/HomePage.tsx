@@ -209,7 +209,7 @@ export default function HomePage() {
           </p>
           <div className="fh-shot">
             <Image
-              src="/home/live-map.png" width={808} height={467}
+              src="/home/live-map.png" width={808} height={467} unoptimized
               sizes="(max-width: 1040px) 100vw, 980px"
               alt="The FinalPing live map around Dallas-Fort Worth: alert rings at 2, 5 and 10 nautical miles around the airport, and the approach steps 10 nm, 5 nm, 2 nm and Landed underneath."
             />
@@ -277,7 +277,7 @@ export default function HomePage() {
             <div className="fh-card fh-gs">
               <Image
                 className="fh-shot-img"
-                src="/home/receiver-range.png" width={810} height={375}
+                src="/home/receiver-range.png" width={810} height={375} unoptimized
                 sizes="(max-width: 1040px) 100vw, 520px"
                 alt="Receiver range in the FinalPing web app: how far the antenna hears in each direction, best 21.4 nm to the north, with all 36 bearings mapped."
               />
