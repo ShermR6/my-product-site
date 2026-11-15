@@ -93,7 +93,7 @@ export const MODEL_LIST: [string, string, string, string, string][] = [
   ["c150", "Cessna 150", "b7e1a85e", "C150|CESSNA [A-Z]?150\\w*|^[AF]?150[A-M]?$", ""],
   ["c152", "Cessna 152", "a82844fc", "C152|CESSNA [A-Z]?152\\w*|^[AF]?152$", ""],
   ["c170", "Cessna 170", "947b9e60", "C170|CESSNA 170\\w*|^170[AB]?$", "C120|C140|C180|C185|CESSNA [A-Z]?(120|140|180|185)\\w*|SKYWAGON|^[A-Z]?(180|185)[A-K]?$"],
-  ["c172", "Cessna 172 Skyhawk", "f39952c4", "C172|CESSNA [A-Z]?172\\w*|SKYHAWK|^[FR]?172[A-Z]{0,2}$", "C175|C177|CESSNA [A-Z]?17[57]\\w*|CARDINAL|^17[57][A-Z]{0,2}$"],
+  ["c172", "Cessna 172 Skyhawk", "611597db", "C172|CESSNA [A-Z]?172\\w*|SKYHAWK|^[FR]?172[A-Z]{0,2}$", "C175|C177|CESSNA [A-Z]?17[57]\\w*|CARDINAL|^17[57][A-Z]{0,2}$"],
   ["c82r", "Cessna 182RG Skylane", "9c0b57d1", "C82R|C82S|CESSNA T?R182\\w*|^T?R182$", "C210|[TP]210|CESSNA [A-Z]?210\\w*|CENTURION|^[TP]?210[A-Z]{0,2}$"],
   ["c182", "Cessna 182 Skylane", "25e3b543", "C182|CESSNA [A-Z]?182\\w*|SKYLANE|^T?182[A-Z]{0,2}$", "C20[5-7]|CESSNA [A-Z]{0,2}20[5-7]\\w*|STATIONAIR|^[A-Z]{0,2}20[5-7][A-Z]{0,2}$"],
   ["l19", "Cessna L-19 Bird Dog", "c3652e7a", "L-?19\\w?|O-?1[A-G]|BIRD ?DOG|CESSNA 305\\w*|C305", ""],
