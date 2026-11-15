@@ -7,9 +7,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError, setPreview } from "./tracker";
 import { recordFixes } from "./trails";
+import { parseUtc } from "./format";
 import type { Aircraft, AirportConfig, GroundStatus, Integration, LiveAircraft, Me, NotificationLog } from "./types";
 
 const LIVE_MS = 10_000;   // positions and ground station status
+// While the account's own receiver is hearing one of its aircraft (it sends a
+// position a second), positions are fetched this often so the map can follow
+// a landing roll and a taxi. Ground station status stays at LIVE_MS.
+const RECEIVER_LIVE_MS = 2_000;
+const RECEIVER_RECENT_MS = 60_000;
+
+/** Whether any tracked aircraft's position came from the receiver in the last minute. */
+function receiverHearing(live: LiveAircraft[]) {
+  const cutoff = Date.now() - RECEIVER_RECENT_MS;
+  return live.some((a) => a.source === "ground_station" && (parseUtc(a.last_seen)?.getTime() ?? 0) > cutoff);
+}
 const SLOW_MS = 60_000;   // everything else
 
 type TrackerState = {
@@ -81,14 +93,28 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     return false;
   }, []);
 
+  const lastStatusAt = useRef(0);
+  const hearing = useRef(false);
+
+  /** Positions, and the ground station's status when it is due (every LIVE_MS). */
   const loadLive = useCallback(async () => {
     if (noPlan.current) return;
-    const [lv, gs] = await Promise.all([get<LiveAircraft[]>("aircraft/live"), get<GroundStatus>("ground/status")]);
+    const statusDue = Date.now() - lastStatusAt.current >= LIVE_MS - 500;
+    const [lv, gs] = await Promise.all([
+      get<LiveAircraft[]>("aircraft/live"),
+      statusDue ? get<GroundStatus>("ground/status") : Promise.resolve(null),
+    ]);
     setNow(Date.now());
-    if (lv.ok) { recordFixes(lv.value); setLive(lv.value); setOffline(false); setUpdatedAt(new Date()); }
+    if (lv.ok) {
+      recordFixes(lv.value); setLive(lv.value); setOffline(false); setUpdatedAt(new Date());
+      hearing.current = receiverHearing(lv.value);
+    }
     else if (!gate(lv.status)) setOffline(lv.status === 0 || lv.status >= 500);
-    if (gs.ok) { setGround(gs.value); setGroundEnabled(true); }
-    else if (gs.status === 403) { setGround(null); setGroundEnabled(false); }
+    if (gs) {
+      lastStatusAt.current = Date.now();
+      if (gs.ok) { setGround(gs.value); setGroundEnabled(true); }
+      else if (gs.status === 403) { setGround(null); setGroundEnabled(false); }
+    }
   }, [gate]);
 
   const reload = useCallback(async () => {
@@ -125,12 +151,21 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     reload();
-    const fast = setInterval(() => { if (!document.hidden) loadLive(); }, LIVE_MS);
+    // Positions: every 2 s while the receiver is hearing one of the aircraft,
+    // every 10 s otherwise.
+    let fast: ReturnType<typeof setTimeout>;
+    let stopped = false;
+    const tick = async () => {
+      if (!document.hidden) await loadLive();
+      if (!stopped) fast = setTimeout(tick, hearing.current ? RECEIVER_LIVE_MS : LIVE_MS);
+    };
+    fast = setTimeout(tick, LIVE_MS);
     const slow = setInterval(() => { if (!document.hidden) reload(); }, SLOW_MS);
     const onShow = () => { if (!document.hidden) reload(); };
     document.addEventListener("visibilitychange", onShow);
     return () => {
-      clearInterval(fast);
+      stopped = true;
+      clearTimeout(fast);
       clearInterval(slow);
       document.removeEventListener("visibilitychange", onShow);
     };

@@ -69,6 +69,14 @@ if (typeof window !== "undefined") ml.setWorkerUrl("/maplibre/maplibre-gl-worker
 const PI = Math.PI;
 const KT = 0.514444;            // knots to metres per second
 const STALE_MS = 90_000;        // a position older than this is where it was, not where it is
+const ROLL_KT = 3;              // on the ground, slower than this is standing still
+
+/** Moving and recently heard: in the air above 20 kt, or rolling or taxiing on the ground. */
+function underway(p: MapPlane) {
+  const fresh = p.seenAt == null || Date.now() - p.seenAt < STALE_MS;
+  const kt = p.speedKt ?? 0;
+  return fresh && (p.dim ? kt >= ROLL_KT : kt > 20);
+}
 const ICON_PX = 60;             // wingspan on screen, zoomed in
 const ICON_FAR_PX = 22;         // and zoomed right out: aircraft shrink as the view widens
 const MIN_SPAN_M = 14;          // zoomed right in, models stop shrinking at about real size
@@ -285,8 +293,10 @@ export default function MapGL({
           // Glide ahead of the last report only for an aircraft we have watched move, and only for
           // about as long as its reports are apart. A position that is already old when the app
           // opens stays where it was reported: flying it onward would put it somewhere it never was.
-          const flying = !p.dim && (p.speedKt ?? 0) > 20 && (p.seenAt == null || Date.now() - p.seenAt < STALE_MS);
-          const moving = !calm && flying && p.heading != null && tr.moves > 0;
+          // On the ground too: a landing roll or a taxi glides between the
+          // receiver's reports instead of hopping from one to the next.
+          const flying = !p.dim && underway(p);
+          const moving = !calm && underway(p) && p.heading != null && tr.moves > 0;
           const age = Math.min((now - tr.fixAt) / 1000, tr.gap * 1.25);
           const hr = ((p.heading ?? tr.hdg) * PI) / 180;
           const run = moving ? (p.speedKt as number) * KT * age : 0;
@@ -363,7 +373,7 @@ export default function MapGL({
       setReady(true);
     });
 
-    // Keep the map drawing while something is flying: about 30 frames a second.
+    // Keep the map drawing while something is moving: about 30 frames a second.
     let raf = 0;
     let odd = false;
     const loop = () => {
@@ -372,7 +382,7 @@ export default function MapGL({
       if (calm || odd) return;
       for (const tr of S.tracks.values()) {
         const p = tr.plane;
-        if (!p.dim && (p.speedKt ?? 0) > 20 && (p.seenAt == null || Date.now() - p.seenAt < STALE_MS)) { map.triggerRepaint(); break; }
+        if (underway(p)) { map.triggerRepaint(); break; }
       }
     };
     raf = requestAnimationFrame(loop);
