@@ -25,6 +25,10 @@ export default function Plane3D({
   const canvas = useRef<HTMLCanvasElement>(null);
   const handle = useRef<ViewHandle | null>(null);
   const latest = useRef(color);
+  // Read once, when the model is set up: a card moving in the list (a search,
+  // an aircraft added) changes its starting angle, and that alone must not
+  // tear the model down and build it again.
+  const motion = useRef({ speed, start });
   const family = familyOf(type);
   const real = modelOf(type);
   const modelId = real?.id ?? "";
@@ -41,14 +45,14 @@ export default function Plane3D({
     let gone = false;
     import("../_lib/fleet3d").then((m) => {
       if (gone || !canvas.current) return;
-      handle.current = m.mount(canvas.current, { family, color: latest.current, speed, start, model: modelId ? { id: modelId, v: modelV } : null });
+      handle.current = m.mount(canvas.current, { family, color: latest.current, ...motion.current, model: modelId ? { id: modelId, v: modelV } : null });
     }).catch(() => {});
     return () => {
       gone = true;
       handle.current?.dispose();
       handle.current = null;
     };
-  }, [family, modelId, modelV, speed, start]);
+  }, [family, modelId, modelV]);
 
   return (
     <div className={`fa-vp ${className}`} style={{ height, ["--paint" as string]: color }}>

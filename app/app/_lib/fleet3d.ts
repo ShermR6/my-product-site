@@ -476,6 +476,11 @@ export type ViewHandle = { setColor: (hex: string) => void; dispose: () => void 
 type View = {
   canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; model: Model; cam: T.PerspectiveCamera;
   ang: number; speed: number; drag: boolean; dirty: boolean; off: () => void;
+  /** Whether the camera has been placed. A new camera starts at the origin,
+   *  inside the model, and a view mounted on a canvas that already had its
+   *  size never saw a size change to place it: a zoomed-in close-up or an
+   *  empty card. */
+  framed: boolean;
 };
 const views = new Set<View>();
 let raf = 0;
@@ -496,7 +501,8 @@ function frame() {
     if (r.width < 2 || r.bottom < 0 || r.top > window.innerHeight) continue;
     const w = Math.min(Math.round(r.width * dpr), BW);
     const h = Math.min(Math.round(r.height * dpr), BH);
-    if (c.width !== w || c.height !== h) {
+    if (!v.framed || c.width !== w || c.height !== h) {
+      v.framed = true;
       c.width = w;
       c.height = h;
       v.cam.aspect = w / h;
@@ -527,7 +533,7 @@ export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | n
   };
   const v: View = {
     canvas, ctx, model: make(), cam: new T.PerspectiveCamera(24, 1, 0.1, 50),
-    ang: o.start ?? -0.6, speed: o.speed ?? 0.006, drag: false, dirty: true, off: () => {},
+    ang: o.start ?? -0.6, speed: o.speed ?? 0.006, drag: false, dirty: true, off: () => {}, framed: false,
   };
   let px = 0;
   const down = (e: PointerEvent) => { v.drag = true; px = e.clientX; canvas.setPointerCapture(e.pointerId); };
