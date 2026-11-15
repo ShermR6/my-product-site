@@ -25,6 +25,7 @@ export default function Plane3D({
   const canvas = useRef<HTMLCanvasElement>(null);
   const handle = useRef<ViewHandle | null>(null);
   const latest = useRef(color);
+  const latestTail = useRef(tail);
   // Read once, when the model is set up: a card moving in the list (a search,
   // an aircraft added) changes its starting angle, and that alone must not
   // tear the model down and build it again.
@@ -41,11 +42,21 @@ export default function Plane3D({
     handle.current?.setColor(color);
   }, [color]);
 
+  // The registration painted on the fuselage: only a real tail number.
+  const reg = /^[A-Z0-9-]{3,8}$/i.test(tail) ? tail : "";
+  useEffect(() => {
+    latestTail.current = reg;
+    handle.current?.setTail(reg);
+  }, [reg]);
+
   useEffect(() => {
     let gone = false;
     import("../_lib/fleet3d").then((m) => {
       if (gone || !canvas.current) return;
-      handle.current = m.mount(canvas.current, { family, color: latest.current, ...motion.current, model: modelId ? { id: modelId, v: modelV } : null });
+      handle.current = m.mount(canvas.current, {
+        family, color: latest.current, ...motion.current, tail: latestTail.current,
+        model: modelId ? { id: modelId, v: modelV } : null,
+      });
     }).catch(() => {});
     return () => {
       gone = true;

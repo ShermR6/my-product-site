@@ -9,6 +9,8 @@
 // Model axes: nose +X, up +Y, right wing +Z.
 
 import * as T from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { Family } from "./paint";
 
 const PI = Math.PI;
@@ -20,12 +22,29 @@ type Rotor = { o: T.Object3D; ax: "x" | "y" | "z"; v: number };
 const std = (color: T.ColorRepresentation, o: T.MeshStandardMaterialParameters = {}) =>
   new T.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05, side: T.DoubleSide, ...o });
 
-let MAT: { body: Mat; dark: Mat; glass: Mat; blade: Mat; disc: Mat; rotor: Mat } | null = null;
+/**
+ * The aircraft's colour. In the cards' studio (`studio`) it has a clear coat
+ * that picks up the studio's reflections; elsewhere (the Live Map) it keeps
+ * the plain finish, since without a studio the clear coat only greys it.
+ */
+function paintFor(hex: string, studio: boolean) {
+  return studio ? gloss(hex) : std(hex, { roughness: 0.42 });
+}
+
+/** Painted metal under a clear coat: a sharp gloss on top of the colour. */
+const gloss = (color: T.ColorRepresentation, o: T.MeshPhysicalMaterialParameters = {}) =>
+  new T.MeshPhysicalMaterial({
+    color, roughness: 0.38, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.12, side: T.DoubleSide, ...o,
+  });
+
+let MAT: { body: Mat; bodyGloss: Mat; dark: Mat; glass: Mat; blade: Mat; disc: Mat; rotor: Mat } | null = null;
 function mats() {
   return (MAT ??= {
     body: std(0xededed),
+    bodyGloss: gloss(0xededed),
     dark: std(0x1c1c1c, { roughness: 0.7 }),
-    glass: std(0x0b1017, { roughness: 0.15, metalness: 0.5 }),
+    // Dark, mirror-like glass: it shows the studio's reflections.
+    glass: std(0x0a0f16, { roughness: 0.06, metalness: 0.9 }),
     blade: std(0x2a2a2a, { transparent: true, opacity: 0.55 }),
     rotor: std(0x5c5c5c, { roughness: 0.6 }),
     disc: new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.06, side: T.DoubleSide, depthWrite: false }),
@@ -112,19 +131,23 @@ function prop(r: number, pairs: number) {
 
 export type Model = {
   pivot: T.Group; tilt: T.Group; accent: T.MeshStandardMaterial; rotors: Rotor[];
+  /** Repaints the registration on the fuselage (real models on cards only). */
+  setTail?: (tail: string) => void;
   /** True for a model loaded from a file. */
   real?: boolean;
   /** Materials made for this one model, to free with it. */
   own?: Mat[];
+  /** Anything else to free with it (the registration's texture). */
+  cleanup?: () => void;
 };
 
 /** solid = paint the whole aircraft (on the map); otherwise white with painted tail, nose and stripe. */
-export function buildModel(fam: Family, hex: string, solid: boolean): Model {
+export function buildModel(fam: Family, hex: string, solid: boolean, studio = false): Model {
   const M = mats();
   const g = new T.Group();
   const rotors: Rotor[] = [];
-  const A = std(hex, { roughness: 0.42 });
-  const B: Mat = solid ? A : M.body;
+  const A = paintFor(hex, studio);
+  const B: Mat = solid ? A : studio ? M.bodyGloss : M.body;
   const D = M.dark;
   const G = M.glass;
 
@@ -297,6 +320,7 @@ export function destroyModel(m: Model) {
   m.pivot.traverse((o) => { if (o instanceof T.Mesh && !o.geometry.userData.shared) o.geometry.dispose(); });
   m.accent.dispose();
   m.own?.forEach((x) => x.dispose());
+  m.cleanup?.();
 }
 
 // ----- real models -----
@@ -305,7 +329,9 @@ export function destroyModel(m: Model) {
 export type ModelFile = { id: string; v: string };
 type Part = { kind: "body" | "glass" | "trim" | "spin"; geo: T.BufferGeometry; at: V3; ax: "x" | "y" | "z" };
 type Zones = { tailX: number; noseX: number; stripeY: number; stripeH: number; fuseZ: number };
-type Real = { parts: Part[]; zones: Zones };
+/** Where the registration goes: a band on each side of the rear fuselage. */
+type Reg = { xc: number; yc: number; h: number };
+type Real = { parts: Part[]; zones: Zones; reg: Reg | null };
 
 const REAL = new Map<string, Real | null>(); // null: the file could not be used
 const LOADING = new Map<string, Promise<boolean>>();
@@ -317,6 +343,29 @@ type GltfDoc = {
   accessors: { bufferView: number; componentType: number; count: number }[];
   bufferViews: { byteOffset: number }[];
 };
+
+/**
+ * Smooth shading across gentle curves (cowling, wing roots) with hard edges
+ * kept, worked out at full precision instead of the file's 8-bit normals,
+ * which band and facet on curved panels. Where the result disagrees with the
+ * file (a wing modelled as one thin surface, whose top and bottom would
+ * average to nothing and shade dark) the file's own normal is kept.
+ */
+function smoothNormals(indexed: T.BufferGeometry): T.BufferGeometry {
+  const creased = toCreasedNormals(indexed, (40 * PI) / 180);
+  const flat = indexed.toNonIndexed();          // same vertex order as `creased`
+  const n = creased.getAttribute("normal") as T.BufferAttribute;
+  const o = flat.getAttribute("normal") as T.BufferAttribute;
+  const a = new T.Vector3(), b = new T.Vector3();
+  for (let i = 0; i < n.count; i++) {
+    a.fromBufferAttribute(n, i);
+    b.fromBufferAttribute(o, i).normalize();
+    if (!(a.lengthSq() > 0.25) || a.normalize().dot(b) < 0.75) n.setXYZ(i, b.x, b.y, b.z);
+  }
+  n.needsUpdate = true;
+  flat.dispose();
+  return creased;
+}
 
 /** Read one of our own model files: 16-bit positions, 8-bit normals, one node per part. */
 function parseReal(buf: ArrayBuffer): Real {
@@ -344,17 +393,71 @@ function parseReal(buf: ArrayBuffer): Real {
     }
     const wide = ia.componentType === 5125;
     const raw = buf.slice(io, io + ia.count * (wide ? 4 : 2));
-    const geo = new T.BufferGeometry();
-    geo.setAttribute("position", new T.BufferAttribute(pos, 3));
-    geo.setAttribute("normal", new T.BufferAttribute(nrm, 3));
-    geo.setIndex(new T.BufferAttribute(wide ? new Uint32Array(raw) : new Uint16Array(raw), 1));
+    const indexed = new T.BufferGeometry();
+    indexed.setAttribute("position", new T.BufferAttribute(pos, 3));
+    indexed.setAttribute("normal", new T.BufferAttribute(nrm, 3));
+    indexed.setIndex(new T.BufferAttribute(wide ? new Uint32Array(raw) : new Uint16Array(raw), 1));
+    const geo = smoothNormals(indexed);
+    indexed.dispose();
     geo.userData.shared = true;
     const kind = n.name === "glass" || n.name === "trim" || n.name === "spin" ? n.name : "body";
     const ax = n.extras?.axis === "y" || n.extras?.axis === "z" ? n.extras.axis : "x";
     const t = n.translation ?? [0, 0, 0];
     parts.push({ kind, geo, at: [t[0], t[1], t[2]], ax });
   }
-  return { parts, zones: doc.asset.extras };
+  const zones = doc.asset.extras;
+  return { parts, zones, reg: registrationArea(parts, zones) };
+}
+
+/**
+ * The band on the rear fuselage where a registration is painted: about a
+ * fifth of the way from the tail to the nose, centred on the fuselage side
+ * there and a third of its height. Null when the shape there is unclear.
+ */
+function registrationArea(parts: Part[], z: Zones): Reg | null {
+  const len = z.noseX - z.tailX;
+  if (!(len > 0)) return null;
+  const xc = z.tailX + len * 0.22;
+  const span = len * 0.12;
+  let lo = Infinity, hi = -Infinity, wide = 0;
+  for (const p of parts) {
+    if (p.kind !== "body") continue;
+    const a = p.geo.getAttribute("position");
+    for (let i = 0; i < a.count; i++) {
+      const x = a.getX(i) + p.at[0], y = a.getY(i) + p.at[1], zz = Math.abs(a.getZ(i) + p.at[2]);
+      if (Math.abs(x - xc) > span || zz > z.fuseZ * 1.2) continue;
+      wide = Math.max(wide, zz);
+      lo = Math.min(lo, y);
+      hi = Math.max(hi, y);
+    }
+  }
+  const tall = hi - lo;
+  if (!(tall > 0.02) || wide < z.fuseZ * 0.25) return null;
+  const h = Math.min(tall * 0.5, 0.095);
+  // Just above the stripe when there is room, else the middle of the side.
+  const above = z.stripeY + z.stripeH + h * 0.65;
+  const yc = above + h / 2 < hi - tall * 0.12 ? above : (lo + hi) / 2;
+  return { xc, yc, h };
+}
+
+/** The registration in dark block letters on a transparent canvas. */
+function registrationTexture(tail: string): { tex: T.CanvasTexture; aspect: number } {
+  const text = tail.trim().toUpperCase().slice(0, 8);
+  const c = document.createElement("canvas");
+  const ctx = c.getContext("2d")!;
+  const font = "700 150px Arial, Helvetica, sans-serif";
+  ctx.font = font;
+  const w = Math.max(64, Math.ceil(ctx.measureText(text || " ").width) + 24);
+  c.width = w;
+  c.height = 192;
+  ctx.font = font;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, w / 2, 100);
+  const tex = new T.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return { tex, aspect: w / 192 };
 }
 
 /** Fetch a model file once. Resolves true when it is ready to draw. */
@@ -372,33 +475,77 @@ export function loadReal(f: ModelFile): Promise<boolean> {
   return p;
 }
 
-/** White paintwork with the tail, nose and a stripe along the fuselage in the aircraft's colour. */
-function paintwork(paint: T.Color, z: Zones) {
-  const m = std(0xededed);
+/**
+ * White paintwork with the tail, nose and a stripe along the fuselage in the
+ * aircraft's colour, and the registration in dark letters on both sides of
+ * the rear fuselage (read the right way round on each side).
+ */
+function paintwork(paint: T.Color, z: Zones, reg: Reg | null, studio: boolean) {
+  const m = studio ? gloss(0xededed) : std(0xededed);
+  const u = {
+    uReg: { value: new T.Vector4(0, 0, 0, 0) },   // x0, x1, yc, h; h = 0 hides it
+    uRegTex: { value: null as T.Texture | null },
+  };
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uPaint = { value: paint };
     sh.uniforms.uZone = { value: new T.Vector4(z.tailX, z.noseX, z.stripeY, z.stripeH) };
     sh.uniforms.uHalf = { value: z.fuseZ };
+    sh.uniforms.uReg = u.uReg;
+    sh.uniforms.uRegTex = u.uRegTex;
     sh.vertexShader = sh.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vAt;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvAt = position;");
+      .replace("#include <common>", "#include <common>\nvarying vec3 vAt;\nvarying vec3 vObjN;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvAt = position;\nvObjN = normal;");
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform vec3 uPaint;\nuniform vec4 uZone;\nuniform float uHalf;\nvarying vec3 vAt;")
+      .replace(
+        "#include <common>",
+        "#include <common>\nuniform vec3 uPaint;\nuniform vec4 uZone;\nuniform float uHalf;\nuniform vec4 uReg;\nuniform sampler2D uRegTex;\nvarying vec3 vAt;\nvarying vec3 vObjN;",
+      )
       .replace(
         "#include <color_fragment>",
-        "#include <color_fragment>\nif (vAt.x < uZone.x || vAt.x > uZone.y || (abs(vAt.y - uZone.z) < uZone.w && abs(vAt.z) < uHalf)) diffuseColor.rgb = uPaint;",
+        [
+          "#include <color_fragment>",
+          "if (vAt.x < uZone.x || vAt.x > uZone.y || (abs(vAt.y - uZone.z) < uZone.w && abs(vAt.z) < uHalf)) diffuseColor.rgb = uPaint;",
+          // The registration: on side-facing fuselage skin inside its band.
+          "if (uReg.w > 0.0 && vAt.x > uReg.x && vAt.x < uReg.y && abs(vAt.y - uReg.z) < uReg.w * 0.5",
+          "    && abs(vAt.z) < uHalf * 1.25 && abs(normalize(vObjN).z) > 0.45) {",
+          "  float s = (vAt.x - uReg.x) / (uReg.y - uReg.x);",
+          "  vec2 st = vec2(vAt.z > 0.0 ? s : 1.0 - s, (vAt.y - uReg.z) / uReg.w + 0.5);",
+          "  float ink = texture2D(uRegTex, st).a;",
+          "  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.012), smoothstep(0.15, 0.6, ink));",
+          "}",
+        ].join("\n"),
       );
   };
-  m.customProgramCacheKey = () => "fp-paintwork";
-  return m;
+  m.customProgramCacheKey = () => (studio ? "fp-paintwork-reg-gloss" : "fp-paintwork-reg");
+  let tex: T.Texture | null = null;
+  const setTail = (tail: string) => {
+    tex?.dispose();
+    tex = null;
+    if (!reg || !tail.trim()) { u.uReg.value.set(0, 0, 0, 0); return; }
+    const t = registrationTexture(tail);
+    tex = t.tex;
+    const half = (reg.h * t.aspect) / 2;
+    u.uReg.value.set(reg.xc - half, reg.xc + half, reg.yc, reg.h);
+    u.uRegTex.value = tex;
+  };
+  return { m, setTail, dispose: () => tex?.dispose() };
 }
 
-function realModel(real: Real, hex: string, solid: boolean): Model {
+function realModel(real: Real, hex: string, solid: boolean, tail?: string, studio = false): Model {
   const M = mats();
-  const A = std(hex, { roughness: 0.42 });
+  const A = paintFor(hex, studio);
   const own: Mat[] = [];
   let B: Mat = A;
-  if (!solid) { B = paintwork(A.color, real.zones); own.push(B); }
+  let setTail: ((t: string) => void) | undefined;
+  let cleanup: (() => void) | undefined;
+  if (!solid) {
+    const pw = paintwork(A.color, real.zones, real.reg, studio);
+    B = pw.m;
+    own.push(B);
+    setTail = pw.setTail;
+    cleanup = pw.dispose;
+    if (tail) setTail(tail);
+  }
   const g = new T.Group();
   const rotors: Rotor[] = [];
   for (const p of real.parts) {
@@ -413,22 +560,29 @@ function realModel(real: Real, hex: string, solid: boolean): Model {
   tilt.add(g);
   const pivot = new T.Group();
   pivot.add(tilt);
-  return { pivot, tilt, accent: A, rotors, real: true, own };
+  return { pivot, tilt, accent: A, rotors, real: true, own, setTail, cleanup };
 }
 
-/** The real model when its file has loaded; otherwise the built-in shape for the family. */
-export function makeModel(fam: Family, file: ModelFile | null | undefined, hex: string, solid: boolean): Model {
+/**
+ * The real model when its file has loaded; otherwise the built-in shape for
+ * the family. `studio`: drawn in the cards' studio, with glossy paint and the
+ * registration on the fuselage.
+ */
+export function makeModel(
+  fam: Family, file: ModelFile | null | undefined, hex: string, solid: boolean, tail?: string, studio = false,
+): Model {
   const real = file ? REAL.get(file.id) : null;
-  return real ? realModel(real, hex, solid) : buildModel(fam, hex, solid);
+  return real ? realModel(real, hex, solid, tail, studio) : buildModel(fam, hex, solid, studio);
 }
 
-/** The same three lights everywhere a model is shown. */
-export function lightScene(scene: T.Scene) {
-  const key = new T.DirectionalLight(0xffffff, 2.8);
+/** The same three lights everywhere a model is shown. `k` scales them down
+ *  where a studio environment already lights the model (the cards). */
+export function lightScene(scene: T.Scene, k = 1) {
+  const key = new T.DirectionalLight(0xffffff, 2.8 * Math.max(k, 0.75));
   key.position.set(3, 5, 4);
-  const rim = new T.DirectionalLight(0xffffff, 1.1);
+  const rim = new T.DirectionalLight(0xffffff, 1.1 * Math.max(k, 0.75));
   rim.position.set(-4, 2, -3);
-  scene.add(new T.HemisphereLight(0xffffff, 0x202020, 2.6), key, rim);
+  scene.add(new T.HemisphereLight(0xffffff, 0x202020, 2.6 * k), key, rim);
 }
 
 // ----- the shared renderer -----
@@ -446,8 +600,17 @@ function renderer(): T.WebGLRenderer | null {
     R.setPixelRatio(1);
     R.setSize(BW, BH, false);
     R.setClearColor(0x000000, 0);
+    // Neutral tone mapping: white paint keeps its detail without the colour
+    // being drained from the aircraft's paint (ACES turned gold to pastel).
+    R.toneMapping = T.NeutralToneMapping;
+    R.toneMappingExposure = 1.0;
     scene = new T.Scene();
-    lightScene(scene);
+    // A soft studio around the aircraft, for reflections in the paint and glass.
+    const pm = new T.PMREMGenerator(R);
+    scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.6;
+    pm.dispose();
+    lightScene(scene, 0.6);
   } catch {
     failed = true; // no WebGL here; callers fall back to flat icons
     R = null;
@@ -470,8 +633,8 @@ function draw(model: Model, cam: T.Camera, w: number, h: number, ctx: CanvasRend
 
 // ----- turning models on cards -----
 
-export type ViewOptions = { family: Family; color: string; speed?: number; start?: number; model?: ModelFile | null };
-export type ViewHandle = { setColor: (hex: string) => void; dispose: () => void };
+export type ViewOptions = { family: Family; color: string; speed?: number; start?: number; model?: ModelFile | null; tail?: string };
+export type ViewHandle = { setColor: (hex: string) => void; setTail: (tail: string) => void; dispose: () => void };
 
 type View = {
   canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; model: Model; cam: T.PerspectiveCamera;
@@ -526,8 +689,9 @@ export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | n
   const ctx = canvas.getContext("2d");
   if (!ctx || !renderer()) return null;
   let color = o.color;
+  let tail = o.tail ?? "";
   const make = () => {
-    const m = makeModel(o.family, o.model, color, false);
+    const m = makeModel(o.family, o.model, color, false, tail, true);
     m.tilt.rotation.z = 0.05;
     return m;
   };
@@ -563,6 +727,7 @@ export function mount(canvas: HTMLCanvasElement, o: ViewOptions): ViewHandle | n
   }
   return {
     setColor(hex) { color = hex; v.model.accent.color.set(hex); v.dirty = true; },
+    setTail(t) { tail = t; v.model.setTail?.(t); v.dirty = true; },
     dispose() { views.delete(v); v.off(); destroyModel(v.model); },
   };
 }
