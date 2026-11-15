@@ -1,15 +1,13 @@
 // The homepage: what FinalPing does, one section per feature.
 // Static markup, rendered on the server; the hero globe is the one client piece.
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight, Check, Clock, Code, Hash, Mail, MessageCircle, MessageSquare, Moon, Plus, Send, Smartphone, Users,
 } from "lucide-react";
 import "../home.css";
 import HeroGlobe from "./HeroGlobe";
-
-const PLANE =
-  "M0,-15 C1.8,-15 3,-11.5 3,-8 L3,-3.2 L16,3.8 L16,7.2 L3,4.2 L3,9 L7,12.2 L7,14.6 L0,12.8 L-7,14.6 L-7,12.2 L-3,9 L-3,4.2 L-16,7.2 L-16,3.8 L-3,-3.2 L-3,-8 C-3,-11.5 -1.8,-15 0,-15 Z";
 
 const ALERT_ROWS = [
   { title: "Landing", sub: "Aircraft lands at or near the airport", on: true },
@@ -209,46 +207,12 @@ export default function HomePage() {
             Your airport, your alert rings and every aircraft on your watchlist. Each one shows how fresh its last
             position is, so you never mistake an old fix for a live one.
           </p>
-          <div className="fh-map">
-            <div className="fh-map-bar">
-              <span className="fh-card-title">Live Map · KDTO Denton Enterprise</span>
-              <div className="fh-legend">
-                <span><i />Live</span>
-                <span><i className="old" />45 s old</span>
-              </div>
-            </div>
-            <svg viewBox="0 0 1100 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Map of Denton Enterprise Airport with alert rings at 2, 5 and 10 nautical miles, runway 18L 36R, and two tracked aircraft with their trails">
-              <rect x="0" y="0" width="1100" height="500" fill="#0A0A0A" />
-              <path d="M-20 120 C 180 150, 320 60, 520 110 S 900 190, 1120 130" fill="none" stroke="#1C1C1C" strokeWidth="10" />
-              <path d="M140 520 C 220 380, 380 330, 470 180 S 600 20, 640 -20" fill="none" stroke="#1C1C1C" strokeWidth="7" />
-              <path d="M-20 400 C 240 360, 520 440, 780 380 S 1040 300, 1120 330" fill="none" stroke="#1C1C1C" strokeWidth="6" />
-              <path d="M820 520 C 800 400, 900 300, 880 160 S 960 40, 990 -20" fill="none" stroke="#161616" strokeWidth="5" />
-              <path d="M60 240 C 110 215, 180 222, 205 262 S 150 322, 95 304 S 30 268, 60 240 Z" fill="#131313" />
-              <circle cx="600" cy="260" r="430" fill="none" stroke="#636363" strokeWidth="1.5" strokeDasharray="8 7" opacity="0.75" />
-              <circle cx="600" cy="260" r="215" fill="rgba(255,255,255,0.02)" stroke="#8F8F8F" strokeWidth="1.5" strokeDasharray="8 7" opacity="0.85" />
-              <circle cx="600" cy="260" r="86" fill="rgba(255,255,255,0.04)" stroke="#FAFAFA" strokeWidth="1.5" strokeDasharray="8 7" />
-              <g style={{ fontFamily: "var(--mono)" }} fontWeight="600">
-                <text x="216" y="100" fill="#A3A3A3" fontSize="13">10 nm</text>
-                <text x="452" y="418" fill="#D4D4D4" fontSize="13">5 nm</text>
-                <text x="660" y="330" fill="#FAFAFA" fontSize="13">2 nm</text>
-                <text x="612" y="238" fill="#FFFFFF" fontSize="11">18L</text>
-                <text x="612" y="290" fill="#FFFFFF" fontSize="11">36R</text>
-              </g>
-              <line x1="600" y1="238" x2="600" y2="282" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" opacity="0.9" />
-              <circle cx="600" cy="260" r="5" fill="#FAFAFA" stroke="#FFFFFF" strokeWidth="2" />
-              <path d="M930 40 C 860 30, 760 30, 690 44 S 606 70, 600 114" fill="none" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
-              <g transform="translate(600,114) rotate(180) scale(1.05)"><path fill="#38BDF8" stroke="#0A0A0A" strokeWidth="1" d={PLANE} /></g>
-              <rect x="626" y="96" width="152" height="44" rx="9" fill="#1C1C1C" stroke="#404040" />
-              <path d="M40 470 C 110 440, 150 400, 200 372 S 268 338, 292 318" fill="none" stroke="#8F8F8F" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
-              <g transform="translate(292,318) rotate(52) scale(1.05)"><path fill="#8F8F8F" stroke="#0A0A0A" strokeWidth="1" d={PLANE} /></g>
-              <rect className="fh-map-far" x="118" y="268" width="156" height="44" rx="9" fill="#1C1C1C" stroke="#404040" />
-              <g style={{ fontFamily: "var(--mono)" }}>
-                <text x="638" y="114" fill="#FAFAFA" fontSize="13" fontWeight="600">N172AK</text>
-                <text x="638" y="131" fill="#38BDF8" fontSize="11.5" fontWeight="500">3.4 nm · live</text>
-                <text className="fh-map-far" x="130" y="286" fill="#FAFAFA" fontSize="13" fontWeight="600">N64423</text>
-                <text className="fh-map-far" x="130" y="303" fill="#D4D4D4" fontSize="11.5" fontWeight="500">7.6 nm · 45s ago</text>
-              </g>
-            </svg>
+          <div className="fh-shot">
+            <Image
+              src="/home/live-map.png" width={808} height={467}
+              sizes="(max-width: 1040px) 100vw, 980px"
+              alt="The FinalPing live map around Dallas-Fort Worth: alert rings at 2, 5 and 10 nautical miles around the airport, and the approach steps 10 nm, 5 nm, 2 nm and Landed underneath."
+            />
           </div>
         </div>
       </section>
@@ -309,24 +273,14 @@ export default function HomePage() {
               <ArrowRight size={15} strokeWidth={2.5} aria-hidden="true" />
             </Link>
           </div>
-          <div className="fh-art" aria-hidden="true">
+          <div className="fh-art">
             <div className="fh-card fh-gs">
-              <svg viewBox="0 0 520 300">
-                <circle cx="260" cy="150" r="46" fill="none" stroke="#2A2A2A" strokeWidth="1.5" />
-                <circle cx="260" cy="150" r="92" fill="none" stroke="#2A2A2A" strokeWidth="1.5" />
-                <circle cx="260" cy="150" r="138" fill="none" stroke="#2A2A2A" strokeWidth="1.5" />
-                <line x1="260" y1="6" x2="260" y2="294" stroke="#2A2A2A" strokeWidth="1.5" />
-                <line x1="116" y1="150" x2="404" y2="150" stroke="#2A2A2A" strokeWidth="1.5" />
-                <polygon
-                  points="260,28 296,40 338,52 364,88 392,118 386,150 372,186 336,214 300,252 260,264 228,236 196,224 172,196 150,170 164,138 148,104 186,84 214,50"
-                  fill="rgba(255,255,255,0.07)" stroke="#FAFAFA" strokeWidth="2" strokeDasharray="7 6" strokeLinejoin="round"
-                />
-                <circle cx="260" cy="150" r="6" fill="#FAFAFA" stroke="#FFFFFF" strokeWidth="2" />
-                <g style={{ fontFamily: "var(--mono)" }} fontWeight="600">
-                  <text x="272" y="146" fill="#FAFAFA" fontSize="12">Receiver</text>
-                  <text x="256" y="20" fill="#A3A3A3" fontSize="11">N</text>
-                </g>
-              </svg>
+              <Image
+                className="fh-shot-img"
+                src="/home/receiver-range.png" width={810} height={375}
+                sizes="(max-width: 1040px) 100vw, 520px"
+                alt="Receiver range in the FinalPing web app: how far the antenna hears in each direction, best 21.4 nm to the north, with all 36 bearings mapped."
+              />
               <div className="fh-compare">
                 <div>
                   <div className="fh-compare-label"><span>Cloud feed</span><span className="fh-mono">about 30 s</span></div>

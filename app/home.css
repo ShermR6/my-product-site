@@ -340,6 +340,18 @@
 
 /* ground station */
 .fh-gs { gap: 20px; }
+/* Screenshots of the web app. */
+.fh-shot {
+  width: 100%;
+  max-width: 860px;     /* about its real size: wider only blurs it */
+  margin: 0 auto;
+  border: 1px solid var(--fh-line);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--fh-bg);
+}
+.fh-shot img, .fh-shot-img { display: block; width: 100%; height: auto; }
+.fh-shot-img { border-radius: 14px; border: 1px solid var(--fh-line); }
 .fh-gs svg { width: 100%; height: auto; }
 .fh-compare { display: flex; flex-direction: column; gap: 12px; }
 .fh-compare > div { display: flex; flex-direction: column; gap: 6px; }
