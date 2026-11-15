@@ -7,6 +7,8 @@ export type Me = {
   email: string;
   display_name: string | null;
   license_tier: string;
+  /** "feeder" when the plan is the free one for feeding adsb.lol. */
+  plan_source?: string | null;
   expires_at: string | null;
 };
 
@@ -114,6 +116,25 @@ export type GroundStats = {
   uptime_s?: number;
   msg_rate?: number;
   aircraft_count?: number;
+  /** Whether adsb.lol can see this receiver's feed. Receivers from 3.9 on. */
+  feeding?: boolean;
+};
+
+/** Where the account stands on the free plan for feeding adsb.lol. */
+export type FeederStatus = {
+  /** Days in the window the receiver really fed. */
+  days_fed: number;
+  /** Days that count towards the rule (fed, or credited to a new feeder). */
+  days_counted: number;
+  days_needed: number;
+  window_days: number;
+  minutes_today: number;
+  minutes_per_day: number;
+  since: string | null;
+  qualifies: boolean;
+  /** Last day the plan holds if the receiver stopped feeding now. */
+  valid_until: string | null;
+  plan: "feeder" | "paid" | "none";
 };
 
 export type GroundStatus = {
@@ -123,6 +144,7 @@ export type GroundStatus = {
   /** Last four characters of the device key. The key itself: /api/ground/key. */
   gs_key_hint: string | null;
   stats: GroundStats | null;
+  feeder?: FeederStatus | null;
 };
 
 export type GroundRange = {

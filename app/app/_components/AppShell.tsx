@@ -231,6 +231,10 @@ function Preview() {
               ${OFFER.monthly.toFixed(2)} a month after the trial, or ${OFFER.yearlyPerMonth.toFixed(2)} a month billed yearly, with everything included.
             </p>
             <p className="fa-note" style={{ marginTop: 12 }}>The trial needs a card. Nothing is charged until it ends, and you can cancel before then.</p>
+            <p className="fa-note" style={{ marginTop: 8 }}>
+              Have an ADS-B receiver? Feed adsb.lol with it and the plan is free.{" "}
+              <Link className="fa-link" href="/app/ground-station" onClick={() => setAsking(false)}>Set one up</Link>
+            </p>
             {trial.note && <p className="fa-error" role="alert">{trial.note}</p>}
             <div className="fa-modal-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
               <Link className="fa-link" href="/pricing">See what&apos;s included</Link>
@@ -303,7 +307,7 @@ function TopBar({ pathname, bare }: { pathname: string; bare?: boolean }) {
         <div className="fa-menu" role="menu" onClick={(e) => e.stopPropagation()}>
           <div className="fa-menu-head">
             <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>{t.me?.email ?? "Signed in"}</div>
-            {t.me && <div className="fa-note">{t.me.license_tier === "free" ? "Preview, no plan yet" : `${planOf(t.me.license_tier).name} plan`}</div>}
+            {t.me && <div className="fa-note">{t.me.license_tier === "free" ? "Preview, no plan yet" : t.me.plan_source === "feeder" ? "Free plan, for feeding adsb.lol" : `${planOf(t.me.license_tier).name} plan`}</div>}
           </div>
           <Link href="/dashboard" role="menuitem"><CreditCard size={15} aria-hidden="true" />Account and billing</Link>
           <Link href="/" role="menuitem"><Globe size={15} aria-hidden="true" />finalpingapp.com</Link>

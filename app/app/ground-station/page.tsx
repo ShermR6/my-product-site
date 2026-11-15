@@ -8,13 +8,32 @@ import { useEffect, useState } from "react";
 import { useTracker } from "../_lib/store";
 import { api } from "../_lib/tracker";
 import { ago, duration, parseUtc } from "../_lib/format";
-import type { GroundRange } from "../_lib/types";
+import type { FeederStatus, GroundRange, GroundStatus } from "../_lib/types";
 import { Card, PageHead } from "../_components/kit";
 import DeviceKey from "../_components/DeviceKey";
 
 export default function GroundStationPage() {
   const t = useTracker();
   const [range, setRange] = useState<GroundRange | null>(null);
+  // Without a plan the app polls nothing, so this page asks after the
+  // receiver itself: someone setting one up to feed needs to see it arrive.
+  const [own, setOwn] = useState<GroundStatus | null>(null);
+  const noPlan = t.groundEnabled === false;
+  const reload = t.reload;
+
+  useEffect(() => {
+    if (!noPlan) return;
+    let live = true;
+    const load = () => api<GroundStatus>("ground/status").then((s) => {
+      if (!live) return;
+      setOwn(s);
+      // A feeding receiver's first report starts the plan: leave the preview.
+      if (s.feeder && s.feeder.plan !== "none") reload();
+    }).catch(() => {});
+    load();
+    const id = setInterval(() => { if (!document.hidden) load(); }, 15_000);
+    return () => { live = false; clearInterval(id); };
+  }, [noPlan, reload]);
 
   useEffect(() => {
     if (t.groundEnabled !== true) return;
@@ -25,10 +44,13 @@ export default function GroundStationPage() {
     return () => { live = false; clearInterval(id); };
   }, [t.groundEnabled]);
 
-  if (t.groundEnabled === false) {
+  if (noPlan) {
+    const seen = own?.last_seen_seconds != null;
     return (
       <div className="fa-page">
-        <PageHead title="Ground Station" sub="Your own receiver at the field." />
+        <PageHead title="Ground Station" sub="Your own receiver at the field. Feed adsb.lol with it and the plan is free.">
+          {seen && <span className={`fa-pilltag ${own?.online ? "" : "warn"}`}><span className={`fa-dot ${own?.online ? "" : "warn"}`} />{own?.online ? "Receiver online" : "Receiver offline"}</span>}
+        </PageHead>
         <div className="fa-grid fa-cols-2">
           <Card title="What it adds">
             <div className="fa-kv"><span>Position updates</span><span>About once a second</span></div>
@@ -39,8 +61,11 @@ export default function GroundStationPage() {
             </p>
           </Card>
           <Card title="Set one up">
-            <p className="fa-note" style={{ lineHeight: 1.6, marginBottom: 16 }}>
-              Ground Station is included in the plan. The kit arrives ready to plug in, and this page lights up as soon as it starts reporting.
+            <div className="fa-kv" style={{ borderTop: "none" }}><span>1</span><span>A Raspberry Pi with an ADS-B radio and antenna</span></div>
+            <div className="fa-kv"><span>2</span><span>Paste the install command below into the Pi</span></div>
+            <div className="fa-kv"><span>3</span><span>It shows up here within a minute</span></div>
+            <p className="fa-note" style={{ margin: "12px 0 16px", lineHeight: 1.6 }}>
+              You do not need a plan to set one up. The installer also feeds adsb.lol, the open network FinalPing draws on, and a receiver that keeps feeding earns the plan for free.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link className="fa-btn primary" href="/groundstationkit">See the kit</Link>
@@ -48,6 +73,7 @@ export default function GroundStationPage() {
             </div>
           </Card>
         </div>
+        <div style={{ marginTop: 16 }}><FeederCard feeder={own?.feeder ?? null} feedingNow={own?.stats?.feeding} online={!!own?.online} /></div>
         <div style={{ marginTop: 16 }}><DeviceKey /></div>
       </div>
     );
@@ -109,13 +135,63 @@ export default function GroundStationPage() {
           <div className="fa-kv"><span>Last heartbeat</span><span className="mono">{g?.last_seen_seconds != null ? ago(g.last_seen_seconds) : "Never"}</span></div>
           <div className="fa-kv"><span>Software</span><span className="mono">{stats?.version ? `v${stats.version}` : "—"}</span></div>
           <div className="fa-kv"><span>Messages per second</span><span className="mono">{stats?.msg_rate != null ? Math.round(stats.msg_rate) : "—"}</span></div>
-          <div className="fa-kv"><span>Feeding</span><span>{[t.airport?.airport_code, t.airport?.airport_name].filter(Boolean).join(" · ") || "—"}</span></div>
+          <div className="fa-kv"><span>Airport</span><span>{[t.airport?.airport_code, t.airport?.airport_name].filter(Boolean).join(" · ") || "—"}</span></div>
+          <div className="fa-kv"><span>adsb.lol feed</span><span>{stats?.feeding === true ? "Feeding" : stats?.feeding === false ? "Not feeding" : "—"}</span></div>
           {!stats && g?.online && <p className="fa-note" style={{ marginTop: 10 }}>Version, uptime and message rate appear once the receiver updates itself to software 3.7.</p>}
         </Card>
       </div>
 
+      <div style={{ marginTop: 16 }}><FeederCard feeder={g?.feeder ?? null} feedingNow={stats?.feeding} online={!!g?.online} /></div>
       <div style={{ marginTop: 16 }}><DeviceKey /></div>
     </div>
+  );
+}
+
+/** Where the account stands on the free plan for feeding adsb.lol. */
+function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | null; feedingNow: boolean | undefined; online: boolean }) {
+  const needed = feeder?.days_needed ?? 5;
+  const windowDays = feeder?.window_days ?? 7;
+  const counted = Math.min(feeder?.days_counted ?? 0, windowDays);
+  const plan = feeder?.plan ?? "none";
+  const perDayH = Math.round((feeder?.minutes_per_day ?? 360) / 60);
+  const today = feeder?.minutes_today ?? 0;
+  const day = (iso: string | null | undefined) => {
+    const d = iso ? new Date(`${iso}T00:00:00Z`) : null;
+    return d && !isNaN(d.getTime()) ? d.toLocaleDateString([], { month: "short", day: "numeric", timeZone: "UTC" }) : null;
+  };
+  const until = day(feeder?.valid_until);
+  const since = day(feeder?.since);
+  // A new feeder is credited the days before its first feed.
+  const credited = !!feeder && feeder.days_fed < counted;
+
+  const lead =
+    plan === "feeder" ? "Your plan is free while this receiver keeps feeding adsb.lol."
+    : plan === "paid" && feeder?.qualifies ? "You are on a paid plan, and this receiver feeds enough to earn the plan for free. If the paid plan ends, the free one takes over."
+    : plan === "paid" ? `You are on a paid plan. A receiver that feeds adsb.lol on ${needed} of any ${windowDays} days earns the plan for free.`
+    : `Feed adsb.lol on ${needed} of any ${windowDays} days and the whole plan is free. A new receiver gets it from its first report.`;
+
+  return (
+    <Card title="Free plan for feeding" note={plan === "feeder" ? "Active" : feeder?.qualifies ? "Earned" : "Not earned yet"}>
+      <p className="fa-note" style={{ lineHeight: 1.6, marginBottom: 14 }}>{lead}</p>
+      <div style={{ display: "flex", gap: 4, marginBottom: 6 }} role="img" aria-label={`${counted} of the last ${windowDays} days count. ${needed} are needed.`}>
+        {Array.from({ length: windowDays }, (_, i) => (
+          <span key={i} style={{ flex: 1, height: 8, borderRadius: 3, background: i < counted ? "#FAFAFA" : "#242424", marginRight: i === needed - 1 && needed < windowDays ? 8 : 0 }} />
+        ))}
+      </div>
+      <div className="fa-kv" style={{ borderTop: "none" }}><span>Days that count, last {windowDays}</span><span className="mono">{counted} of {windowDays} · {needed} needed</span></div>
+      <div className="fa-kv"><span>Today</span><span className="mono">{today >= perDayH * 60 ? "Counted" : `${duration(today * 60)} fed · counts at ${perDayH} h`}</span></div>
+      <div className="fa-kv"><span>Feeding adsb.lol now</span><span>{feedingNow === true ? "Yes" : feedingNow === false ? "No" : "—"}</span></div>
+      {until && <div className="fa-kv"><span>{plan === "feeder" ? "Covered through" : "Would cover through"}</span><span className="mono">{until}</span></div>}
+      {credited && since && (
+        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The days before your first feed on {since} count in your favour, once. After that it is the days the receiver really fed.</p>
+      )}
+      {feedingNow === false && online && (
+        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The receiver is online, but adsb.lol does not see a feed from its network. Run the install command below again to add the feed.</p>
+      )}
+      {feedingNow === undefined && online && (
+        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>Feeding is reported by receiver software 3.9 and later. Yours updates itself.</p>
+      )}
+    </Card>
   );
 }
 

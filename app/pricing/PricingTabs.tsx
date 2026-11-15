@@ -201,6 +201,9 @@ export default function PricingTabs() {
           <p style={{ fontSize: 13, lineHeight: 1.7, margin: "0 0 12px" }}>
             Connect your own ADS-B receiver and alerts arrive in under 10 seconds instead of about 30, with touchdown and liftoff detected at your field. It used to be a paid add-on. Now it comes with the plan.
           </p>
+          <p style={{ fontSize: 13, lineHeight: 1.7, margin: "0 0 12px" }}>
+            <strong style={{ color: "var(--text)" }}>Free for feeders.</strong> The installer also feeds adsb.lol, the open network FinalPing draws on. A receiver that feeds on 5 of any 7 days earns the whole plan for free, for as long as it keeps feeding.
+          </p>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
             <Link href="/groundstationkit" style={{ color: "var(--text)", textDecoration: "underline" }}>Receiver kits</Link>
             <Link href="/groundstationsetup" style={{ color: "var(--text)", textDecoration: "underline" }}>Setup guide</Link>

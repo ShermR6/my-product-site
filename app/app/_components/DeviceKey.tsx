@@ -4,7 +4,7 @@
 // for, copyable, and replaceable when it may have been seen. Works for every
 // account, with or without a plan, so a receiver can be set up to feed first.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { api, errorText } from "../_lib/tracker";
 import { Btn, Card } from "./kit";
@@ -12,6 +12,12 @@ import { Btn, Card } from "./kit";
 type KeyInfo = { hint: string | null; key: string | null; ground_station_enabled: boolean };
 
 const MASK = "•".repeat(20);
+/** The one-line installer (public/install.sh). The device key goes on the end. */
+const INSTALL = "curl -fsSL https://finalpingapp.com/install.sh | sudo bash -s --";
+const PRE: CSSProperties = {
+  margin: 0, padding: "10px 12px", borderRadius: 10, background: "rgba(0,0,0,0.35)", border: "1px solid #1E1E1E",
+  whiteSpace: "pre-wrap", wordBreak: "break-all", fontSize: 12, lineHeight: 1.6, color: "var(--text-2)",
+};
 
 export default function DeviceKey() {
   const [hint, setHint] = useState<string | null>(null);
@@ -22,6 +28,7 @@ export default function DeviceKey() {
   const [err, setErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [replaced, setReplaced] = useState(false);
+  const [cmdNote, setCmdNote] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -77,7 +84,21 @@ export default function DeviceKey() {
     }
   }
 
+  /** The whole install line, with the key in it, ready to paste into the Pi. */
+  async function copyCommand() {
+    const k = await fetchKey();
+    if (!k) return;
+    try {
+      await navigator.clipboard.writeText(`${INSTALL} ${k}`);
+      setCmdNote("Copied. Paste it into the Pi.");
+      setTimeout(() => setCmdNote(null), 2600);
+    } catch {
+      setShown(true);   // clipboard blocked: show it to copy by hand
+    }
+  }
+
   const value = shown && key ? key : hint ? `${MASK}${hint}` : "Loading…";
+  const command = `${INSTALL} ${shown && key ? key : hint ? `${"•".repeat(8)}${hint}` : "YOUR_DEVICE_KEY"}`;
 
   return (
     // Usable in preview too: someone without a plan sets up a receiver first.
@@ -106,14 +127,25 @@ export default function DeviceKey() {
 
         {replaced && (
           <div className="fa-banner warn" role="status" style={{ marginTop: 14, marginBottom: 0, display: "block", lineHeight: 1.6 }}>
-            <strong>Your old key no longer works.</strong> Your ground station stops sending data until you give it this new key. On a Raspberry Pi, connect to it over SSH and run:
-            {/* Changes only the token: config.json also holds the receiver's location. */}
-            <pre className="mono" style={{ margin: "10px 0 0", padding: "10px 12px", borderRadius: 10, background: "rgba(0,0,0,0.35)", whiteSpace: "pre-wrap", wordBreak: "break-all", fontSize: 12, color: "var(--text-2)" }}>
-{`sudo python3 -c 'import json,os,sys;p="/home/pi/finalping-ground/config.json";c=json.load(open(p)) if os.path.exists(p) else {};c["token"]=sys.argv[1];json.dump(c,open(p,"w"),indent=2)' ${key ?? "NEW_KEY"} && sudo systemctl restart finalping-ground`}
-            </pre>
+            <strong>Your old key no longer works.</strong> Your ground station stops sending data until you give it this new key. Connect to the Pi over SSH and run the install command below again: it only swaps the key and restarts the receiver.
           </div>
         )}
       </Card>
+
+      <div style={{ marginTop: 16 }}>
+        <Card title="Install on a Raspberry Pi" note="One command">
+          <p className="fa-note" style={{ lineHeight: 1.6, marginBottom: 12 }}>
+            Connect to the Pi over SSH and paste this. It installs the ADS-B decoder, the adsb.lol feed and the FinalPing receiver, and starts them on every boot. Running it again is safe: it only does what is missing.
+          </p>
+          <pre className="mono" style={PRE} aria-label="Install command">{command}</pre>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+            <span className="fa-note" role="status">{cmdNote ?? "Your device key is part of the command. Copy puts the whole line on your clipboard."}</span>
+            <Btn small onClick={copyCommand} disabled={!hint}>
+              <Copy size={13} aria-hidden="true" style={{ marginRight: 7, verticalAlign: -2 }} />Copy command
+            </Btn>
+          </div>
+        </Card>
+      </div>
 
       {confirming && (
         <div className="fa-overlay" onClick={() => !busy && setConfirming(false)}>

@@ -262,7 +262,7 @@ export default function DashboardPage() {
         >
           {t.groundEnabled === false ? (
             <div className="fa-row fa-note" style={{ display: "block", lineHeight: 1.55 }}>
-              Your own receiver at the field: positions every second instead of every few.{" "}
+              Your own receiver at the field: positions every second instead of every few. Feed adsb.lol with it and the plan is free.{" "}
               <Link className="fa-link" href="/app/ground-station">See how it works</Link>
             </div>
           ) : (

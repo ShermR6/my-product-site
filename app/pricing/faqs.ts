@@ -17,6 +17,10 @@ export const faqs = [
     a: "No. There is one plan and it includes every feature: up to 15 aircraft, every notification channel and Ground Station support. The only thing sold separately is receiver hardware, if you want your own Ground Station.",
   },
   {
+    q: "Can I get FinalPing for free?",
+    a: "Yes, by running a receiver that feeds adsb.lol, the open flight-data network FinalPing draws on. Set up a Ground Station on a Raspberry Pi with the one-command installer and it feeds adsb.lol by itself. While it has fed on 5 of the last 7 days, the whole plan is free, with no card needed. A new receiver gets the plan from its first report. If it stops feeding, the plan ends a couple of days later and your aircraft and settings are kept.",
+  },
+  {
     q: "Is there a limit on text message alerts?",
     a: "Yes, 100 text messages a month per account, because each one has a carrier cost. Every other channel, including Discord, email, Slack, Microsoft Teams, Google Chat, Telegram and webhooks, has no monthly limit.",
   },

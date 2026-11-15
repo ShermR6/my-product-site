@@ -114,7 +114,7 @@ export default function GroundStationSetupPage() {
             FinalPing Ground Station Setup
           </h1>
           <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 10px" }}>
-            Pick your setup type below. Your location and tracked aircraft are always pulled automatically from your FinalPing account — no manual config needed.
+            A Ground Station is a Raspberry Pi with an ADS-B radio at your field. Setting one up is one command, and your airport and aircraft come from your FinalPing account by themselves. It also feeds adsb.lol, and a receiver that keeps feeding earns the FinalPing plan for free.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" as const, marginTop: 24 }}>
             <Link href="/groundstationdevices" style={{
@@ -131,7 +131,7 @@ export default function GroundStationSetupPage() {
               background: "var(--cta)", color: "var(--cta-text)",
               fontSize: 13, fontWeight: 600, textDecoration: "none",
             }}>
-              Buy Ground Station →
+              See the plan →
             </Link>
           </div>
         </div>
@@ -145,8 +145,8 @@ export default function GroundStationSetupPage() {
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>Before you start</div>
             {[
-              "FinalPing account with an active plan (Ground Station is included)",
-              "Aircraft and location set up in the FinalPing app",
+              "A FinalPing account. No plan needed to start: feeding earns one",
+              "A Raspberry Pi on your Wi-Fi or network",
               "FlightAware Pro Stick Plus + 1090MHz antenna",
             ].map(i => (
               <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4, display: "flex", gap: 8 }}>
@@ -160,10 +160,10 @@ export default function GroundStationSetupPage() {
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>What happens automatically</div>
             {[
-              "Pulls your location from your account",
-              "Pulls your tracked aircraft from your account",
-              "Sends alerts through your notification channels",
-              "Starts on every boot or login",
+              "Pulls your airport and aircraft from your account",
+              "Feeds adsb.lol, which earns the free plan",
+              "Keeps its own software up to date",
+              "Starts on every boot",
             ].map(i => (
               <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4, display: "flex", gap: 8 }}>
                 <span style={{ color: "var(--good)" }}>✓</span> {i}
@@ -185,7 +185,7 @@ export default function GroundStationSetupPage() {
             "A setup page opens automatically on your phone. If it doesn't appear after 10 seconds, open a browser and go to 192.168.4.1",
             "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
             "The Pi connects to your home WiFi and automatically claims your account credentials from FinalPing. Your location and aircraft are pulled from your account — no manual config needed.",
-            "The Pi reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online within 60 seconds.",
+            "The Pi reboots and starts tracking. Open finalpingapp.com/app and go to Ground Station: it shows Online within 60 seconds.",
           ], "var(--text)")}
           {note("Use your phone — not a laptop or desktop. iPhones and Android phones open the setup page automatically when joining FinalPing-Setup. Laptops typically do not.")}
           {success("That's it. The Pi runs silently in the background on every boot. No further setup needed.")}
@@ -193,9 +193,9 @@ export default function GroundStationSetupPage() {
 
         {/* ── DIY Pi Kit ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("Raspberry Pi Kit — Self-Setup (No Pre-flash)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
+          {sectionTag("Your own Raspberry Pi: one command", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
           <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
-            If your kit did not come pre-flashed, you'll need to image the SD card yourself. You'll need a Windows PC or Mac, your microSD card, and a card reader.
+            For any Raspberry Pi with an ADS-B radio, and for kits that did not come pre-flashed. You need a Windows PC or Mac for a few minutes, to prepare the SD card and paste one command. There is no phone or hotspot step.
           </p>
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "24px 0 8px" }}>Step 1 — Flash the SD card</h3>
@@ -239,17 +239,17 @@ export default function GroundStationSetupPage() {
               </div>
             ))}
           </div>
-          {tip("The WiFi credentials you enter here are so the Pi connects to your home network temporarily, which lets you SSH in to run the installer. The installer will wipe this at the end, and you'll enter your WiFi again on your phone during the FinalPing setup step.")}
+          {tip("This is the Wi-Fi the Pi stays on, so use the network at the place the receiver will live.")}
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "12px 0" }}>
             Click <strong style={{ color: "var(--text)" }}>Save → Write → Yes</strong> to flash. When done, eject the card and insert it into your Pi.
           </p>
 
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Step 2 — Run the FinalPing installer</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Step 2 — Connect to the Pi</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
             Plug your Pro Stick Plus into the Pi, then power it on. Wait about 60 seconds for it to boot and connect to your WiFi.
           </p>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
-            Next, find the Pi's IP address. Use whichever method works for your router:
+            Next, find the Pi&apos;s IP address. Use whichever method works for your router:
           </p>
           <div style={{
             background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
@@ -274,63 +274,37 @@ export default function GroundStationSetupPage() {
             Replace <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: 4, fontSize: 12 }}>192.168.1.45</code> with the actual IP from your router. It will ask for the password you set in the Imager — nothing appears as you type, that is normal.
           </p>
           {note("If you get a warning about a changed host key (REMOTE HOST IDENTIFICATION HAS CHANGED), run this first to clear it — then SSH in again:\n\nssh-keygen -R <ip-address>")}
-          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "12px 0" }}>
-            Enter your password when prompted. Nothing will appear as you type — that's normal. Once you're in, run the FinalPing installer:
-          </p>
-          {codeBlock(`curl -fsSL https://finalpingapp.com/setup-portal.sh | sudo bash`)}
-          {tip("The installer compiles dump1090 from source — this takes around 10–15 minutes. You'll see a lot of compiler output. That's normal. Let it finish.")}
-          {success("When you see \"Kit preparation complete!\" the installer is done. The Pi will reboot automatically.")}
 
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Step 3 — Activate on your phone</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Step 3 — Paste the install command</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            After the Pi reboots it broadcasts a setup WiFi network. On your phone:
+            Open <Link href="/app/ground-station" style={{ color: "var(--text)" }}>Ground Station in the web app</Link> and press <strong style={{ color: "var(--text)" }}>Copy command</strong>. It is this line with your own device key on the end:
           </p>
-          {stepList([
-            "Open WiFi settings and connect to FinalPing-Setup. No password — it's an open network.",
-            "A setup page opens automatically. If it doesn't, open a browser and go to 192.168.4.1",
-            "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
-            "The Pi connects to your WiFi and automatically claims your account credentials from FinalPing. It reboots and starts tracking. Open the FinalPing desktop app — Dashboard → Ground Station: Online.",
-          ], "var(--good)")}
-          {note("Use your phone for this step — not your laptop. Phones auto-open the setup page when joining FinalPing-Setup. Laptops do not.")}
+          {codeBlock(`curl -fsSL https://finalpingapp.com/install.sh | sudo bash -s -- YOUR_DEVICE_KEY`)}
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
+            Paste it into the SSH window and press Enter. It installs the ADS-B decoder, the adsb.lol feed and the FinalPing receiver, starts them on every boot, and asks no questions. Running it again is safe: it only does what is missing.
+          </p>
+          {tip("On a Pi Zero 2 W the first install takes 15 to 30 minutes, most of it building the decoder. It prints a line every two minutes so you can see it is still working.")}
+          {success("When it says \"Done. Your receiver is online.\" the Ground Station page shows it within a minute.")}
+          {note("Treat the device key like a password. If someone else has seen it, replace it on the Ground Station page and run the command again with the new key.")}
 
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Optional — Contribute to the adsb.lol network</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Feeding adsb.lol, and the free plan</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            Your Pi can anonymously feed ADS-B data to <a href="https://adsb.lol" target="_blank" style={{ color: "var(--text)" }}>adsb.lol</a>, a community-run network that improves coverage for all FinalPing users in your area. It runs alongside FinalPing and won't interfere with anything.
+            The installer sets the Pi up to feed <a href="https://adsb.lol" target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>adsb.lol</a>, the community-run open network FinalPing draws on. A receiver that feeds on 5 of any 7 days earns the whole FinalPing plan for free, for as long as it keeps feeding, and a new receiver gets it from its first report. The Ground Station page shows where you stand.
           </p>
-          {codeBlock(`curl -L -o /tmp/lol-feed.sh https://adsb.lol/feed.sh\nsudo bash /tmp/lol-feed.sh`)}
-          {tip("Use your receiver's physical location coordinates, not necessarily your airport. When done, check adsb.lol to confirm you're showing as a feeder.")}
+
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Optional — MLAT</h3>
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
+            adsb.lol can also use your receiver to help locate aircraft that do not broadcast a position (MLAT). That needs the antenna&apos;s exact position and height, so it is off unless you give them on the first install: latitude, longitude, and altitude in metres above sea level, after the key.
+          </p>
+          {codeBlock(`curl -fsSL https://finalpingapp.com/install.sh | sudo bash -s -- YOUR_DEVICE_KEY 33.09376 -97.25061 206`)}
+          {tip("Without a position, MLAT stays off and the decoder is only given your airport's location, rounded to about a kilometre.")}
         </div>
 
-        {/* ── Windows ── */}
+        {/* ── Windows and macOS ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("Windows PC", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
-          <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            Run the ground station directly on your Windows PC with the Pro Stick Plus plugged in. No Pi required.
-          </p>
-          {stepList([
-            "Plug your Pro Stick Plus into any USB port on this PC.",
-            "Right-click Start → Windows PowerShell (Admin) or Terminal (Admin) and run the installer:",
-          ], "var(--text)")}
-          {codeBlock(`irm https://finalpingapp.com/install.ps1 | iex`)}
-          {stepList([
-            "The installer verifies your FinalPing account and Ground Station access.",
-            "When Zadig opens: Options → List All Devices → select RTL2832U → choose WinUSB → click Install Driver. Return to PowerShell when done.",
-            "The installer sets up auto-start via Task Scheduler. Restart your PC.",
-            "After reboot FinalPing Ground Station starts silently in the background on every login. Open the FinalPing app — Dashboard → Ground Station: Online.",
-          ].map((s, i) => `${s}`), "var(--text)")}
-          {note("The Zadig driver step is required the first time. If you skip it, dump1090 won't see the receiver.")}
-        </div>
-
-        {/* ── Mac ── */}
-        <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("macOS", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
-          <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            Run the ground station directly on your Mac with the Pro Stick Plus plugged in. No Pi required.
-          </p>
-          {codeBlock(`curl -fsSL https://finalpingapp.com/install-mac.sh | bash`)}
-          {note("If macOS blocks the RTL-SDR driver, go to System Settings → Privacy & Security → Allow Anyway.")}
-          <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "12px 0 0" }}>
-            The installer sets up Launch Agents so dump1090 and FinalPing Ground Station start automatically on every login.
+          {sectionTag("Windows and macOS", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
+          <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: 0 }}>
+            The receiver installs on Raspberry Pi OS and other Debian-based Linux. The earlier Windows and macOS installers signed in the way the desktop app did, which has been retired, so they are not offered for now.
           </p>
         </div>
 
@@ -339,11 +313,11 @@ export default function GroundStationSetupPage() {
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 16px" }}>After setup</h2>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
             {[
-              { title: "Ground Station status", body: "Open the FinalPing desktop app. The Dashboard shows a Ground Station row with a green Online dot when your receiver is connected and running. If it shows Offline, check that your Pi or PC is powered on and connected to the internet." },
-              { title: "Alerts", body: "Takeoff, approach (10nm, 5nm, 2nm), and landing alerts fire automatically through your FinalPing notification channels — Discord, Slack, SMS, email, or any integration you have set up. Nothing extra to configure." },
-              { title: "Live Map", body: "The Live Map in the FinalPing desktop app shows your aircraft in real time. The purple SDR range polygon shows the area your antenna can actually hear — it builds out over time as more aircraft are received in different directions." },
-              { title: "Changing aircraft or location", body: "Update aircraft or location in the FinalPing app. The ground station re-fetches your config from your account every hour automatically." },
-              { title: "Finding your ICAO24 code", body: "Search your tail number at globe.adsbexchange.com — the ICAO24 hex code appears in the aircraft detail panel. Enter it in the FinalPing app under Aircraft." },
+              { title: "Ground Station status", body: "Open finalpingapp.com/app and go to Ground Station. It shows whether the receiver is online, how many aircraft it hears, its range, and where you stand on the free plan for feeding. If it shows Offline, check that the Pi has power and internet." },
+              { title: "Alerts", body: "Takeoff, approach and landing alerts go out through your FinalPing notification channels: Discord, Slack, SMS, email, or any other you have connected. Nothing extra to configure." },
+              { title: "Live Map", body: "The Live Map in the web app shows your aircraft in real time. The range outline is the area your antenna can actually hear. It fills in over time as aircraft are received in different directions." },
+              { title: "Changing aircraft or airport", body: "Change them in the web app. The receiver picks the change up within 10 minutes." },
+              { title: "Updates", body: "The receiver checks for new software by itself and installs it. There is nothing to do." },
             ].map(item => (
               <div key={item.title} style={{
                 background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
@@ -363,15 +337,15 @@ export default function GroundStationSetupPage() {
         }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Troubleshooting</h2>
           {[
-            { q: "Ground Station shows Offline in the app", a: "Check that your Pi or PC is powered on and online. On the Pi, SSH in and run: sudo systemctl status finalping-ground — look for errors. On Windows, check Task Scheduler for the FinalPingGroundStation task." },
+            { q: "Ground Station shows Offline", a: "Check that the Pi is powered on and online. Then SSH in and run: sudo systemctl status finalping-ground — look for errors. The last lines of its log: sudo journalctl -u finalping-ground -n 40" },
+            { q: "The installer stopped, or a step reported a problem", a: "Run the same command again: it only does what is still missing. Everything the install did is in /var/log/finalping-install.log on the Pi." },
+            { q: "\"FinalPing did not accept that device key\"", a: "The key in the command is not the current one. Copy the command again from the Ground Station page in the web app. If you replaced the key, the old one no longer works." },
+            { q: "\"The decoder is not running yet\"", a: "The radio is not plugged in or was not detected. Plug the Pro Stick Plus in and restart the Pi: sudo reboot. To look closer: sudo systemctl status readsb (on kits flashed before November 2026: sudo systemctl status finalping-dump1090)." },
+            { q: "The Ground Station page says adsb.lol is not being fed", a: "Run the install command again, which adds the feed if it is missing, and check it: sudo systemctl status adsblol-feed. The decoder has to be running for there to be anything to feed." },
             { q: "SSH gives \"host key changed\" warning", a: "You previously connected to a different Pi at this IP address. Clear the old key (replace the IP with your Pi's actual IP) and try again:\n\nssh-keygen -R 192.168.1.45" },
-            { q: "\"Cannot reach dump1090\" in the logs", a: "dump1090 is not running or the receiver isn't detected. On the Pi: sudo systemctl status finalping-dump1090. Make sure the Pro Stick Plus is plugged in." },
-            { q: "\"Ground station not enabled\"", a: "Your account doesn't have an active plan. Ground Station is included in the FinalPing plan: start one at finalpingapp.com/pricing." },
-            { q: "\"Ground station not enabled\" or \"Invalid device key\"", a: "Your FinalPing account doesn't have Ground Station enabled, or the wrong email was entered during setup. To redo setup, delete the config and reboot — the Pi will broadcast FinalPing-Setup again:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot" },
-            { q: "Pi won't connect to my WiFi after setup", a: "The SSID or password entered during phone setup may have been wrong. To redo setup, delete the config and reboot:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot\n\nThen connect to FinalPing-Setup again and re-enter your WiFi credentials and email." },
-            { q: "No aircraft appearing", a: "Make sure your antenna is connected and pointing skyward. Indoor antennas near windows work but outdoor antennas give much better range. Confirm your aircraft have ICAO24 codes entered in the FinalPing app." },
-            { q: "Windows — no signals received", a: "The Zadig driver step is required. Open Zadig (zadig.akeo.ie), go to Options → List All Devices, select RTL2832U, choose WinUSB, click Install Driver. Then restart your PC." },
-            { q: "Mac — driver blocked by macOS", a: "Go to System Settings → Privacy & Security → scroll down and click Allow Anyway next to the RTL-SDR driver entry. Then restart." },
+            { q: "Pre-flashed kit: \"Ground station not enabled\" during phone setup", a: "The phone setup needs the email of a FinalPing account with a plan. To redo it, delete the config and reboot, and the Pi will broadcast FinalPing-Setup again:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot" },
+            { q: "Pre-flashed kit: the Pi won't connect to my WiFi after setup", a: "The SSID or password entered during phone setup may have been wrong. To redo setup, delete the config and reboot:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot\n\nThen connect to FinalPing-Setup again and re-enter your WiFi credentials and email." },
+            { q: "No aircraft appearing", a: "Make sure your antenna is connected and has a view of the sky. Indoor antennas near windows work but outdoor antennas give much better range. Confirm your aircraft are added in the web app under Aircraft." },
           ].map((item, i, arr) => (
             <div key={item.q} style={{
               marginBottom: i < arr.length - 1 ? 16 : 0,
@@ -405,7 +379,7 @@ export default function GroundStationSetupPage() {
             background: "var(--cta)", color: "var(--cta-text)",
             fontSize: 14, fontWeight: 700, textDecoration: "none",
           }}>
-            Buy Ground Station →
+            See the plan →
           </Link>
         </div>
 
