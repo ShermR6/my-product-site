@@ -5,17 +5,22 @@
 #
 # Your device key is on https://finalpingapp.com/app/ground-station
 #
-# Optional: the antenna's position. With all three, the receiver also takes
-# part in adsb.lol's MLAT, which needs the position to within a few metres.
+# Add the antenna's position and the feed includes MLAT, which finds aircraft
+# that do not send their own position. MLAT needs the position to within a few
+# metres, and the antenna's height above sea level (metres, or feet as 675ft):
 #
-#   ... | sudo bash -s -- YOUR_DEVICE_KEY LATITUDE LONGITUDE ALTITUDE_IN_METRES
+#   ... | sudo bash -s -- YOUR_DEVICE_KEY LATITUDE LONGITUDE ALTITUDE
+#
+# The Ground Station page builds this line for you. Run it again with a
+# position at any time to turn MLAT on or to move the antenna.
 #
 # What it does. Each step is skipped when it is already in place, so it is
 # safe to run again (for example to give the receiver a new device key):
 #
 #   1. checks the device key with FinalPing
 #   2. installs an ADS-B decoder (readsb) unless one is already running
-#   3. installs the adsb.lol feed client, so the receiver also feeds adsb.lol
+#   3. installs the adsb.lol feed client, so the receiver also feeds adsb.lol,
+#      with MLAT when the antenna's position was given
 #   4. installs the FinalPing receiver program and starts it on every boot
 #
 # Nothing here asks a question, and there is no phone or hotspot step.
@@ -33,6 +38,7 @@ main() {
   # is a Docker setup and has no update.sh.
   local ADSBLOL_BRANCH="master"
   local ADSBLOL_DIR="/usr/local/share/adsblol"
+  local ADSBLOL_CONF="/etc/default/adsblol"
   local STATE="/var/lib/finalping-ground"
   local SERVICE="/etc/systemd/system/finalping-ground.service"
   local LOG="/var/log/finalping-install.log"
@@ -79,8 +85,17 @@ main() {
       || die "that position is not on the map: latitude is -90 to 90, longitude -180 to 180."
   fi
   if [ -n "$ALT" ]; then
-    ALT="${ALT%m}"
-    printf '%s' "$ALT" | grep -Eq "$number" || die "the altitude should be a number of metres, for example: 206"
+    local unit="m"
+    case "$ALT" in
+      *ft) unit="ft"; ALT="${ALT%ft}" ;;
+      *m)  ALT="${ALT%m}" ;;
+    esac
+    printf '%s' "$ALT" | grep -Eq "$number" \
+      || die "the altitude should be the antenna's height above sea level, in metres (206) or feet (675ft)."
+    # The limits adsb.lol's MLAT client accepts: the Dead Sea to the Andes.
+    awk -v a="$ALT" -v u="$unit" 'BEGIN { if (u == "ft") a *= 0.3048; exit !(a >= -420 && a <= 5100) }' \
+      || die "that altitude is out of range. It is the antenna's height above sea level, in metres (206) or feet (675ft)."
+    ALT="$ALT$unit"
   fi
 
   echo "FinalPing Ground Station installer"
@@ -185,32 +200,116 @@ except Exception:
     if wait_for_decoder; then note "Decoder installed and running."; else DECODER_OK=0; fi
   fi
 
-  # ── 3. the adsb.lol feed ──────────────────────────────────────────────────
+  # ── 3. the adsb.lol feed, with MLAT ───────────────────────────────────────
   say "3/4  adsb.lol feed"
-  if [ -x "$ADSBLOL_DIR/feed-adsblol" ] && systemctl list-unit-files adsblol-feed.service 2>/dev/null | grep -q '^adsblol-feed.service'; then
+  # MLAT is part of the feed, but it only works with the antenna's exact
+  # position and height. Given all three, they go into adsb.lol's settings
+  # (also on a receiver that is already installed) and MLAT is switched on.
+  # An MLAT name that is already there is kept; a new one is random and is
+  # kept off adsb.lol's public MLAT map. Without a position nothing in an
+  # existing setup is touched, and the position stays on this Pi.
+  cat > "$TMP/mlat.py" <<'PY_MLAT'
+import os, re, sys
+
+path, lat, lon, alt, name = sys.argv[1:6]
+with open(path, encoding="utf-8") as f:
+    text = f.read()
+lines = text.split("\n")
+
+
+def value(key):
+    found = ""
+    for line in lines:
+        m = re.match(r"\s*%s=(.*)$" % key, line)
+        if m:
+            found = m.group(1).strip().strip("\"'").strip()
+    return found
+
+
+def put(key, new):
+    row = '%s="%s"' % (key, new)
+    hits = [i for i, line in enumerate(lines) if re.match(r"\s*%s=" % key, line)]
+    if hits:
+        lines[hits[-1]] = row
+    elif lines and lines[-1] == "":
+        lines.insert(len(lines) - 1, row)
+    else:
+        lines.append(row)
+
+
+def named():
+    return value("USER") not in ("", "0", "disable")
+
+
+def placed():
+    try:
+        return float(value("LATITUDE")) != 0 and float(value("LONGITUDE")) != 0
+    except ValueError:
+        return False
+
+
+if lat and lon and alt:
+    put("LATITUDE", lat)
+    put("LONGITUDE", lon)
+    put("ALTITUDE", alt)
+    if not named():
+        put("USER", name)
+        if not value("PRIVACY"):
+            put("PRIVACY", "--privacy")
+
+new = "\n".join(lines)
+if new != text:
+    tmp = path + ".finalping"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(new)
+    os.chmod(tmp, os.stat(path).st_mode & 0o777)
+    os.replace(tmp, path)
+print("on" if named() and placed() else "off", "changed" if new != text else "same")
+PY_MLAT
+  local MLAT_LAT="" MLAT_LON="" MLAT_ALT="" MLAT_STATE="off same"
+  if [ -n "$LAT" ] && [ -n "$ALT" ]; then MLAT_LAT="$LAT"; MLAT_LON="$LON"; MLAT_ALT="$ALT"; fi
+  local MLAT_NAME
+  MLAT_NAME="FinalPing-$(od -An -tx1 -N3 /dev/urandom | tr -d ' \n')"
+  # Puts the position into adsb.lol's settings when there is one, and says
+  # where MLAT stands: "on" or "off", then "changed" or "same".
+  set_mlat() {
+    MLAT_STATE="off same"
+    [ -s "$ADSBLOL_CONF" ] || return 0
+    MLAT_STATE="$(python3 "$TMP/mlat.py" "$ADSBLOL_CONF" "$MLAT_LAT" "$MLAT_LON" "$MLAT_ALT" "$MLAT_NAME" 2>>"$LOG" </dev/null)" \
+      || MLAT_STATE="off same"
+  }
+
+  if [ -x "$ADSBLOL_DIR/feed-adsblol" ] && has_unit adsblol-feed; then
     note "Already installed."
     systemctl enable adsblol-feed >/dev/null 2>&1 || true
     systemctl is-active --quiet adsblol-feed || systemctl restart adsblol-feed >/dev/null 2>&1 || true
+    set_mlat
+    if has_unit adsblol-mlat; then
+      case "$MLAT_STATE" in
+        "on changed")
+          note "Giving MLAT the antenna's position."
+          systemctl enable adsblol-mlat >/dev/null 2>&1 || true
+          systemctl restart adsblol-mlat >/dev/null 2>&1 || true ;;
+        on*)
+          systemctl enable adsblol-mlat >/dev/null 2>&1 || true
+          systemctl is-active --quiet adsblol-mlat || systemctl restart adsblol-mlat >/dev/null 2>&1 || true ;;
+      esac
+    fi
   else
-    if [ ! -s /etc/default/adsblol ]; then
-      # MLAT needs the antenna's exact position and height. Without all
-      # three it is left off (name "0"), and the position stays on this Pi.
-      local MLAT_NAME="0"
-      if [ -n "$LAT" ] && [ -n "$ALT" ]; then
-        MLAT_NAME="FinalPing-$(od -An -tx1 -N3 /dev/urandom | tr -d ' \n')"
-      fi
-      cat > /etc/default/adsblol <<EOF
+    if [ ! -s "$ADSBLOL_CONF" ]; then
+      # Written with MLAT off (name "0"); set_mlat below turns it on.
+      cat > "$ADSBLOL_CONF" <<EOF
 INPUT="127.0.0.1:30005"
 REDUCE_INTERVAL="0.5"
 
 # feed name for checking MLAT sync
 # also displayed on the MLAT map
-USER="$MLAT_NAME"
+USER="0"
 
 LATITUDE="${NEAR_LAT:-0}"
 LONGITUDE="${NEAR_LON:-0}"
 
-ALTITUDE="${ALT:-0}m"
+ALTITUDE="0m"
 
 # this is the source for 978 data, use port 30978 from dump978 --raw-port
 # if you're not receiving 978, don't worry about it, not doing any harm!
@@ -231,6 +330,8 @@ NET_OPTIONS="--net-heartbeat 60 --net-ro-size 1280 --net-ro-interval=0.05 --net-
 JSON_OPTIONS="--max-range 450 --json-location-accuracy 2 --range-outline-hours 24"
 EOF
     fi
+    # Before their installer runs: it starts MLAT itself when the settings ask for it.
+    set_mlat
     note "Installing adsb.lol's feed client (their own installer, run without its questions)."
     mkdir -p "$ADSBLOL_DIR"
     rm -rf "$ADSBLOL_DIR/git"
@@ -241,9 +342,16 @@ EOF
     else
       note "Could not download adsb.lol's feed client. Run this installer again later to add it."
     fi
+    set_mlat
   fi
-  local FEED_OK=0
+  local FEED_OK=0 MLAT_OK=0
   systemctl is-active --quiet adsblol-feed && FEED_OK=1
+  case "$MLAT_STATE" in on*) systemctl is-active --quiet adsblol-mlat && MLAT_OK=1 ;; esac
+  if [ "$MLAT_OK" = "1" ]; then
+    note "MLAT is on."
+  elif [ "$FEED_OK" = "1" ] && [ -z "$MLAT_LAT" ]; then
+    note "MLAT is off: it needs the antenna's exact position."
+  fi
 
   # ── 4. the FinalPing receiver ─────────────────────────────────────────────
   say "4/4  FinalPing receiver"
@@ -355,6 +463,16 @@ sys.exit(0 if d.get("online") and (d.get("last_seen_seconds") or 999) <= 60 else
     echo
     echo " The adsb.lol feed is not running yet. Run this installer again"
     echo " once the decoder is up; it only does what is still missing."
+  fi
+  if [ "$FEED_OK" = "1" ] && [ "$MLAT_OK" != "1" ]; then
+    echo
+    if [ -n "$MLAT_LAT" ]; then
+      echo " MLAT did not start. See: sudo journalctl -u adsblol-mlat -n 20"
+    else
+      echo " MLAT is off, because it needs to know exactly where the antenna"
+      echo " is. Enter the position on the page below and run the command it"
+      echo " gives you. Everything else keeps running as it is."
+    fi
   fi
   echo
   echo " Status, and your free plan for feeding:"

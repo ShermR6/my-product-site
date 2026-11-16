@@ -137,6 +137,8 @@ export default function GroundStationPage() {
           <div className="fa-kv"><span>Messages per second</span><span className="mono">{stats?.msg_rate != null ? Math.round(stats.msg_rate) : "—"}</span></div>
           <div className="fa-kv"><span>Airport</span><span>{[t.airport?.airport_code, t.airport?.airport_name].filter(Boolean).join(" · ") || "—"}</span></div>
           <div className="fa-kv"><span>adsb.lol feed</span><span>{stats?.feeding === true ? "Feeding" : stats?.feeding === false ? "Not feeding" : "—"}</span></div>
+          <div className="fa-kv"><span>MLAT</span><span>{stats?.mlat === true ? (stats.mlat_peers ? `On · in sync with ${stats.mlat_peers} receiver${stats.mlat_peers === 1 ? "" : "s"}` : "On · no receivers in sync yet") : stats?.mlat === false ? "Off" : "—"}</span></div>
+          {stats?.mlat === false && g?.online && <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>MLAT is off because adsb.lol does not know where your antenna is. Enter its position in the install card below and run the command on the Pi.</p>}
           {!stats && g?.online && <p className="fa-note" style={{ marginTop: 10 }}>Version, uptime and message rate appear once the receiver updates itself to software 3.7.</p>}
         </Card>
       </div>

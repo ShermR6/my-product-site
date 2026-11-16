@@ -118,6 +118,10 @@ export type GroundStats = {
   aircraft_count?: number;
   /** Whether adsb.lol is getting data from this receiver's own feed. */
   feeding?: boolean;
+  /** Whether adsb.lol has this receiver's MLAT client. Receivers from 4.1 on. */
+  mlat?: boolean;
+  /** How many other receivers the MLAT client is in sync with. */
+  mlat_peers?: number;
 };
 
 /** Where the account stands on the free plan for feeding adsb.lol. */

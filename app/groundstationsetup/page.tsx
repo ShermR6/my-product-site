@@ -273,12 +273,13 @@ export default function GroundStationSetupPage() {
             The installer sets the Pi up to feed <a href="https://adsb.lol" target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>adsb.lol</a>, the community-run open network FinalPing draws on. A receiver that feeds for 18 hours a day, on 5 of every 7 days, earns the whole FinalPing plan for free, for as long as it keeps feeding, and a new receiver gets it from its first report. Each receiver earns the plan for one account. The Ground Station page shows where you stand.
           </p>
 
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Optional — MLAT</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>MLAT</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            adsb.lol can also use your receiver to help locate aircraft that do not broadcast a position (MLAT). That needs the antenna&apos;s exact position and height, so it is off unless you give them on the first install: latitude, longitude, and altitude in metres above sea level, after the key.
+            MLAT is part of the feed: adsb.lol uses your receiver, together with others nearby, to locate aircraft that do not broadcast a position. It only works when adsb.lol knows where your antenna is to within a few metres, so the install command carries the antenna&apos;s latitude, longitude and height above sea level after the key. Enter them on the Ground Station page and it builds the command for you. In Google Maps, right-click the antenna&apos;s spot and click the coordinates to copy them; the height is the ground&apos;s elevation plus how high the antenna is mounted, in metres (206) or feet (676ft).
           </p>
-          {codeBlock(`curl -fsSL https://finalpingapp.com/install.sh | sudo bash -s -- YOUR_DEVICE_KEY 33.09376 -97.25061 206`)}
-          {tip("Without a position, MLAT stays off and the decoder is only given your airport's location, rounded to about a kilometre.")}
+          {codeBlock(`curl -fsSL https://finalpingapp.com/install.sh | sudo bash -s -- YOUR_DEVICE_KEY 33.09376 -97.25061 676ft`)}
+          {tip("Already installed without a position? Run the command again with one: it turns MLAT on and leaves everything else as it is. The same goes for moving the antenna.")}
+          {note("Without a position everything else still works and MLAT stays off. Your receiver's name on adsb.lol's MLAT network is random, and it is kept off their public MLAT map.")}
         </div>
 
         {/* ── Windows and macOS ── */}
