@@ -13,16 +13,14 @@ const KITS = [
     id: "standard",
     name: "Standard Kit",
     subtitle: "Raspberry Pi Zero 2 W + Pro Stick Plus + Stand Antenna",
-    description: "Everything you need to run a full ADS-B ground station. Self-assemble and flash, or have it done for you.",
+    description: "Everything you need to run a full ADS-B ground station. Plug it together and set it up with one command.",
     imgs: [
       { src: "/ground/814LpKbBx3L._AC_SL1500_.jpg", label: "Pi Zero 2 W" },
       { src: "/ground/ProStick_Plus_open.jpg", label: "Pro Stick Plus" },
       { src: "/ground/51jXcyrG51L._AC_SL1001_.jpg", label: "Stand Antenna" },
     ],
     basePrice: 200,
-    builtPrice: 225,
     tier: "ground-station-kit",
-    builtTier: "ground-station-kit-built",
     includes: ["Raspberry Pi Zero 2 W Starter Kit", "FlightAware Pro Stick Plus", "2.5dBi Stand Antenna"],
   },
   {
@@ -36,9 +34,7 @@ const KITS = [
       { src: "/ground/stubby-antenna.jpg", label: "Stubby Antenna" },
     ],
     basePrice: 220,
-    builtPrice: 245,
     tier: "ground-station-kit-stubby",
-    builtTier: "ground-station-kit-stubby-built",
     includes: ["Raspberry Pi Zero 2 W Starter Kit", "FlightAware Pro Stick Plus", "6dBi Stubby Antenna"],
     popular: true,
   },
@@ -456,8 +452,7 @@ function CartSidebar({
 }
 
 function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, name: string, price: number) => void }) {
-  const [built, setBuilt] = useState(false);
-  const price = built ? kit.builtPrice : kit.basePrice;
+  const price = kit.basePrice;
 
   return (
     <div style={{
@@ -504,47 +499,6 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           ))}
         </div>
 
-        {/* Pre-built toggle */}
-        <div
-          onClick={() => setBuilt(v => !v)}
-          style={{
-            display: "flex", alignItems: "flex-start", gap: 10,
-            padding: "12px", borderRadius: 10, marginBottom: 10, cursor: "pointer",
-            border: built ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--border)",
-            background: built ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)",
-            transition: "all 0.15s",
-          }}
-        >
-          <div style={{
-            width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 1,
-            border: built ? "2px solid var(--muted)" : "2px solid rgba(255,255,255,0.25)",
-            background: built ? "var(--cta)" : "transparent",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s",
-          }}>
-            {built && (
-              <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="#0A0A0A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
-              Pre-built &amp; Pre-flashed
-              <span style={{
-                marginLeft: 6, fontSize: 11, fontWeight: 800, padding: "3px 9px", borderRadius: 999,
-                background: "rgba(255,255,255,0.075)", color: "var(--text)", border: "1px solid rgba(255,255,255,0.24)",
-                display: "inline-flex", alignItems: "center", gap: 2, lineHeight: 1, verticalAlign: "middle",
-              }}>
-                <span style={{ fontSize: 12, transform: "translateY(-0.5px)" }}>+</span>
-                <span>$25</span>
-              </span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.5 }}>
-              Assembled and pre-loaded. Plug in, connect WiFi, done.
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Add to Cart */}
@@ -554,11 +508,7 @@ function KitCard({ kit, onAdd }: { kit: typeof KITS[0]; onAdd: (tier: string, na
           <span style={{ fontSize: 12, color: "var(--muted)" }}>+ shipping</span>
         </div>
         <button
-          onClick={() => onAdd(
-            built ? kit.builtTier : kit.tier,
-            built ? `${kit.name} (Pre-built)` : kit.name,
-            price
-          )}
+          onClick={() => onAdd(kit.tier, kit.name, price)}
           style={{
             display: "block", width: "100%", padding: "12px", borderRadius: 10, border: "none",
             background: "var(--cta)", color: "var(--cta-text)", fontSize: 14, fontWeight: 800, cursor: "pointer",

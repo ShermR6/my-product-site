@@ -172,30 +172,11 @@ export default function GroundStationSetupPage() {
           </div>
         </div>
 
-        {/* ── Pre-flashed Pi Kit ── */}
-        <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("Raspberry Pi Kit — Pre-flashed", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
-          <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
-            Your kit arrives with the SD card already flashed. No computer setup needed — just plug in and go through setup on your phone.
-          </p>
-          {stepList([
-            "Screw the antenna onto the Pro Stick Plus and plug it into any USB port on the Pi.",
-            "Plug the power supply into the Pi and wait about 60 seconds for it to fully boot.",
-            "On your phone, open WiFi settings and connect to FinalPing-Setup. No password — it's an open network.",
-            "A setup page opens automatically on your phone. If it doesn't appear after 10 seconds, open a browser and go to 192.168.4.1",
-            "Enter your home WiFi name, WiFi password, and your FinalPing account email. Tap Save & Connect.",
-            "The Pi connects to your home WiFi and automatically claims your account credentials from FinalPing. Your location and aircraft are pulled from your account — no manual config needed.",
-            "The Pi reboots and starts tracking. Open finalpingapp.com/app and go to Ground Station: it shows Online within 60 seconds.",
-          ], "var(--text)")}
-          {note("Use your phone — not a laptop or desktop. iPhones and Android phones open the setup page automatically when joining FinalPing-Setup. Laptops typically do not.")}
-          {success("That's it. The Pi runs silently in the background on every boot. No further setup needed.")}
-        </div>
-
         {/* ── DIY Pi Kit ── */}
         <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 40, paddingBottom: 40 }}>
-          {sectionTag("Your own Raspberry Pi: one command", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
+          {sectionTag("Raspberry Pi: one command", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", "var(--text)")}
           <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 8px" }}>
-            For any Raspberry Pi with an ADS-B radio, and for kits that did not come pre-flashed. You need a Windows PC or Mac for a few minutes, to prepare the SD card and paste one command. There is no phone or hotspot step.
+            For a FinalPing kit or any Raspberry Pi with an ADS-B radio. You need a Windows PC or Mac for a few minutes, to prepare the SD card and paste one command. There is no phone or hotspot step.
           </p>
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "24px 0 8px" }}>Step 1 — Flash the SD card</h3>
@@ -343,8 +324,6 @@ export default function GroundStationSetupPage() {
             { q: "\"The decoder is not running yet\"", a: "The radio is not plugged in or was not detected. Plug the Pro Stick Plus in and restart the Pi: sudo reboot. To look closer: sudo systemctl status readsb (on kits flashed before November 2026: sudo systemctl status finalping-dump1090)." },
             { q: "The Ground Station page says adsb.lol is not being fed", a: "Run the install command again, which adds the feed if it is missing, and check it: sudo systemctl status adsblol-feed. The decoder has to be running for there to be anything to feed." },
             { q: "SSH gives \"host key changed\" warning", a: "You previously connected to a different Pi at this IP address. Clear the old key (replace the IP with your Pi's actual IP) and try again:\n\nssh-keygen -R 192.168.1.45" },
-            { q: "Pre-flashed kit: \"Ground station not enabled\" during phone setup", a: "The phone setup needs the email of a FinalPing account with a plan. To redo it, delete the config and reboot, and the Pi will broadcast FinalPing-Setup again:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot" },
-            { q: "Pre-flashed kit: the Pi won't connect to my WiFi after setup", a: "The SSID or password entered during phone setup may have been wrong. To redo setup, delete the config and reboot:\n\nsudo rm /home/pi/finalping-ground/config.json && sudo reboot\n\nThen connect to FinalPing-Setup again and re-enter your WiFi credentials and email." },
             { q: "No aircraft appearing", a: "Make sure your antenna is connected and has a view of the sky. Indoor antennas near windows work but outdoor antennas give much better range. Confirm your aircraft are added in the web app under Aircraft." },
           ].map((item, i, arr) => (
             <div key={item.q} style={{

@@ -140,7 +140,7 @@ export default function GroundStationDevicesPage() {
                   FinalPing Official Bundle
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>Ground Station Kit — from $200</div>
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Pi Zero 2 W · Pro Stick Plus · Antenna · All cables included. Optional pre-built &amp; flashed for +$25.</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Pi Zero 2 W · Pro Stick Plus · Antenna · All cables included.</div>
               </div>
             </div>
             <div style={{

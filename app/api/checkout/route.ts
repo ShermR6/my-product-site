@@ -18,9 +18,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // "ground-station" unlock is no longer sold.
 const PRICE_MAP: Record<string, string> = {
   "ground-station-kit": process.env.STRIPE_PRICE_GROUND_STATION_KIT!,
-  "ground-station-kit-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_BUILT!,
   "ground-station-kit-stubby": process.env.STRIPE_PRICE_GROUND_STATION_KIT_STUBBY!,
-  "ground-station-kit-stubby-built": process.env.STRIPE_PRICE_GROUND_STATION_KIT_STUBBY_BUILT!,
   "pro-stick-plus": process.env.STRIPE_PRICE_PRO_STICK_PLUS!,
   "stand-antenna": process.env.STRIPE_PRICE_STAND_ANTENNA!,
   "stubby-antenna-solo": process.env.STRIPE_PRICE_STUBBY_ANTENNA_SOLO!,
@@ -28,17 +26,14 @@ const PRICE_MAP: Record<string, string> = {
 
 const ONE_TIME_TIERS = new Set([
   "ground-station-kit",
-  "ground-station-kit-built",
   "ground-station-kit-stubby",
-  "ground-station-kit-stubby-built",
   "pro-stick-plus",
   "stand-antenna",
   "stubby-antenna-solo",
 ]);
 
 const HARDWARE_TIERS = new Set([
-  "ground-station-kit", "ground-station-kit-built",
-  "ground-station-kit-stubby", "ground-station-kit-stubby-built",
+  "ground-station-kit", "ground-station-kit-stubby",
   "pro-stick-plus", "stand-antenna", "stubby-antenna-solo",
 ]);
 
