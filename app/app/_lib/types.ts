@@ -116,7 +116,7 @@ export type GroundStats = {
   uptime_s?: number;
   msg_rate?: number;
   aircraft_count?: number;
-  /** Whether adsb.lol can see this receiver's feed. Receivers from 3.9 on. */
+  /** Whether adsb.lol is getting data from this receiver's own feed. */
   feeding?: boolean;
 };
 
@@ -135,6 +135,9 @@ export type FeederStatus = {
   /** Last day the plan holds if the receiver stopped feeding now. */
   valid_until: string | null;
   plan: "feeder" | "paid" | "none";
+  /** The receiver last heard from. linked false: it already earns for another
+   *  account. null: it has not said which receiver it is (software before 4.0). */
+  device?: { model: string | null; linked: boolean | null; why: "no_feed_client" | "not_connected" | "no_data" | null } | null;
 };
 
 export type GroundStatus = {

@@ -163,6 +163,12 @@ function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | nul
   const since = day(feeder?.since);
   // A new feeder is credited the days before its first feed.
   const credited = !!feeder && feeder.days_fed < counted;
+  const device = feeder?.device ?? null;
+  const taken = device?.linked === false;
+  const whyNot =
+    device?.why === "no_feed_client" ? "This receiver has no adsb.lol feed of its own. Run the install command below again to add it."
+    : device?.why === "no_data" ? "The adsb.lol feed is connected but carries no data. Check that the radio is plugged in."
+    : "adsb.lol is not getting a feed from this receiver. Run the install command below again to repair it.";
 
   const lead =
     plan === "feeder" ? "Your plan is free while this receiver keeps feeding adsb.lol."
@@ -182,14 +188,20 @@ function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | nul
       <div className="fa-kv"><span>Today</span><span className="mono">{today >= perDayH * 60 ? "Counted" : `${duration(today * 60)} fed · counts at ${perDayH} h`}</span></div>
       <div className="fa-kv"><span>Feeding adsb.lol now</span><span>{feedingNow === true ? "Yes" : feedingNow === false ? "No" : "—"}</span></div>
       {until && <div className="fa-kv"><span>{plan === "feeder" ? "Covered through" : "Would cover through"}</span><span className="mono">{until}</span></div>}
+      {device?.model && <div className="fa-kv"><span>Receiver</span><span>{device.model}</span></div>}
+      {taken && (
+        <div className="fa-banner warn" role="status" style={{ marginTop: 12, marginBottom: 0, display: "block", lineHeight: 1.6 }}>
+          <strong>This receiver already earns the free plan for another FinalPing account.</strong> One receiver earns it for one account, so its feeding does not count here. A receiver that stops feeding for its old account is free again after 14 days. If that is not what happened, contact us.
+        </div>
+      )}
       {credited && since && (
         <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The days before your first feed on {since} count in your favour, once. After that it is the days the receiver really fed.</p>
       )}
       {feedingNow === false && online && (
-        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The receiver is online, but adsb.lol does not see a feed from its network. Run the install command below again to add the feed.</p>
+        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>{whyNot}</p>
       )}
-      {feedingNow === undefined && online && (
-        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>Feeding is reported by receiver software 3.9 and later. Yours updates itself.</p>
+      {online && device?.linked == null && device?.why == null && (
+        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The free plan needs receiver software 4.0, which says which receiver is feeding. Yours updates itself within the hour.</p>
       )}
     </Card>
   );

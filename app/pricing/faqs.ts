@@ -18,7 +18,7 @@ export const faqs = [
   },
   {
     q: "Can I get FinalPing for free?",
-    a: "Yes, by running a receiver that feeds adsb.lol, the open flight-data network FinalPing draws on. Set up a Ground Station on a Raspberry Pi with the one-command installer and it feeds adsb.lol by itself. While it has fed for at least 18 hours a day on 5 of the last 7 days, the whole plan is free, with no card needed. A new receiver gets the plan from its first report. If it stops feeding, the plan ends a few days later and your aircraft and settings are kept.",
+    a: "Yes, by running a receiver that feeds adsb.lol, the open flight-data network FinalPing draws on. Set up a Ground Station on a Raspberry Pi with the one-command installer and it feeds adsb.lol by itself. While it has fed for at least 18 hours a day on 5 of the last 7 days, the whole plan is free, with no card needed. A new receiver gets the plan from its first report, and each receiver earns it for one account. If it stops feeding, the plan ends a few days later and your aircraft and settings are kept.",
   },
   {
     q: "Is there a limit on text message alerts?",

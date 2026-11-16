@@ -916,6 +916,103 @@ export default function AdminPage() {
             ))}
           </div>
         )}
+        <FeedersSection />
+      </div>
+    );
+  }
+
+  // ── Feeders: the free plan for feeding adsb.lol ──────────────────────────────
+  type Feeder = {
+    email: string; plan: "feeder" | "paid" | "none"; qualifies: boolean;
+    days_counted: number; days_needed: number; window_days: number; minutes_today: number;
+    since: string | null; valid_until: string | null; online: boolean; last_seen: string | null;
+    version: string | null; feeding: boolean | null; model: string | null;
+    devices: { kind: string; id: string; first_seen: string | null; last_seen: string | null }[];
+    refused: { email: string; kind: string; at: string | null }[];
+  };
+
+  function FeedersSection() {
+    const [feeders, setFeeders] = React.useState<Feeder[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [failed, setFailed] = React.useState(false);
+
+    React.useEffect(() => {
+      fetch("/api/admin/feeders")
+        .then(r => r.json())
+        .then(d => { if (Array.isArray(d.feeders)) setFeeders(d.feeders); else setFailed(true); })
+        .catch(() => setFailed(true))
+        .finally(() => setLoading(false));
+    }, []);
+
+    const ago = (iso: string | null) => {
+      if (!iso) return "never";
+      const diff = Math.floor((Date.now() - new Date(iso.endsWith("Z") ? iso : iso + "Z").getTime()) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    };
+    const planLabel = { feeder: "Free plan", paid: "Paid plan", none: "No plan" };
+    const free = feeders.filter(f => f.plan === "feeder").length;
+    const clashes = feeders.filter(f => f.refused.length > 0).length;
+
+    return (
+      <div style={{ marginTop: 36 }}>
+        <div style={s.tabHeader}>
+          <h2 style={s.tabTitle}>Feeders</h2>
+          <p style={s.tabSub}>
+            {feeders.length} account{feeders.length !== 1 ? "s" : ""} with a receiver feeding adsb.lol · {free} on the free plan
+            {clashes > 0 ? ` · ${clashes} with a refused attempt` : ""}
+          </p>
+        </div>
+        {loading ? (
+          <div style={{ color: "var(--muted)", fontSize: 13 }}>Loading feeders...</div>
+        ) : failed ? (
+          <div style={{ color: "var(--muted)", fontSize: 13 }}>Could not load the feeder list.</div>
+        ) : feeders.length === 0 ? (
+          <div style={{ color: "var(--muted)", fontSize: 13, padding: "40px 0", textAlign: "center" }}>No receiver has fed adsb.lol yet.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {feeders.map((f) => (
+              <div key={f.email} style={s.card}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{f.email}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                      {f.model ?? "Unknown receiver"}{f.version ? ` · v${f.version}` : ""} · {f.online ? "online" : `last seen ${ago(f.last_seen)}`}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "monospace", marginTop: 4 }}>
+                      {f.devices.map(d => `${d.kind === "hw" ? "machine" : "feed"} ${d.id}`).join("  ·  ")}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "right" }}>
+                      <div>{f.days_counted} of {f.window_days} days · {f.days_needed} needed</div>
+                      <div style={{ color: "var(--text-2)", fontWeight: 600 }}>
+                        {Math.floor(f.minutes_today / 60)}h {f.minutes_today % 60}m today · {f.feeding === true ? "feeding now" : f.feeding === false ? "not feeding" : "unknown"}
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700,
+                      background: f.plan === "feeder" ? "rgba(255,255,255,0.05)" : "rgba(107,114,128,0.1)",
+                      border: `1px solid ${f.plan === "feeder" ? "rgba(255,255,255,0.7)" : "rgba(107,114,128,0.3)"}`,
+                      color: f.plan === "none" ? "var(--muted)" : "var(--text)",
+                    }}>
+                      {planLabel[f.plan] ?? f.plan}{f.plan !== "feeder" && f.qualifies ? " · qualifies" : ""}
+                    </div>
+                  </div>
+                </div>
+                {f.refused.length > 0 && (
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--warn)", lineHeight: 1.7 }}>
+                    {f.refused.map((r, i) => (
+                      <div key={i}>Refused: {r.email} tried to earn with this {r.kind === "hw" ? "machine" : "feed"} · {ago(r.at)}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
