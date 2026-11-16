@@ -289,7 +289,7 @@ export default function GroundStationSetupPage() {
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Feeding adsb.lol, and the free plan</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            The installer sets the Pi up to feed <a href="https://adsb.lol" target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>adsb.lol</a>, the community-run open network FinalPing draws on. A receiver that feeds on 5 of any 7 days earns the whole FinalPing plan for free, for as long as it keeps feeding, and a new receiver gets it from its first report. The Ground Station page shows where you stand.
+            The installer sets the Pi up to feed <a href="https://adsb.lol" target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>adsb.lol</a>, the community-run open network FinalPing draws on. A receiver that feeds for 18 hours a day, on 5 of every 7 days, earns the whole FinalPing plan for free, for as long as it keeps feeding, and a new receiver gets it from its first report. The Ground Station page shows where you stand.
           </p>
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Optional — MLAT</h3>

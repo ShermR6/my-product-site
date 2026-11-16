@@ -167,8 +167,8 @@ function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | nul
   const lead =
     plan === "feeder" ? "Your plan is free while this receiver keeps feeding adsb.lol."
     : plan === "paid" && feeder?.qualifies ? "You are on a paid plan, and this receiver feeds enough to earn the plan for free. If the paid plan ends, the free one takes over."
-    : plan === "paid" ? `You are on a paid plan. A receiver that feeds adsb.lol on ${needed} of any ${windowDays} days earns the plan for free.`
-    : `Feed adsb.lol on ${needed} of any ${windowDays} days and the whole plan is free. A new receiver gets it from its first report.`;
+    : plan === "paid" ? `You are on a paid plan. A receiver that feeds adsb.lol for ${perDayH} hours a day, on ${needed} of every ${windowDays} days, earns the plan for free.`
+    : `Feed adsb.lol for ${perDayH} hours a day, on ${needed} of every ${windowDays} days, and the whole plan is free. A new receiver gets it from its first report.`;
 
   return (
     <Card title="Free plan for feeding" note={plan === "feeder" ? "Active" : feeder?.qualifies ? "Earned" : "Not earned yet"}>
