@@ -195,6 +195,30 @@ export default function AlertsPage() {
     airport: t.airport?.airport_code ?? "KDTO", runway: "Runway 18",
   };
 
+  // ── aircraft with their own rings, which these rings don't reach ──
+  const customRings = t.aircraft.filter((a) => (a.alert_distances ?? []).some((n) => Number(n) > 0));
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  async function resetAircraftRings() {
+    setResetting(true); setErr(""); setOk("");
+    let done = 0;
+    try {
+      // One at a time: each save reloads that user's aircraft in the tracker.
+      for (const a of customRings) {
+        await api(`aircraft/${a.id}`, { method: "PUT", body: { alert_distances: [] } });
+        done++;
+      }
+      setOk(`${done === 1 ? "1 aircraft now uses" : `All ${done} aircraft now use`} these rings.`);
+    } catch (e) {
+      setErr(`${done ? `${done} of ${customRings.length} switched, then: ` : ""}${errorText(e)}`);
+    } finally {
+      setConfirmReset(false);
+      setResetting(false);
+      await t.reload();
+    }
+  }
+
   const dirty = routingDirty || quietDirty || ringsDirty;
   const cols = t.integrations;
   const ringsFull = plan.rings != null && rings.length >= plan.rings;
@@ -283,7 +307,37 @@ export default function AlertsPage() {
           <div className="fa-note" style={{ padding: "12px 22px 16px", borderTop: "1px solid #1E1E1E" }}>
             {cols.length === 0
               ? <>These have nowhere to go yet. <Link className="fa-link" href="/app/integrations">Connect a channel</Link></>
-              : <>Landed and Took off are always listed; untick them to switch them off. An aircraft with its own rings keeps those: see <Link className="fa-link" href="/app/aircraft">Aircraft</Link>.</>}
+              : <>Landed and Took off are always listed; untick them to switch them off.</>}
+          </div>
+        )}
+        {t.hasAirport !== false && customRings.length > 0 && (
+          <div style={{ padding: "12px 22px 16px", borderTop: "1px solid #1E1E1E", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div className="fa-note" style={{ minWidth: 0, flex: "1 1 280px" }}>
+              {confirmReset ? (
+                <>Remove the own rings of {customRings.map((a) => a.tail_number).join(", ")}? {customRings.length === 1 ? "It" : "They"} will alert at {savedRings.join(", ")} nm like the rest.</>
+              ) : (
+                <>
+                  {customRings.length === 1 ? "1 aircraft has" : `${customRings.length} aircraft have`} {customRings.length === 1 ? "its" : "their"} own rings and {customRings.length === 1 ? "doesn't" : "don't"} use these:{" "}
+                  <span className="mono">{customRings.map((a) => a.tail_number).join(", ")}</span>.{" "}
+                  Change one on <Link className="fa-link" href="/app/aircraft">Aircraft</Link>.
+                </>
+              )}
+            </div>
+            <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+              {confirmReset ? (
+                <>
+                  <Btn small variant="primary" disabled={resetting} onClick={resetAircraftRings}>
+                    {resetting ? "Switching…" : `Switch ${customRings.length === 1 ? "it" : `all ${customRings.length}`}`}
+                  </Btn>
+                  <Btn small disabled={resetting} onClick={() => setConfirmReset(false)}>Cancel</Btn>
+                </>
+              ) : (
+                <Btn small disabled={ringsDirty || busy} title={ringsDirty ? "Save your ring changes first" : undefined}
+                  onClick={() => { setConfirmReset(true); setOk(""); setErr(""); }}>
+                  Use these rings for all aircraft
+                </Btn>
+              )}
+            </div>
           </div>
         )}
       </div>
