@@ -2,7 +2,7 @@
 
 // Integrations: where alerts get delivered. Connect, test, edit, pause, remove.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTracker } from "../_lib/store";
 import { api, ApiError, errorText } from "../_lib/tracker";
 import { CHANNELS, channelLabel, clock, dayLabel, parseUtc, planOf } from "../_lib/format";
@@ -82,6 +82,19 @@ export default function IntegrationsPage() {
   const available = ORDER.filter((k) => !have.has(k));
   const atLimit = plan.integrations != null && connected.length >= plan.integrations;
 
+  // Texts are the one channel with a monthly allowance: show how much of it is used.
+  const hasSms = have.has("sms");
+  const [sms, setSms] = useState<{ sent: number; limit: number; resets_at: string } | null>(null);
+  const smsRecent = t.recent.filter((n) => n.integration_type === "sms").length;
+  useEffect(() => {
+    if (!hasSms) { setSms(null); return; }
+    let live = true;
+    api<{ sent: number; limit: number; resets_at: string }>("integrations/sms-usage")
+      .then((u) => { if (live) setSms(u); })
+      .catch(() => { if (live) setSms(null); });
+    return () => { live = false; };
+  }, [hasSms, smsRecent]);
+
   const weekAgo = t.now - 7 * 86400000;
   function stats(type: string) {
     let ok = 0, total = 0;
@@ -155,6 +168,7 @@ export default function IntegrationsPage() {
                     <span className="mono" style={failed ? { color: "var(--warn)" } : undefined}>{s.total ? `${s.ok} / ${s.total}${failed ? ` · ${failed} failed` : ""}` : "—"}</span>
                   </div>
                   <div className="fa-kv"><span>Last alert</span><span className="mono">{s.last ? `${clock(s.last)} ${dayLabel(s.last).toLowerCase()}` : "None yet"}</span></div>
+                  {i.type === "sms" && sms && <SmsUsage {...sms} />}
                 </div>
                 {note && <div className={note.ok ? "fa-ok" : "fa-error"} role="status" style={{ marginTop: 10 }}>{note.text}</div>}
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
@@ -200,6 +214,30 @@ export default function IntegrationsPage() {
           onDone={async () => { setEdit(null); await t.reload(); }}
         />
       )}
+    </div>
+  );
+}
+
+/** Texts sent this month against the plan's allowance, with when it starts over. */
+function SmsUsage({ sent, limit, resets_at }: { sent: number; limit: number; resets_at: string }) {
+  const used = Math.min(1, limit > 0 ? sent / limit : 1);
+  const out = sent >= limit;
+  const near = !out && used >= 0.8;
+  const resets = parseUtc(resets_at);
+  const day = resets ? resets.toLocaleDateString([], { day: "numeric", month: "short", timeZone: "UTC" }) : "the 1st";
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div className="fa-kv" style={{ borderBottom: "none", paddingBottom: 4 }}>
+        <span>Texts this month</span>
+        <span className="mono" style={out || near ? { color: "var(--warn)" } : undefined}>{sent} / {limit}</span>
+      </div>
+      <div role="progressbar" aria-label="Texts used this month" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={Math.min(sent, limit)}
+        style={{ height: 4, borderRadius: 2, background: "#1E1E1E", overflow: "hidden" }}>
+        <div style={{ width: `${used * 100}%`, height: "100%", background: out || near ? "var(--warn)" : "var(--text)" }} />
+      </div>
+      <div className="fa-note" style={{ marginTop: 6, color: out ? "var(--warn)" : undefined }}>
+        {out ? `All used. Texts start again on ${day}; other channels keep working.` : `Starts over on ${day}.`}
+      </div>
     </div>
   );
 }
