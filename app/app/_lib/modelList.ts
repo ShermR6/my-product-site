@@ -117,7 +117,7 @@ export const MODEL_LIST: [string, string, string, string, string][] = [
   ["lgez", "Rutan Long-EZ", "a3e236a7", "LONG-?EZ\\w*|LGEZ|VARI-?EZE?|VEZE", "RUTAN|COZY\\w*"],
   ["velo", "Velocity XL", "fc1bc034", "VELOCITY\\w*|VELO", ""],
   ["jab", "Jabiru J170", "ec8cd299", "JABIRU\\w*|J-?1[67]0\\w*|J-?2[34]0\\w*|JAB[24]", ""],
-  ["ch650", "Zenith CH 650", "103c90cc", "CH ?-?6[05][01]\\w*|ZODIAC|CH60|CH65", ""],
+  ["ch650", "Zenith CH 650", "3b739a66", "CH ?-?6[05][01]\\w*|ZODIAC|CH60|CH65", ""],
   ["ch750", "Zenith STOL CH 750", "fc614903", "CH ?-?7[05][01]\\w*|STOL CH\\w*|CH70|CH75", "ZENAIR|ZENITH"],
   ["virus", "Pipistrel Virus SW", "6859bd71", "VIRUS\\w*|PIVI", "PIPISTREL\\w*|SINUS|PISI"],
   ["g115", "Grob G 115", "1b81cf14", "G[- ]?115\\w*|TUTOR", ""],
