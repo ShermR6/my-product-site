@@ -47,7 +47,7 @@ export default function LiveMapPage() {
     let live = true;
     const load = () => api<FlightTrail>(`aircraft/trail?tail=${encodeURIComponent(selected)}`)
       .then((r) => { if (live) setLoaded({ ...r, at: Date.now() }); })
-      .catch(() => { /* the short trail stays */ });
+      .catch(() => { /* keep the flight already loaded; the next try is in half a minute */ });
     load();
     const id = window.setInterval(load, FLIGHT_RELOAD_MS);
     return () => { live = false; window.clearInterval(id); };

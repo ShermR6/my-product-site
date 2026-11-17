@@ -226,8 +226,7 @@ export default function MapGL({
         if (!src) return;
         const features: GeoJSON.Feature[] = [];
         // Only the picked aircraft has a line: nothing is drawn until one is
-        // picked. The line fades towards its older end; a whole flight fades
-        // less, so its start can still be seen.
+        // picked. The line fades a little towards its older end.
         const picked = selectedRef.current ?? null;
         const fade = (pts: [number, number][], color: string, full: boolean) => {
           const n = pts.length - 1;
@@ -249,22 +248,18 @@ export default function MapGL({
         let drewWhole = false;
         for (const tr of S.tracks.values()) {
           if (tr.plane.tail !== picked) continue;
-          const full = whole !== null;
-          // Until the whole flight has loaded (or when the backend has none),
-          // the picked aircraft shows what this page has seen of it. On the
-          // ground that is nothing, so only a loaded flight is drawn there.
-          if (tr.plane.dim && !full) continue;
-          const own = trailOf(tr.plane.tail);
-          const pts: [number, number][] = full
-            ? [
-              ...whole!.points.map((p): [number, number] => [p[1], p[0]]),
-              ...own.filter((f) => f.t > whole!.at).map((f): [number, number] => [f.lon, f.lat]),
-            ]
-            : own.map((f) => [f.lon, f.lat]);
-          if (!pts.length) continue;
-          pts.push(S.toLngLat(tr.x, tr.z)); // the trail always ends at the aircraft
+          // The line is the flight the backend recorded, which is there
+          // however late this page was opened. Nothing is drawn from what the
+          // page itself has seen, except to carry the line on from the moment
+          // the flight was loaded to where the aircraft is now.
+          if (!whole) continue;
+          const pts: [number, number][] = [
+            ...whole.points.map((p): [number, number] => [p[1], p[0]]),
+            ...trailOf(tr.plane.tail).filter((f) => f.t > whole.at).map((f): [number, number] => [f.lon, f.lat]),
+          ];
+          pts.push(S.toLngLat(tr.x, tr.z)); // the line always ends at the aircraft
           fade(pts, tr.color, true);
-          if (full) drewWhole = true;
+          drewWhole = true;
         }
         // Picked, but not on the map right now: its last flight on its own.
         if (whole && !drewWhole && whole.points.length > 1) {
