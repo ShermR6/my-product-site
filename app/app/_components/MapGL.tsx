@@ -178,6 +178,8 @@ export default function MapGL({
   useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
   const flightRef = useRef(flight);
   useEffect(() => { flightRef.current = flight; stage.current?.drawTrails(); }, [flight]);
+  const selectedRef = useRef(selected);
+  useEffect(() => { selectedRef.current = selected; stage.current?.drawTrails(); }, [selected]);
 
   // Create the map once.
   useEffect(() => {
@@ -223,8 +225,10 @@ export default function MapGL({
         const src = map.getSource("fp-trails") as ml.GeoJSONSource | undefined;
         if (!src) return;
         const features: GeoJSON.Feature[] = [];
-        // A line that fades towards its older end. The picked aircraft's
-        // whole flight fades less, so its start can still be seen.
+        // Only the picked aircraft has a line: nothing is drawn until one is
+        // picked. The line fades towards its older end; a whole flight fades
+        // less, so its start can still be seen.
+        const picked = selectedRef.current ?? null;
         const fade = (pts: [number, number][], color: string, full: boolean) => {
           const n = pts.length - 1;
           const bands = Math.min(14, n);
@@ -240,12 +244,15 @@ export default function MapGL({
             });
           }
         };
-        const whole = flightRef.current && flightRef.current.points.length > 0 ? flightRef.current : null;
+        const loaded = flightRef.current;
+        const whole = picked && loaded && loaded.tail === picked && loaded.points.length > 0 ? loaded : null;
         let drewWhole = false;
         for (const tr of S.tracks.values()) {
-          const full = whole?.tail === tr.plane.tail;
-          // An aircraft on the ground has no trail, unless it is the picked
-          // one: then the flight it arrived on is shown.
+          if (tr.plane.tail !== picked) continue;
+          const full = whole !== null;
+          // Until the whole flight has loaded (or when the backend has none),
+          // the picked aircraft shows what this page has seen of it. On the
+          // ground that is nothing, so only a loaded flight is drawn there.
           if (tr.plane.dim && !full) continue;
           const own = trailOf(tr.plane.tail);
           const pts: [number, number][] = full
@@ -256,7 +263,7 @@ export default function MapGL({
             : own.map((f) => [f.lon, f.lat]);
           if (!pts.length) continue;
           pts.push(S.toLngLat(tr.x, tr.z)); // the trail always ends at the aircraft
-          fade(pts, tr.color, full);
+          fade(pts, tr.color, true);
           if (full) drewWhole = true;
         }
         // Picked, but not on the map right now: its last flight on its own.
