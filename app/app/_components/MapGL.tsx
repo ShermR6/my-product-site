@@ -84,6 +84,55 @@ const KT = 0.514444;            // knots to metres per second
 const STALE_MS = 90_000;        // a position older than this is where it was, not where it is
 const ROLL_KT = 3;              // on the ground, slower than this is standing still
 
+// On the ground an aircraft is drawn on the runway or taxiway it is using, not
+// beside it where the reported position put it (a few metres of error is
+// normal). Taxiing or rolling it snaps from further out than standing still,
+// so one parked just off a taxiway stays where it is.
+const SNAP_RUNWAY_M = 45;       // moving, from a runway's centreline
+const SNAP_TAXIWAY_M = 30;      // moving, from a taxiway's
+const SNAP_STILL_M = 12;        // standing still, from either
+const SNAP_ALIGN_DEG = 35;      // a moving aircraft this close to the line's direction points along it
+const NET_REACH_M = 6000;       // lines this far from the airport are not looked at
+
+/** A runway or taxiway centreline piece, in lng/lat. */
+type NetLine = { a: [number, number]; b: [number, number]; runway: boolean };
+/** The same in the scene's local metres. */
+type NetSeg = { ax: number; az: number; bx: number; bz: number; runway: boolean };
+
+/**
+ * The closest point on the ground network to (x, z), if one is near enough.
+ * Moving, with a heading, it reaches further, but only to a line it is
+ * moving along: one it is crossing is not the one it is on. `along` is the
+ * heading turned onto that line.
+ */
+function snapToNet(net: NetSeg[], x: number, z: number, heading: number | null) {
+  let best: { x: number; z: number; along: number | null; d: number } | null = null;
+  for (const s of net) {
+    const dx = s.bx - s.ax, dz = s.bz - s.az;
+    const len2 = dx * dx + dz * dz;
+    if (len2 < 1) continue;
+    const t = Math.max(0, Math.min(1, ((x - s.ax) * dx + (z - s.az) * dz) / len2));
+    const px = s.ax + dx * t, pz = s.az + dz * t;
+    const d = Math.hypot(x - px, z - pz);
+    if (d > SNAP_RUNWAY_M || (best && d >= best.d)) continue;
+    // x is east and z is south, so north is -z.
+    const along = heading == null ? null : alongLine(heading, ((Math.atan2(dx, -dz) * 180) / PI + 360) % 360);
+    const reach = along != null ? (s.runway ? SNAP_RUNWAY_M : SNAP_TAXIWAY_M) : SNAP_STILL_M;
+    if (d > reach) continue;
+    best = { x: px, z: pz, along, d };
+  }
+  return best;
+}
+
+/** `heading` turned onto the line, whichever way along it is closer, or null when it is crossing the line. */
+function alongLine(heading: number, dir: number): number | null {
+  const one = headingGap(heading, dir);
+  const back = (dir + 180) % 360;
+  if (one <= SNAP_ALIGN_DEG) return dir;
+  if (headingGap(heading, back) <= SNAP_ALIGN_DEG) return back;
+  return null;
+}
+
 /** Moving and recently heard: in the air above 20 kt, or rolling or taxiing on the ground. */
 function underway(p: MapPlane) {
   const fresh = p.seenAt == null || Date.now() - p.seenAt < STALE_MS;
@@ -176,6 +225,12 @@ type Stage = {
   /** Start and stop keeping the camera on the picked aircraft. */
   startFollow: (insetBottom: number) => void;
   endFollow: () => void;
+  /** The home airport's runways and taxiways: from the basemap, at the zoom they were read at, and our own runway strips. */
+  netLines: NetLine[]; netZoom: number; stripLines: NetLine[];
+  /** Read the basemap's runways and taxiways near the airport, when the view shows them. */
+  readNet: () => void;
+  /** All of it in local metres, for snapping aircraft on the ground. */
+  groundNet: () => NetSeg[];
 };
 
 const FOLLOW_EASE_MS = 700;      // how long the camera takes to get onto the aircraft
@@ -285,6 +340,9 @@ export default function MapGL({
       }
     };
 
+    // The ground network in local metres, rebuilt when the lines or the origin change.
+    let netCache: { ox: number; oy: number; net: NetLine[]; strips: NetLine[]; segs: NetSeg[] } | null = null;
+
     const S: Stage = {
       map, tracks: new Map(), ox: 0.5, oy: 0.5, s: 1, lat0: 0, labels: [], scene, ground: 0,
       startFollow(insetBottom) {
@@ -315,6 +373,54 @@ export default function MapGL({
       setOrigin(lat, lon) {
         const m = ml.MercatorCoordinate.fromLngLat([lon, lat]);
         S.ox = m.x; S.oy = m.y; S.s = m.meterInMercatorCoordinateUnits(); S.lat0 = lat;
+        // A new airport: its taxiways have to be read again.
+        S.netLines = []; S.netZoom = 0;
+      },
+      netLines: [], netZoom: 0, stripLines: [],
+      readNet() {
+        // Zoomed out the basemap has no taxiways, and the lines it has are
+        // simplified. Its tiles stop getting more detailed at 14.
+        const zoom = Math.min(14, Math.floor(map.getZoom()));
+        if (zoom < 12 || zoom < S.netZoom || !map.getSource("omt")) return;
+        let found: GeoJSON.Feature[];
+        try {
+          found = map.querySourceFeatures("omt", {
+            sourceLayer: "aeroway",
+            filter: ["all", ["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]], ["in", ["get", "class"], ["literal", ["runway", "taxiway"]]]],
+          });
+        } catch { return; }
+        const lines: NetLine[] = [];
+        const near = (c: number[]) => { const l = S.toLocal(c[1], c[0]); return Math.abs(l.x) < NET_REACH_M && Math.abs(l.z) < NET_REACH_M; };
+        for (const f of found) {
+          const g = f.geometry;
+          const parts = g.type === "LineString" ? [g.coordinates] : g.type === "MultiLineString" ? g.coordinates : [];
+          const runway = f.properties?.class === "runway";
+          for (const part of parts) {
+            for (let i = 1; i < part.length; i++) {
+              const a = part[i - 1], b = part[i];
+              if (near(a) || near(b)) lines.push({ a: [a[0], a[1]], b: [b[0], b[1]], runway });
+            }
+          }
+        }
+        if (!lines.length) return;
+        // A more detailed read replaces a rougher one. At the same detail the
+        // view may show another part of the airport, so the two are combined.
+        const key = (l: NetLine) => `${l.a[0].toFixed(6)},${l.a[1].toFixed(6)},${l.b[0].toFixed(6)},${l.b[1].toFixed(6)}`;
+        const keep = zoom === S.netZoom ? S.netLines : [];
+        const have = new Set(keep.map(key));
+        const added = lines.filter((l) => { const k = key(l); if (have.has(k)) return false; have.add(k); return true; });
+        if (!added.length && zoom === S.netZoom) return;
+        S.netLines = [...keep, ...added]; S.netZoom = zoom;
+      },
+      groundNet() {
+        const c = netCache;
+        if (c && c.ox === S.ox && c.oy === S.oy && c.net === S.netLines && c.strips === S.stripLines) return c.segs;
+        const segs = [...S.netLines, ...S.stripLines].map((l) => {
+          const a = S.toLocal(l.a[1], l.a[0]), b = S.toLocal(l.b[1], l.b[0]);
+          return { ax: a.x, az: a.z, bx: b.x, bz: b.z, runway: l.runway };
+        });
+        netCache = { ox: S.ox, oy: S.oy, net: S.netLines, strips: S.stripLines, segs };
+        return segs;
       },
       drawTrails() {
         const src = map.getSource("fp-trails") as ml.GeoJSONSource | undefined;
@@ -364,6 +470,8 @@ export default function MapGL({
       },
     };
     S.setOrigin(39.5, -98.35);
+    // Each time the map settles, pick up the runways and taxiways it now shows.
+    map.on("idle", () => S.readNet());
     stage.current = S;
 
     // ----- the aircraft layer -----
@@ -417,6 +525,7 @@ export default function MapGL({
           if (g != null) S.ground = g;
         } else S.ground = 0;
 
+        const net = S.groundNet();
         for (const tr of S.tracks.values()) {
           const p = tr.plane;
           // Glide ahead of the last report only for an aircraft we have watched move, and only for
@@ -429,15 +538,25 @@ export default function MapGL({
           const age = Math.min((now - tr.fixAt) / 1000, tr.gap * 1.25);
           const hr = ((p.heading ?? tr.hdg) * PI) / 180;
           const run = moving ? (p.speedKt as number) * KT * age : 0;
-          const tx = tr.fx + Math.sin(hr) * run;
-          const tz = tr.fz - Math.cos(hr) * run;
+          let tx = tr.fx + Math.sin(hr) * run;
+          let tz = tr.fz - Math.cos(hr) * run;
+          // On the ground: onto the runway or taxiway it is on, pointing along it while it moves.
+          let toHdg = p.heading;
+          if (p.dim && net.length) {
+            const rolling = (p.speedKt ?? 0) >= ROLL_KT;
+            const on = snapToNet(net, tx, tz, rolling ? p.heading : null);
+            if (on) {
+              tx = on.x; tz = on.z;
+              if (on.along != null) toHdg = on.along;
+            }
+          }
           const k = calm ? 1 : 1 - Math.exp(-dt / 0.45);
           const wasX = tr.x, wasZ = tr.z;
           tr.x += (tx - tr.x) * k;
           tr.z += (tz - tr.z) * k;
           if (elapsed > 0.001 && elapsed < 1 && !calm) { tr.vx = (tr.x - wasX) / elapsed; tr.vz = (tr.z - wasZ) / elapsed; } else { tr.vx = 0; tr.vz = 0; }
           tr.drawnAt = now;
-          if (p.heading != null) tr.hdg += ((((p.heading - tr.hdg) % 360) + 540) % 360 - 180) * k;
+          if (toHdg != null) tr.hdg += ((((toHdg - tr.hdg) % 360) + 540) % 360 - 180) * k;
 
           // Never draw an aircraft inside a hillside: parked ones sit on the ground under them.
           const under = S.ground ? map.queryTerrainElevation(S.toLngLat(tr.x, tr.z)) ?? S.ground : 0;
@@ -598,6 +717,11 @@ export default function MapGL({
     const set = (id: string, features: GeoJSON.Feature[]) =>
       (S.map.getSource(id) as ml.GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features });
     set("fp-runways", f.strips); set("fp-runway-ends", f.ends); set("fp-approach", f.paths);
+    // Aircraft on the ground snap to these as well as to the basemap's lines.
+    S.stripLines = f.strips.map((s) => {
+      const [a, b] = (s.geometry as GeoJSON.LineString).coordinates;
+      return { a: [a[0], a[1]] as [number, number], b: [b[0], b[1]] as [number, number], runway: true };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, lat, lon, runwaysKey, ringsKey]);
 
