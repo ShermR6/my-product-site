@@ -168,7 +168,10 @@ export default function LiveMapPage() {
               {flightSince && <div className="fa-note" style={{ marginTop: 10 }}>Flight path on the map since {clock(flightSince)}</div>}
               <div className="fa-note" style={{ marginTop: flightSince ? 4 : 10 }}>
                 {sendsTo.length ? `Sending to ${sendsTo.join(", ")}` : "No channel connected, so no alerts are going out."}
-                {" · "}{sel.source === "ground_station" ? "Ground Station" : "Network"}, position {ago(selAge).replace(" ago", "")} old
+                {" · "}
+                {sel.on_ground && sel.latitude == null
+                  ? `Last heard ${ago(selAge)} close to the airport and low, so it is shown as landed`
+                  : `${sel.source === "ground_station" ? "Ground Station" : "Network"}, position ${ago(selAge).replace(" ago", "")} old`}
               </div>
             </>
           ) : (
