@@ -38,6 +38,11 @@ export type MapPlane = {
 
 export type MapCoverage = { lat: number; lon: number; rangeNm: number[] };
 
+/** The picked aircraft's whole flight: points are [latitude, longitude, unix
+ *  seconds], oldest first. `at` is when it was loaded (ms, this browser's
+ *  clock); positions the page has seen since then are added to its end. */
+export type MapFlight = { tail: string; color?: string; at: number; points: [number, number, number][] };
+
 type Props = {
   center: { lat: number; lon: number } | null;
   code?: string | null;
@@ -45,6 +50,8 @@ type Props = {
   planes?: MapPlane[];
   selected?: string | null;
   onSelect?: (tail: string | null) => void;
+  /** The picked aircraft's whole flight, drawn in place of its short trail. */
+  flight?: MapFlight | null;
   showRings?: boolean;
   coverage?: MapCoverage | null;
   /** Bump to re-fit the view to the rings. */
@@ -161,7 +168,7 @@ type Stage = {
 
 export default function MapGL({
   center, code, rings, planes = [], selected, onSelect, showRings = true, coverage, fitSeq = 0, interactive = true, embedded = false, tilt = false,
-  runways, approach,
+  runways, approach, flight,
 }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
@@ -169,6 +176,8 @@ export default function MapGL({
   const [ready, setReady] = useState(false);
   const onSelectRef = useRef(onSelect);
   useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
+  const flightRef = useRef(flight);
+  useEffect(() => { flightRef.current = flight; stage.current?.drawTrails(); }, [flight]);
 
   // Create the map once.
   useEffect(() => {
@@ -214,23 +223,45 @@ export default function MapGL({
         const src = map.getSource("fp-trails") as ml.GeoJSONSource | undefined;
         if (!src) return;
         const features: GeoJSON.Feature[] = [];
-        for (const tr of S.tracks.values()) {
-          if (tr.plane.dim) continue;
-          const pts: [number, number][] = trailOf(tr.plane.tail).map((f) => [f.lon, f.lat]);
-          if (!pts.length) continue;
-          pts.push(S.toLngLat(tr.x, tr.z)); // the trail always ends at the aircraft
+        // A line that fades towards its older end. The picked aircraft's
+        // whole flight fades less, so its start can still be seen.
+        const fade = (pts: [number, number][], color: string, full: boolean) => {
           const n = pts.length - 1;
           const bands = Math.min(14, n);
+          const floor = full ? 0.42 : 0.08;
           for (let b = 0; b < bands; b++) {
             const from = Math.floor((b * n) / bands);
             const to = Math.floor(((b + 1) * n) / bands);
             if (to <= from) continue;
             features.push({
               type: "Feature",
-              properties: { color: tr.color, o: 0.08 + 0.82 * Math.pow((b + 1) / bands, 1.6) },
+              properties: { color, full, o: floor + (0.9 - floor) * Math.pow((b + 1) / bands, 1.6) },
               geometry: { type: "LineString", coordinates: pts.slice(from, to + 1) },
             });
           }
+        };
+        const whole = flightRef.current && flightRef.current.points.length > 0 ? flightRef.current : null;
+        let drewWhole = false;
+        for (const tr of S.tracks.values()) {
+          const full = whole?.tail === tr.plane.tail;
+          // An aircraft on the ground has no trail, unless it is the picked
+          // one: then the flight it arrived on is shown.
+          if (tr.plane.dim && !full) continue;
+          const own = trailOf(tr.plane.tail);
+          const pts: [number, number][] = full
+            ? [
+              ...whole!.points.map((p): [number, number] => [p[1], p[0]]),
+              ...own.filter((f) => f.t > whole!.at).map((f): [number, number] => [f.lon, f.lat]),
+            ]
+            : own.map((f) => [f.lon, f.lat]);
+          if (!pts.length) continue;
+          pts.push(S.toLngLat(tr.x, tr.z)); // the trail always ends at the aircraft
+          fade(pts, tr.color, full);
+          if (full) drewWhole = true;
+        }
+        // Picked, but not on the map right now: its last flight on its own.
+        if (whole && !drewWhole && whole.points.length > 1) {
+          fade(whole.points.map((p) => [p[1], p[0]]), whole.color && /^#[0-9a-fA-F]{6}$/.test(whole.color) ? whole.color : "#FAFAFA", true);
         }
         src.setData({ type: "FeatureCollection", features });
       },
@@ -365,7 +396,10 @@ export default function MapGL({
       map.addLayer({ id: "fp-ring-inner", type: "line", source: "fp-rings", filter: ["get", "inner"], paint: { "line-color": "#B0B0B0", "line-width": 1, "line-dasharray": [3, 5] } });
       map.addLayer({
         id: "fp-trails", type: "line", source: "fp-trails", layout: { "line-join": "round" },
-        paint: { "line-color": ["get", "color"], "line-opacity": ["get", "o"], "line-width": ["interpolate", ["linear"], ["zoom"], 6, 1.5, 12, 2.6] },
+        paint: {
+          "line-color": ["get", "color"], "line-opacity": ["get", "o"],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 6, ["case", ["get", "full"], 2.1, 1.5], 12, ["case", ["get", "full"], 3.3, 2.6]],
+        },
       });
       map.addLayer({ id: "fp-airport-halo", type: "circle", source: "fp-airport", paint: { "circle-radius": 9, "circle-color": "#FAFAFA", "circle-opacity": 0.15 } });
       map.addLayer({ id: "fp-airport-dot", type: "circle", source: "fp-airport", paint: { "circle-radius": 5, "circle-color": "#FAFAFA" } });

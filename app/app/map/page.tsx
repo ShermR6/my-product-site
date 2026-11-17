@@ -1,7 +1,8 @@
 "use client";
 
 // Live Map: the whole screen is the map. A dock lists the tracked aircraft;
-// picking one opens its sheet with the approach so far.
+// picking one opens its sheet with the approach so far, and draws the whole
+// flight it is on.
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -10,15 +11,19 @@ import { Box, Crosshair, X } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api } from "../_lib/tracker";
 import {
-  ago, airportRings, channelLabel, etaText, nm, parseUtc, recentAlertsFor, ringsFor, runwayFor, stageOf, STAGE_LABEL, whole,
+  ago, airportRings, channelLabel, clock, etaText, nm, parseUtc, recentAlertsFor, ringsFor, runwayFor, stageOf, STAGE_LABEL, whole,
 } from "../_lib/format";
-import type { GroundRange } from "../_lib/types";
+import type { FlightTrail, GroundRange } from "../_lib/types";
 import { Tail } from "../_components/kit";
 import ApproachLadder, { ladderSteps } from "../_components/ApproachLadder";
-import type { MapCoverage } from "../_components/MapGL";
+import type { MapCoverage, MapFlight } from "../_components/MapGL";
 import Plane3D from "../_components/Plane3D";
 import { paintOf, usePaints } from "../_lib/paint";
 import { mapPlanes } from "../_lib/mapPlanes";
+
+/** How often the picked aircraft's flight is loaded again. In between, the
+ *  positions the page gets anyway are added to the end of it. */
+const FLIGHT_RELOAD_MS = 30_000;
 
 const MapGL = dynamic(() => import("../_components/MapGL"), {
   ssr: false,
@@ -34,6 +39,19 @@ export default function LiveMapPage() {
   const [fitSeq, setFitSeq] = useState(0);
   const [tilt, setTilt] = useState(false);
   const paints = usePaints();
+  // The picked aircraft's whole flight, as the backend recorded it.
+  const [loaded, setLoaded] = useState<(FlightTrail & { at: number }) | null>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    let live = true;
+    const load = () => api<FlightTrail>(`aircraft/trail?tail=${encodeURIComponent(selected)}`)
+      .then((r) => { if (live) setLoaded({ ...r, at: Date.now() }); })
+      .catch(() => { /* the short trail stays */ });
+    load();
+    const id = window.setInterval(load, FLIGHT_RELOAD_MS);
+    return () => { live = false; window.clearInterval(id); };
+  }, [selected]);
 
   useEffect(() => {
     if (!showRange || range || t.groundEnabled !== true) return;
@@ -65,6 +83,12 @@ export default function LiveMapPage() {
   const selRunway = sel && selHot ? runwayFor(sel, t.airport?.runway_info) : null;
   const sendsTo = t.integrations.filter((i) => i.enabled).map((i) => channelLabel(i.type));
   const selAge = sel ? Math.max(0, (t.now - (parseUtc(sel.last_seen)?.getTime() ?? t.now)) / 1000) : null;
+  const trail = loaded && loaded.tail === selected && loaded.points.length > 1 ? loaded : null;
+  const flight: MapFlight | null = useMemo(
+    () => (trail ? { tail: trail.tail, color: paintOf(trail.tail, paints), at: trail.at, points: trail.points } : null),
+    [trail, paints],
+  );
+  const flightSince = trail ? parseUtc(trail.started_at) : null;
 
   if (t.hasAirport === false) {
     return (
@@ -82,7 +106,7 @@ export default function LiveMapPage() {
     <div className="fa-map-full">
       <MapGL
         center={center} code={t.airport?.airport_code} rings={rings} planes={planes}
-        selected={selected} onSelect={setSelected} showRings={showRings} coverage={coverage} fitSeq={fitSeq} tilt={tilt}
+        selected={selected} onSelect={setSelected} flight={flight} showRings={showRings} coverage={coverage} fitSeq={fitSeq} tilt={tilt}
         runways={t.airport?.runway_info} approach={landing}
       />
 
@@ -141,13 +165,17 @@ export default function LiveMapPage() {
                   <ApproachLadder vertical steps={ladderSteps(selRings, recentAlertsFor(selected, t.recent), sel)} />
                 </div>
               )}
-              <div className="fa-note" style={{ marginTop: 10 }}>
+              {flightSince && <div className="fa-note" style={{ marginTop: 10 }}>Flight path on the map since {clock(flightSince)}</div>}
+              <div className="fa-note" style={{ marginTop: flightSince ? 4 : 10 }}>
                 {sendsTo.length ? `Sending to ${sendsTo.join(", ")}` : "No channel connected, so no alerts are going out."}
                 {" · "}{sel.source === "ground_station" ? "Ground Station" : "Network"}, position {ago(selAge).replace(" ago", "")} old
               </div>
             </>
           ) : (
-            <p className="fa-note" style={{ marginTop: 14 }}>No position right now. It shows up here as soon as its transponder is heard.</p>
+            <p className="fa-note" style={{ marginTop: 14 }}>
+              No position right now. It shows up here as soon as its transponder is heard.
+              {flightSince ? ` The line on the map is its last flight, from ${clock(flightSince)}.` : ""}
+            </p>
           )}
         </aside>
       )}

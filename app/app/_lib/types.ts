@@ -40,6 +40,15 @@ export type LiveAircraft = {
   source: string | null;
 };
 
+/** One aircraft's flight so far, as the backend recorded it. */
+export type FlightTrail = {
+  tail: string;
+  /** When this flight's trail began. null when there is none. */
+  started_at: string | null;
+  /** Oldest first: [latitude, longitude, unix seconds]. */
+  points: [number, number, number][];
+};
+
 export type Runway = {
   leIdent: string | null;
   leHdg: number | null;
