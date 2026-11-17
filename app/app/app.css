@@ -206,6 +206,9 @@ a.fa-map-chip:hover { border-color: #4A4A4A; }
 button.fa-map-chip { cursor: pointer; font: inherit; font-size: 12px; }
 button.fa-map-chip:hover { border-color: #4A4A4A; }
 button.fa-map-chip[aria-pressed="true"] { color: var(--text); border-color: #4A4A4A; }
+/* follow, in the aircraft's sheet: white while it is on, like the current tab */
+button.fa-map-chip.fa-follow { margin-top: 12px; }
+button.fa-map-chip.fa-follow[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: #0A0A0A; }
 .fa-map-layers { position: absolute; z-index: 450; left: 16px; top: 16px; display: flex; gap: 8px; flex-wrap: wrap; max-width: calc(100% - 32px); }
 .fa-map-toast { position: absolute; z-index: 450; left: 16px; top: 58px; }
 .fa-map-sheet { right: 16px; top: 16px; width: 340px; max-height: calc(100% - 120px); overflow-y: auto; padding: 18px; }

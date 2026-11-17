@@ -2,12 +2,12 @@
 
 // Live Map: the whole screen is the map. A dock lists the tracked aircraft;
 // picking one opens its sheet with the approach so far, and draws the whole
-// flight it is on.
+// flight it is on. Follow keeps the map on it.
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { Box, Crosshair, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Box, Crosshair, LocateFixed, X } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api } from "../_lib/tracker";
 import {
@@ -32,7 +32,22 @@ const MapGL = dynamic(() => import("../_components/MapGL"), {
 
 export default function LiveMapPage() {
   const t = useTracker();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelectedTail] = useState<string | null>(null);
+  // Follow: the map stays on the picked aircraft. Picking another aircraft,
+  // closing the sheet or dragging the map lets go.
+  const [follow, setFollow] = useState(false);
+  const [insetBottom, setInsetBottom] = useState(0);
+  const sheet = useRef<HTMLElement | null>(null);
+  const setSelected = (tail: string | null) => { setSelectedTail(tail); setFollow(false); };
+  const toggleFollow = () => {
+    // On a phone the sheet lies over the lower part of the map.
+    const box = sheet.current;
+    const frame = box?.parentElement;
+    if (box && frame && window.matchMedia("(max-width: 860px)").matches) {
+      setInsetBottom(Math.max(0, Math.round(frame.getBoundingClientRect().bottom - box.getBoundingClientRect().top)));
+    } else setInsetBottom(0);
+    setFollow((v) => !v);
+  };
   const [showRings, setShowRings] = useState(true);
   const [showRange, setShowRange] = useState(false);
   const [range, setRange] = useState<GroundRange | null>(null);
@@ -107,6 +122,7 @@ export default function LiveMapPage() {
       <MapGL
         center={center} code={t.airport?.airport_code} rings={rings} planes={planes}
         selected={selected} onSelect={setSelected} flight={flight} showRings={showRings} coverage={coverage} fitSeq={fitSeq} tilt={tilt}
+        follow={follow} onFollowEnd={() => setFollow(false)} followInsetBottom={insetBottom}
         runways={t.airport?.runway_info} approach={landing}
       />
 
@@ -133,7 +149,7 @@ export default function LiveMapPage() {
 
       {/* selected aircraft */}
       {selected && (
-        <aside className="fa-float fa-map-sheet" aria-label={`${selected} details`}>
+        <aside ref={sheet} className="fa-float fa-map-sheet" aria-label={`${selected} details`}>
           <Plane3D key={selected} className="bleed" tail={selected} type={selInfo?.aircraft_type} color={paintOf(selected, paints)} height={150} />
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
             <div style={{ minWidth: 0 }}>
@@ -145,6 +161,13 @@ export default function LiveMapPage() {
             </div>
             <button className="fa-icon-btn" aria-label="Close" onClick={() => setSelected(null)}><X size={16} aria-hidden="true" /></button>
           </div>
+
+          {sel && sel.latitude != null && sel.longitude != null && (
+            <button className="fa-map-chip fa-follow" aria-pressed={follow} onClick={toggleFollow}
+              title={follow ? "Stop following" : "Keep the map on this aircraft"}>
+              <LocateFixed size={13} aria-hidden="true" />{follow ? "Following" : "Follow"}
+            </button>
+          )}
 
           {sel ? (
             <>

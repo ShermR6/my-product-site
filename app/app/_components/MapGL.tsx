@@ -52,6 +52,12 @@ type Props = {
   onSelect?: (tail: string | null) => void;
   /** The picked aircraft's whole flight, drawn in place of its short trail. */
   flight?: MapFlight | null;
+  /** Keep the camera on the picked aircraft, at its own height, however far in the view is zoomed. */
+  follow?: boolean;
+  /** The user dragged the map away from the aircraft, which ends following. */
+  onFollowEnd?: () => void;
+  /** Pixels of the map's bottom edge that something covers while following (the aircraft's panel on a phone). */
+  followInsetBottom?: number;
   showRings?: boolean;
   coverage?: MapCoverage | null;
   /** Bump to re-fit the view to the rings. */
@@ -147,8 +153,11 @@ type Track = {
   moves: number;
   /** Seconds between the last two changes: how long to keep gliding before the next one is due. */
   gap: number;
-  // Where it is drawn right now.
-  x: number; z: number; hdg: number;
+  // Where it is drawn right now. y is its height in metres, as the map measures height.
+  x: number; z: number; hdg: number; y: number;
+  // How fast that is changing (metres a second) and when it was last drawn:
+  // a camera following it aims at where it will be drawn next, not where it was.
+  vx: number; vz: number; drawnAt: number;
 };
 
 type Stage = {
@@ -164,11 +173,16 @@ type Stage = {
   scene: T.Scene;
   /** Height of the ground at the airport, in metres. Zero while the map is flat. */
   ground: number;
+  /** Start and stop keeping the camera on the picked aircraft. */
+  startFollow: (insetBottom: number) => void;
+  endFollow: () => void;
 };
+
+const FOLLOW_EASE_MS = 700;      // how long the camera takes to get onto the aircraft
 
 export default function MapGL({
   center, code, rings, planes = [], selected, onSelect, showRings = true, coverage, fitSeq = 0, interactive = true, embedded = false, tilt = false,
-  runways, approach, flight,
+  runways, approach, flight, follow = false, onFollowEnd, followInsetBottom = 0,
 }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
@@ -180,6 +194,9 @@ export default function MapGL({
   useEffect(() => { flightRef.current = flight; stage.current?.drawTrails(); }, [flight]);
   const selectedRef = useRef(selected);
   useEffect(() => { selectedRef.current = selected; stage.current?.drawTrails(); }, [selected]);
+  const followRef = useRef(follow);
+  const onFollowEndRef = useRef(onFollowEnd);
+  useEffect(() => { onFollowEndRef.current = onFollowEnd; }, [onFollowEnd]);
 
   // Create the map once.
   useEffect(() => {
@@ -201,14 +218,92 @@ export default function MapGL({
       map.addControl(new ml.NavigationControl({ visualizePitch: true }), "bottom-right");
       map.addControl(new ml.ScaleControl({ unit: "nautical", maxWidth: 120 }), "bottom-left");
       map.on("click", () => onSelectRef.current?.(null));
+      // Dragging the map away lets go of a followed aircraft. Two fingers are a pinch, not a drag.
+      map.on("dragstart", (e) => {
+        if (!followRef.current) return;
+        const from = (e as { originalEvent?: Event }).originalEvent;
+        if (from && "touches" in from && (from as TouchEvent).touches.length > 1) return;
+        onFollowEndRef.current?.();
+      });
     }
 
     // The aircraft are three.js models drawn into the map's own WebGL canvas.
     const scene = new T.Scene();
     lightScene(scene);
 
+    // Follow. The camera's centre is held on the picked aircraft, at the
+    // aircraft's own height: a camera centred on the ground under it would
+    // lose a high aircraft as soon as the view is tilted or zoomed close.
+    // `glide` carries the camera over from where it was when following began.
+    let glide: { lng: number; lat: number; elev: number; at: number } | null = null;
+    let settle = false;
+    const aim = (): { lng: number; lat: number; elev: number } | null => {
+      if (!followRef.current) return null;
+      const tr = S.tracks.get(selectedRef.current ?? "");
+      if (!tr) return null;
+      const lead = tr.drawnAt ? Math.min(0.5, Math.max(0, (performance.now() - tr.drawnAt) / 1000)) : 0;
+      const [lng, lat] = S.toLngLat(tr.x + tr.vx * lead, tr.z + tr.vz * lead);
+      if (!glide) return { lng, lat, elev: tr.y };
+      const t = Math.min(1, (performance.now() - glide.at) / FOLLOW_EASE_MS);
+      if (t >= 1) { glide = null; return { lng, lat, elev: tr.y }; }
+      const k = t * t * (3 - 2 * t);
+      return { lng: glide.lng + (lng - glide.lng) * k, lat: glide.lat + (lat - glide.lat) * k, elev: glide.elev + (tr.y - glide.elev) * k };
+    };
+    // Every camera change a gesture or an animation makes goes through this,
+    // so zooming, turning and tilting all happen around the aircraft.
+    const hold: ml.CameraUpdateTransformFunction = () => {
+      const a = aim();
+      return a ? { center: new ml.LngLat(a.lng, a.lat), elevation: a.elev } : {};
+    };
+    // Between gestures the camera is moved here, once a frame.
+    const keepUp = () => {
+      const a = aim();
+      if (a) {
+        if (map.isMoving()) return;
+        const c = map.getCenter();
+        if (Math.abs(c.lng - a.lng) > 1e-7 || Math.abs(c.lat - a.lat) > 1e-7 || Math.abs(map.getCenterElevation() - a.elev) > 0.5) {
+          map.jumpTo({ center: [a.lng, a.lat], elevation: a.elev });
+        }
+        return;
+      }
+      // Let go: put the map's centre back on the ground, with the camera
+      // left exactly where it is, so nothing on screen moves.
+      if (settle && !followRef.current && !map.isMoving()) {
+        settle = false;
+        if (map.getCenterClampedToGround()) return;
+        try {
+          // The camera's own position is not part of the map's public API.
+          const lens = map._camera.transform;
+          const eye = lens.getCameraLngLat();
+          const height = lens.getCameraAltitude();
+          map.setCenterClampedToGround(true);
+          const to = map.calculateCameraOptionsFromCameraLngLatAltRotation(eye, height, map.getBearing(), map.getPitch(), map.getRoll());
+          map.jumpTo({ center: to.center, zoom: to.zoom });
+        } catch {
+          map.setCenterClampedToGround(true);
+        }
+      }
+    };
+
     const S: Stage = {
       map, tracks: new Map(), ox: 0.5, oy: 0.5, s: 1, lat0: 0, labels: [], scene, ground: 0,
+      startFollow(insetBottom) {
+        settle = false;
+        const c = map.getCenter();
+        glide = { lng: c.lng, lat: c.lat, elev: map.getCenterElevation(), at: performance.now() };
+        map.setCenterClampedToGround(false);
+        map.setTransformCameraUpdate(hold);
+        // On a phone the aircraft's panel covers the lower part of the map:
+        // the aircraft is kept in the middle of what is left.
+        const pad = map.getPadding();
+        if ((pad.bottom ?? 0) !== insetBottom) map.easeTo({ padding: { top: 0, left: 0, right: 0, bottom: insetBottom }, duration: FOLLOW_EASE_MS });
+        map.triggerRepaint();
+      },
+      endFollow() {
+        glide = null;
+        map.setTransformCameraUpdate(null);
+        settle = true;
+      },
       toLocal(lat, lon) {
         const m = ml.MercatorCoordinate.fromLngLat([lon, lat]);
         return { x: (m.x - S.ox) / S.s, z: (m.y - S.oy) / S.s };
@@ -296,7 +391,8 @@ export default function MapGL({
       render(_gl, args) {
         if (!renderer) return;
         const now = performance.now();
-        const dt = Math.min(0.25, (now - last) / 1000);
+        const elapsed = (now - last) / 1000;
+        const dt = Math.min(0.25, elapsed);
         last = now;
 
         // Local metres (x east, y up, z south) to mercator, then mercator to the screen.
@@ -336,14 +432,18 @@ export default function MapGL({
           const tx = tr.fx + Math.sin(hr) * run;
           const tz = tr.fz - Math.cos(hr) * run;
           const k = calm ? 1 : 1 - Math.exp(-dt / 0.45);
+          const wasX = tr.x, wasZ = tr.z;
           tr.x += (tx - tr.x) * k;
           tr.z += (tz - tr.z) * k;
+          if (elapsed > 0.001 && elapsed < 1 && !calm) { tr.vx = (tr.x - wasX) / elapsed; tr.vz = (tr.z - wasZ) / elapsed; } else { tr.vx = 0; tr.vz = 0; }
+          tr.drawnAt = now;
           if (p.heading != null) tr.hdg += ((((p.heading - tr.hdg) % 360) + 540) % 360 - 180) * k;
 
           // Never draw an aircraft inside a hillside: parked ones sit on the ground under them.
           const under = S.ground ? map.queryTerrainElevation(S.toLngLat(tr.x, tr.z)) ?? S.ground : 0;
           const y = p.dim ? under : Math.max(S.ground + Math.max(0, p.altFt ?? 0) * 0.3048, under + 30);
           const pivot = tr.model.pivot;
+          tr.y = y + size * 0.3;
           pivot.position.set(tr.x, y + size * 0.3, tr.z);
           pivot.scale.setScalar(size);
           pivot.rotation.y = PI / 2 - (tr.hdg * PI) / 180;
@@ -414,6 +514,7 @@ export default function MapGL({
     let odd = false;
     const loop = () => {
       raf = requestAnimationFrame(loop);
+      keepUp();
       odd = !odd;
       if (calm || odd) return;
       for (const tr of S.tracks.values()) {
@@ -572,7 +673,7 @@ export default function MapGL({
         btn.addEventListener("click", (e) => { e.stopPropagation(); onSelectRef.current?.(p.tail); });
         box.appendChild(btn);
         const at = S.toLocal(p.lat, p.lon);
-        tr = { plane: p, family, modelId, color, model, el: btn, fixLat: p.lat, fixLon: p.lon, fx: at.x, fz: at.z, fixAt: performance.now(), moves: 0, gap: 10, x: at.x, z: at.z, hdg: p.heading ?? 0 };
+        tr = { plane: p, family, modelId, color, model, el: btn, fixLat: p.lat, fixLon: p.lon, fx: at.x, fz: at.z, fixAt: performance.now(), moves: 0, gap: 10, x: at.x, z: at.z, hdg: p.heading ?? 0, y: 0, vx: 0, vz: 0, drawnAt: 0 };
         S.tracks.set(p.tail, tr);
       }
       if (tr.color !== color) { tr.model.accent.color.set(color); tr.color = color; }
@@ -601,6 +702,18 @@ export default function MapGL({
     S.map.triggerRepaint();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, planesKey, selected, interactive, lat, lon]);
+
+  // Follow the picked aircraft, or let go of it. Declared after the aircraft
+  // are placed, so the one to follow is already on the map.
+  const following = follow && !!selected && planes.some((p) => p.tail === selected);
+  useEffect(() => {
+    const S = stage.current;
+    followRef.current = following;
+    if (!S || !ready) return;
+    if (following) S.startFollow(followInsetBottom);
+    else S.endFollow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [following, ready, selected]);
 
   // Bring a newly selected aircraft into view.
   useEffect(() => {
