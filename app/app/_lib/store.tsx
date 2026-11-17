@@ -7,6 +7,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError, setPreview } from "./tracker";
 import { recordFixes } from "./trails";
+import { syncAccountPaints } from "./paint";
 import { parseUtc } from "./format";
 import type { Aircraft, AirportConfig, GroundStatus, Integration, LiveAircraft, Me, NotificationLog } from "./types";
 
@@ -136,7 +137,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
         setPreview(free);
         if (free) { setLive([]); setGround(null); setGroundEnabled(false); }
       }
-      if (ac.ok) setAircraft(ac.value);
+      if (ac.ok) { setAircraft(ac.value); syncAccountPaints(ac.value, !noPlan.current); }
       if (ap.ok) { setAirport(ap.value); setHasAirport(true); }
       else if (ap.status === 404) { setAirport(null); setHasAirport(false); }
       if (ints.ok) setIntegrations(ints.value);

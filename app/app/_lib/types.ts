@@ -19,6 +19,8 @@ export type Aircraft = {
   friendly_name: string | null;
   aircraft_type: string | null;
   alert_distances: number[] | null;
+  /** The colour picked for it, "#RRGGBB", or null for the default. */
+  paint_color?: string | null;
   active: boolean;
   created_at: string;
 };

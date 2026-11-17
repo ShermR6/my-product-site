@@ -246,12 +246,13 @@ function AircraftModal({
       friendly_name: d.name.trim(),
       aircraft_type: d.type.trim(),
       alert_distances: d.ownRings ? [...d.rings].sort((a, b) => b - a) : [],
+      ...(d.paint ? { paint_color: d.paint } : {}),
     };
     setBusy(true);
     try {
       if (isNew) await api("aircraft", { method: "POST", body });
       else await api(`aircraft/${d.id}`, { method: "PUT", body });
-      if (d.paint) setPaint(d.tail, d.paint);
+      if (d.paint) setPaint(d.tail, d.paint, false);
       await onSaved();
     } catch (e) {
       setErr(errorText(e));

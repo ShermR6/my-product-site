@@ -6,6 +6,7 @@
 
 import { useSyncExternalStore } from "react";
 import { MODEL_LIST } from "./modelList";
+import { api } from "./tracker";
 
 export type Family = "highwing" | "lowwing" | "twin" | "tprop" | "tprop2" | "jet" | "airliner" | "heli";
 
@@ -81,12 +82,24 @@ export function modelOf(type?: string | null): ModelRef | null {
   return null;
 }
 
-// ----- the user's colour picks (kept in this browser) -----
+// ----- the user's colour picks -----
+// Saved with each aircraft on the account, so every device shows the same
+// colours. This browser also keeps its own copy: it covers the moment before
+// the aircraft have loaded, and picks made before colours were saved to the
+// account, which are sent up once.
 
 const KEY = "fp_paint_v1";
 const EMPTY: Record<string, string> = {};
+const HEX = /^#[0-9a-fA-F]{6}$/;
 let cache: Record<string, string> | null = null;
 const listeners = new Set<() => void>();
+/** Colours saved on the account, and each aircraft's id, by tail number. */
+let account: Record<string, string> = {};
+let ids: Record<string, string> = {};
+/** Tails whose browser-only pick was already sent up this visit. */
+const sent = new Set<string>();
+let merged: Record<string, string> | null = null;
+const notify = () => { merged = null; listeners.forEach((fn) => fn()); };
 
 function load(): Record<string, string> {
   if (cache) return cache;
@@ -97,7 +110,7 @@ function load(): Record<string, string> {
     if (parsed && typeof parsed === "object") {
       const out: Record<string, string> = {};
       for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-        if (typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)) out[k] = v;
+        if (typeof v === "string" && HEX.test(v)) out[k] = v;
       }
       cache = out;
     }
@@ -109,20 +122,62 @@ function load(): Record<string, string> {
 
 function subscribe(fn: () => void) {
   listeners.add(fn);
-  const onStorage = (e: StorageEvent) => { if (e.key === KEY) { cache = null; fn(); } };
+  const onStorage = (e: StorageEvent) => { if (e.key === KEY) { cache = null; merged = null; fn(); } };
   window.addEventListener("storage", onStorage);
   return () => { listeners.delete(fn); window.removeEventListener("storage", onStorage); };
 }
 
-/** The saved picks, by tail number. Re-renders when one changes. */
-export function usePaints(): Record<string, string> {
-  return useSyncExternalStore(subscribe, load, () => EMPTY);
+function snapshot(): Record<string, string> {
+  if (!merged) merged = { ...load(), ...account };
+  return merged;
 }
 
-export function setPaint(tail: string, hex: string) {
+/** The saved picks, by tail number. Re-renders when one changes. */
+export function usePaints(): Record<string, string> {
+  return useSyncExternalStore(subscribe, snapshot, () => EMPTY);
+}
+
+function keepHere(tail: string, hex: string) {
   cache = { ...load(), [tail]: hex };
   try { window.localStorage.setItem(KEY, JSON.stringify(cache)); } catch { /* still applies for this visit */ }
-  listeners.forEach((fn) => fn());
+}
+
+/**
+ * Pick a colour: shown at once, kept in this browser and saved to the
+ * account. `save` is false when the caller already sent it with the aircraft.
+ */
+export function setPaint(tail: string, hex: string, save = true) {
+  keepHere(tail, hex);
+  account = { ...account, [tail]: hex };
+  notify();
+  const id = ids[tail];
+  if (id && save) void api(`aircraft/${id}`, { method: "PUT", body: { paint_color: hex } }).catch(() => { /* kept in this browser */ });
+}
+
+/**
+ * The account's aircraft, each time they load. `canSave` is false while the
+ * account has no plan (nothing can be saved then).
+ */
+export function syncAccountPaints(list: { id: string; tail_number: string; paint_color?: string | null }[], canSave: boolean) {
+  const next: Record<string, string> = {};
+  const nextIds: Record<string, string> = {};
+  const local = load();
+  for (const a of list) {
+    nextIds[a.tail_number] = a.id;
+    const saved = a.paint_color && HEX.test(a.paint_color) ? a.paint_color : null;
+    if (saved) {
+      next[a.tail_number] = saved;
+      if (local[a.tail_number] !== saved) keepHere(a.tail_number, saved);
+    } else if (local[a.tail_number] && canSave && !sent.has(a.tail_number)) {
+      // Picked in this browser before colours were saved to the account.
+      sent.add(a.tail_number);
+      next[a.tail_number] = local[a.tail_number];
+      void api(`aircraft/${a.id}`, { method: "PUT", body: { paint_color: local[a.tail_number] } }).catch(() => { sent.delete(a.tail_number); });
+    }
+  }
+  ids = nextIds;
+  const same = Object.keys(next).length === Object.keys(account).length && Object.entries(next).every(([k, v]) => account[k] === v);
+  if (!same) { account = next; notify(); }
 }
 
 /** Colour for a tail number: the saved pick, or a steady default so a fleet isn't all one colour. */
