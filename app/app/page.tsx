@@ -45,14 +45,14 @@ export default function DashboardPage() {
   let title = "All quiet.";
   let sub = "";
   const leadRings = lead ? ringsFor(lead.tail_number, t.aircraft, t.airport) : airportRings(t.airport);
-  const leadSent = lead ? recentAlertsFor(lead.tail_number, t.recent) : new Map<string, Date>();
+  const leadSent = lead ? recentAlertsFor(lead.tail_number, t.recent, lead) : new Map<string, Date>();
   const steps = ladderSteps(leadRings, leadSent, lead);
   const leadRunway = lead ? runwayFor(lead, t.airport?.runway_info) : null;
 
   // The map follows whichever aircraft was clicked, or else the one closest in.
   const focus = (picked ? t.live.find((a) => a.tail_number === picked) : null) ?? lead;
   const focusRings = focus ? ringsFor(focus.tail_number, t.aircraft, t.airport) : airportRings(t.airport);
-  const focusSteps = focus === lead ? steps : ladderSteps(focusRings, recentAlertsFor(focus!.tail_number, t.recent), focus);
+  const focusSteps = focus === lead ? steps : ladderSteps(focusRings, recentAlertsFor(focus!.tail_number, t.recent, focus), focus);
   const focusStage = focus ? stageOf(focus, focusRings) : null;
   const focusHot = focusStage === "final" || focusStage === "inbound";
   const focusAge = focus ? Math.max(0, (t.now - (parseUtc(focus.last_seen)?.getTime() ?? t.now)) / 1000) : null;

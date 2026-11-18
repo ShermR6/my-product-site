@@ -328,7 +328,7 @@ function LiveStrip() {
   const rings = ringsFor(a.tail_number, t.aircraft, t.airport);
   const stage = stageOf(a, rings);
   const type = t.aircraft.find((x) => x.tail_number === a.tail_number)?.aircraft_type;
-  const sent = recentAlertsFor(a.tail_number, t.recent);
+  const sent = recentAlertsFor(a.tail_number, t.recent, a);
   const sentCount = rings.filter((r) => sent.has(ringKey(r))).length;
 
   return (

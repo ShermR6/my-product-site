@@ -185,7 +185,7 @@ export default function LiveMapPage() {
               {selRings.length > 0 && (
                 <div style={{ borderTop: "1px solid #232323", marginTop: 10, paddingTop: 10 }}>
                   <div className="fa-eyebrow" style={{ marginBottom: 6 }}>Alerts this approach</div>
-                  <ApproachLadder vertical steps={ladderSteps(selRings, recentAlertsFor(selected, t.recent), sel)} />
+                  <ApproachLadder vertical steps={ladderSteps(selRings, recentAlertsFor(selected, t.recent, sel), sel)} />
                 </div>
               )}
               {flightSince && <div className="fa-note" style={{ marginTop: 10 }}>Flight path on the map since {clock(flightSince)}</div>}

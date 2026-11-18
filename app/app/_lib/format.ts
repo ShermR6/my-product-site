@@ -130,15 +130,33 @@ export function inboundOf(live: LiveAircraft[], fleet: Aircraft[], airport: Airp
 }
 
 /** Alerts sent for this aircraft in the last two hours, newest per alert type. */
-export function recentAlertsFor(tail: string, recent: NotificationLog[]): Map<string, Date> {
-  const cutoff = Date.now() - 2 * 3600 * 1000;
-  const out = new Map<string, Date>();
+/** How long after a landing an aircraft seen in the air again is on a new flight, not still rolling out. */
+const AIRBORNE_AFTER_LANDING_MS = 5 * 60 * 1000;
+
+/**
+ * The alerts sent for this aircraft's current approach, newest of each kind.
+ * The approach starts at its last takeoff: alerts from before that belong to
+ * the arrival before. With `a`, an aircraft back in the air a while after its
+ * last landing is on a new flight too, even if its takeoff went unreported.
+ */
+export function recentAlertsFor(tail: string, recent: NotificationLog[], a?: LiveAircraft | null): Map<string, Date> {
+  const now = Date.now();
+  const mine: { type: string; at: Date }[] = [];
   for (const n of recent) {
     if (n.aircraft_tail !== tail) continue;
     const t = parseUtc(n.sent_at);
-    if (!t || t.getTime() < cutoff) continue;
-    const prev = out.get(n.alert_type);
-    if (!prev || t > prev) out.set(n.alert_type, t);
+    if (!t || t.getTime() < now - 2 * 3600 * 1000) continue;
+    mine.push({ type: n.alert_type, at: t });
+  }
+  const latest = (type: string) => mine.reduce<Date | null>((m, x) => (x.type === type && (!m || x.at > m) ? x.at : m), null);
+  let from = latest("takeoff");
+  const landed = latest("landing");
+  if (a && !a.on_ground && landed && (!from || landed > from) && now - landed.getTime() > AIRBORNE_AFTER_LANDING_MS) from = landed;
+  const out = new Map<string, Date>();
+  for (const x of mine) {
+    if (from && x.at <= from) continue;
+    const prev = out.get(x.type);
+    if (!prev || x.at > prev) out.set(x.type, x.at);
   }
   return out;
 }
