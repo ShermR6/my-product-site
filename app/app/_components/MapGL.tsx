@@ -270,6 +270,19 @@ export default function MapGL({
       canvasContextAttributes: { antialias: true },
     });
     if (interactive) {
+      // The aircraft markers sit on top of the map and catch the pointer, so a
+      // wheel over one is passed on: zooming in on an aircraft works, which
+      // matters most while following it, when it stays under the pointer.
+      box.addEventListener("wheel", (e) => {
+        if (e.target === box) return;
+        e.preventDefault();
+        map.getCanvas().dispatchEvent(new WheelEvent("wheel", {
+          deltaX: e.deltaX, deltaY: e.deltaY, deltaZ: e.deltaZ, deltaMode: e.deltaMode,
+          clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY,
+          ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey,
+          bubbles: true, cancelable: true,
+        }));
+      }, { passive: false });
       map.addControl(new ml.NavigationControl({ visualizePitch: true }), "bottom-right");
       map.addControl(new ml.ScaleControl({ unit: "nautical", maxWidth: 120 }), "bottom-left");
       map.on("click", () => onSelectRef.current?.(null));
@@ -811,7 +824,7 @@ export default function MapGL({
       tr.plane = p;
       const oldMin = p.seenAt != null && !p.dim ? Math.floor((Date.now() - p.seenAt) / 60000) : 0;
       (tr.el.firstChild as HTMLElement).textContent = oldMin >= 2 ? `${p.tail} · ${oldMin} min ago` : p.tail;
-      tr.el.className = `fa-mk${p.live ? " live" : ""}${p.tail === selected ? " selected" : ""}${p.dim || oldMin >= 2 ? " dim" : ""}`;
+      tr.el.className = `fa-mk${p.live ? " live" : ""}${p.tail === selected ? " selected" : ""}${p.dim || oldMin >= 2 ? " dim" : ""}${p.tail === selected && followRef.current ? " following" : ""}`;
       tr.el.style.setProperty("--paint", color);
       tr.el.setAttribute("aria-label", p.tail);
       tr.el.setAttribute("aria-pressed", String(p.tail === selected));
@@ -836,6 +849,9 @@ export default function MapGL({
     if (!S || !ready) return;
     if (following) S.startFollow(followInsetBottom);
     else S.endFollow();
+    // The followed aircraft's marker lets every gesture through to the map:
+    // pinching or tilting over it, it being in the middle, then just works.
+    for (const [tail, tr] of S.tracks) tr.el.classList.toggle("following", following && tail === selected);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [following, ready, selected]);
 

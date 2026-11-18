@@ -184,6 +184,8 @@ textarea.fa-input { height: auto; min-height: 96px; padding: 12px 14px; line-hei
 .fa-map-overlay { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
 .fa-mk { position: absolute; left: 0; top: 0; width: var(--mk, 56px); height: var(--mk, 56px); margin: calc(var(--mk, 56px) / -2) 0 0 calc(var(--mk, 56px) / -2); padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; pointer-events: auto; will-change: transform; }
 .fa-mk:disabled { pointer-events: none; cursor: default; }
+/* the followed aircraft: gestures over it reach the map */
+.fa-mk.following { pointer-events: none; }
 .fa-mk > * { animation: fa-mk-in 0.3s ease-out both; }
 @keyframes fa-mk-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fa-mk > * { animation: none; } }
