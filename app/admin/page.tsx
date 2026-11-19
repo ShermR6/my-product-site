@@ -1,5 +1,6 @@
 "use client";
-import { Ban, ClipboardList, KeyRound, LayoutDashboard, Package, Plus, Radio, Users } from "lucide-react";
+import { Activity, Ban, ClipboardList, KeyRound, LayoutDashboard, Package, Plus, Radio, Users } from "lucide-react";
+import CoverageTab from "./CoverageTab";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -111,6 +112,7 @@ const NAV_ITEMS = [
   { id: "waitlist", label: "Waitlist", icon: ClipboardList },
   { id: "orders", label: "Orders", icon: Package },
   { id: "ground-stations", label: "Ground Stations", icon: Radio },
+  { id: "coverage", label: "Coverage Gaps", icon: Activity },
 ];
 
 // ── Overview Tab ─────────────────────────────────────────────────────────────
@@ -1056,6 +1058,7 @@ export default function AdminPage() {
         {activeTab === "waitlist" && <WaitlistTab />}
         {activeTab === "orders" && <OrdersTab />}
         {activeTab === "ground-stations" && <GroundStationsTab />}
+        {activeTab === "coverage" && <CoverageTab />}
       </div>
     </div>
   );
