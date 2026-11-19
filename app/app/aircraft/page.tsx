@@ -66,6 +66,8 @@ export default function AircraftPage() {
   const paints = usePaints();
 
   const atLimit = plan.aircraft != null && t.aircraft.length >= plan.aircraft;
+  const onFeeder = t.me?.license_tier === "feeder";
+  const pausedCount = t.aircraft.filter((a) => a.paused).length;
   const defaultRings = airportRings(t.airport);
   const sendsTo = t.integrations.filter((i) => i.enabled).map((i) => channelLabel(i.type));
 
@@ -89,7 +91,7 @@ export default function AircraftPage() {
     <div className="fa-page">
       <PageHead
         title="Aircraft"
-        sub={<>The tail numbers FinalPing watches for you. {plan.aircraft != null ? `${t.aircraft.length} of ${plan.aircraft} slots used.` : `${t.aircraft.length} tracked.`}</>}
+        sub={<>The tail numbers FinalPing watches for you. {pausedCount > 0 ? `${t.aircraft.length - pausedCount} of ${plan.aircraft} tracked, ${pausedCount} paused.` : plan.aircraft != null ? `${t.aircraft.length} of ${plan.aircraft} slots used.` : `${t.aircraft.length} tracked.`}</>}
       >
         {t.aircraft.length > 3 && (
           <div style={{ position: "relative" }}>
@@ -103,9 +105,22 @@ export default function AircraftPage() {
         </Btn>
       </PageHead>
 
-      {atLimit && (
+      {pausedCount > 0 ? (
+        <div className="fa-banner warn" role="status">
+          <span>
+            {pausedCount} {pausedCount === 1 ? "aircraft is" : "aircraft are"} paused. The free feeder plan tracks the first {plan.aircraft} you added.
+            Remove some, or <a href="/pricing" style={{ fontWeight: 600, textDecoration: "underline" }}>upgrade to the paid plan</a> to track up to 15.
+          </span>
+        </div>
+      ) : atLimit && onFeeder ? (
+        <div className="fa-banner">
+          <span>
+            The free feeder plan covers {plan.aircraft} aircraft. <a href="/pricing" style={{ fontWeight: 600, textDecoration: "underline" }}>Upgrade to the paid plan</a> for up to 15, with texts and every channel.
+          </span>
+        </div>
+      ) : atLimit ? (
         <div className="fa-banner"><span>All {plan.aircraft} aircraft slots are in use. Need more? <a href="/contact" style={{ fontWeight: 600, textDecoration: "underline" }}>Contact us</a></span></div>
-      )}
+      ) : null}
 
       {t.aircraft.length === 0 ? (
         <Card>
@@ -122,7 +137,7 @@ export default function AircraftPage() {
             const paint = paintOf(a.tail_number, paints);
             const lv = t.live.find((x) => x.tail_number === a.tail_number);
             const rings = ringsFor(a.tail_number, t.aircraft, t.airport);
-            const stage = lv ? stageOf(lv, rings) : null;
+            const stage = lv && !a.paused ? stageOf(lv, rings) : null;
             const hot = stage === "final" || stage === "inbound";
             const custom = (a.alert_distances ?? []).length > 0;
             const last = t.recent.find((n) => n.aircraft_tail === a.tail_number);
@@ -146,7 +161,7 @@ export default function AircraftPage() {
                   </div>
                   <span className={`fa-pilltag ${hot ? "live" : stage === "airborne" ? "" : "dim"}`}>
                     <span className={`fa-dot ${hot ? "live" : stage === "airborne" ? "" : "hollow"}`} />
-                    {stage ? STAGE_LABEL[stage] : "Not in view"}
+                    {a.paused ? "Paused" : stage ? STAGE_LABEL[stage] : "Not in view"}
                   </span>
                 </div>
 

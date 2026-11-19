@@ -23,6 +23,8 @@ export type Aircraft = {
   paint_color?: string | null;
   /** What it broadcasts on, once anything has heard it: 1090 MHz ADS-B, 978 MHz UAT, or no ADS-B out. */
   link?: "1090" | "978" | "none" | null;
+  /** Over the plan's aircraft cap (the free feeder plan's 5): listed but not tracked. */
+  paused?: boolean;
   active: boolean;
   created_at: string;
 };

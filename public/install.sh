@@ -475,7 +475,7 @@ sys.exit(0 if d.get("online") and (d.get("last_seen_seconds") or 999) <= 60 else
     fi
   fi
   echo
-  echo " Status, and your free plan for feeding:"
+  echo " Status, and your feeder plan:"
   echo "   https://finalpingapp.com/app/ground-station"
   echo " Logs:   sudo journalctl -u finalping-ground -f"
   echo " Full install log: $LOG"

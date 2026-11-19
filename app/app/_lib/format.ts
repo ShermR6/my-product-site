@@ -212,6 +212,8 @@ export const PLAN: Record<string, { name: string; aircraft: number | null; rings
   starter: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
   premium: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
   pro: { name: "Personal", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
+  // Free for feeding adsb.lol, capped for hobbyists (backend plans.FEEDER_AIRCRAFT).
+  feeder: { name: "Feeder plan", aircraft: 5, rings: null, integrations: null, channels: ["discord", "email", "slack"] },
   // No live plan: a read-only preview that shows what the plan allows.
   free: { name: "Preview", aircraft: 15, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },
   owner: { name: "Owner", aircraft: null, rings: null, integrations: null, channels: ["discord", "email", "slack", "teams", "google_chat", "sms", "telegram", "webhook"] },

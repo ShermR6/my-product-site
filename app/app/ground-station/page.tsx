@@ -65,7 +65,7 @@ export default function GroundStationPage() {
             <div className="fa-kv"><span>2</span><span>Paste the install command below into the Pi</span></div>
             <div className="fa-kv"><span>3</span><span>It shows up here within a minute</span></div>
             <p className="fa-note" style={{ margin: "12px 0 16px", lineHeight: 1.6 }}>
-              You do not need a plan to set one up. The installer also feeds adsb.lol, the open network FinalPing draws on, and a receiver that keeps feeding earns the plan for free.
+              You do not need a plan to set one up. The installer also feeds adsb.lol, the open network FinalPing draws on, and a receiver that keeps feeding earns the free feeder plan: up to 5 aircraft, with alerts to Discord, email and Slack.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link className="fa-btn primary" href="/groundstationkit">See the kit</Link>
@@ -173,13 +173,13 @@ function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | nul
     : "adsb.lol is not getting a feed from this receiver. Run the install command below again to repair it.";
 
   const lead =
-    plan === "feeder" ? "Your plan is free while this receiver keeps feeding adsb.lol."
-    : plan === "paid" && feeder?.qualifies ? "You are on a paid plan, and this receiver feeds enough to earn the plan for free. If the paid plan ends, the free one takes over."
-    : plan === "paid" ? `You are on a paid plan. A receiver that feeds adsb.lol for ${perDayH} hours a day, on ${needed} of every ${windowDays} days, earns the plan for free.`
-    : `Feed adsb.lol for ${perDayH} hours a day, on ${needed} of every ${windowDays} days, and the whole plan is free. A new receiver gets it from its first report.`;
+    plan === "feeder" ? "You are on the free feeder plan while this receiver keeps feeding adsb.lol: up to 5 aircraft, with alerts to Discord, email and Slack. The paid plan covers up to 15 aircraft, with texts and every other channel."
+    : plan === "paid" && feeder?.qualifies ? "You are on the paid plan, and this receiver feeds enough to earn the free feeder plan. If the paid plan ends, the feeder plan takes over."
+    : plan === "paid" ? `You are on the paid plan. A receiver that feeds adsb.lol for ${perDayH} hours a day, on ${needed} of every ${windowDays} days, earns the free feeder plan.`
+    : `Feed adsb.lol for ${perDayH} hours a day, on ${needed} of every ${windowDays} days, and get the feeder plan free: up to 5 aircraft, with alerts to Discord, email and Slack. A new receiver gets it from its first report.`;
 
   return (
-    <Card title="Free plan for feeding" note={plan === "feeder" ? "Active" : feeder?.qualifies ? "Earned" : "Not earned yet"}>
+    <Card title="Feeder plan" note={plan === "feeder" ? "Active" : feeder?.qualifies ? "Earned" : "Not earned yet"}>
       <p className="fa-note" style={{ lineHeight: 1.6, marginBottom: 14 }}>{lead}</p>
       <div style={{ display: "flex", gap: 4, marginBottom: 6 }} role="img" aria-label={`${counted} of the last ${windowDays} days count. ${needed} are needed.`}>
         {Array.from({ length: windowDays }, (_, i) => (
@@ -193,7 +193,7 @@ function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | nul
       {device?.model && <div className="fa-kv"><span>Receiver</span><span>{device.model}</span></div>}
       {taken && (
         <div className="fa-banner warn" role="status" style={{ marginTop: 12, marginBottom: 0, display: "block", lineHeight: 1.6 }}>
-          <strong>This receiver already earns the free plan for another FinalPing account.</strong> One receiver earns it for one account, so its feeding does not count here. A receiver that stops feeding for its old account is free again after 14 days. If that is not what happened, contact us.
+          <strong>This receiver already earns the feeder plan for another FinalPing account.</strong> One receiver earns it for one account, so its feeding does not count here. A receiver that stops feeding for its old account is free again after 14 days. If that is not what happened, contact us.
         </div>
       )}
       {credited && since && (
@@ -203,7 +203,7 @@ function FeederCard({ feeder, feedingNow, online }: { feeder: FeederStatus | nul
         <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>{whyNot}</p>
       )}
       {online && device?.linked == null && device?.why == null && (
-        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The free plan needs receiver software 4.0, which says which receiver is feeding. Yours updates itself within the hour.</p>
+        <p className="fa-note" style={{ marginTop: 10, lineHeight: 1.6 }}>The feeder plan needs receiver software 4.0, which says which receiver is feeding. Yours updates itself within the hour.</p>
       )}
     </Card>
   );

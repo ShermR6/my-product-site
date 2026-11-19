@@ -307,7 +307,7 @@ function TopBar({ pathname, bare }: { pathname: string; bare?: boolean }) {
         <div className="fa-menu" role="menu" onClick={(e) => e.stopPropagation()}>
           <div className="fa-menu-head">
             <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>{t.me?.email ?? "Signed in"}</div>
-            {t.me && <div className="fa-note">{t.me.license_tier === "free" ? "Preview, no plan yet" : t.me.plan_source === "feeder" ? "Free plan, for feeding adsb.lol" : `${planOf(t.me.license_tier).name} plan`}</div>}
+            {t.me && <div className="fa-note">{t.me.license_tier === "free" ? "Preview, no plan yet" : t.me.plan_source === "feeder" ? "Feeder plan, free for feeding adsb.lol" : `${planOf(t.me.license_tier).name} plan`}</div>}
           </div>
           <Link href="/dashboard" role="menuitem"><CreditCard size={15} aria-hidden="true" />Account and billing</Link>
           <Link href="/" role="menuitem"><Globe size={15} aria-hidden="true" />finalpingapp.com</Link>

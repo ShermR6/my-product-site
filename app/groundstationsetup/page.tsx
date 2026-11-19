@@ -114,7 +114,7 @@ export default function GroundStationSetupPage() {
             FinalPing Ground Station Setup
           </h1>
           <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 10px" }}>
-            A Ground Station is a Raspberry Pi with an ADS-B radio at your field. Setting one up is one command, and your airport and aircraft come from your FinalPing account by themselves. It also feeds adsb.lol, and a receiver that keeps feeding earns the FinalPing plan for free.
+            A Ground Station is a Raspberry Pi with an ADS-B radio at your field. Setting one up is one command, and your airport and aircraft come from your FinalPing account by themselves. It also feeds adsb.lol, and a receiver that keeps feeding earns FinalPing's free feeder plan.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" as const, marginTop: 24 }}>
             <Link href="/groundstationdevices" style={{
@@ -161,7 +161,7 @@ export default function GroundStationSetupPage() {
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>What happens automatically</div>
             {[
               "Pulls your airport and aircraft from your account",
-              "Feeds adsb.lol, which earns the free plan",
+              "Feeds adsb.lol, which earns the free feeder plan",
               "Keeps its own software up to date",
               "Starts on every boot",
             ].map(i => (
@@ -268,9 +268,9 @@ export default function GroundStationSetupPage() {
           {success("When it says \"Done. Your receiver is online.\" the Ground Station page shows it within a minute.")}
           {note("Treat the device key like a password. If someone else has seen it, replace it on the Ground Station page and run the command again with the new key.")}
 
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Feeding adsb.lol, and the free plan</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>Feeding adsb.lol, and the feeder plan</h3>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8, margin: "0 0 12px" }}>
-            The installer sets the Pi up to feed <a href="https://adsb.lol" target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>adsb.lol</a>, the community-run open network FinalPing draws on. A receiver that feeds for 18 hours a day, on 5 of every 7 days, earns the whole FinalPing plan for free, for as long as it keeps feeding, and a new receiver gets it from its first report. Each receiver earns the plan for one account. The Ground Station page shows where you stand.
+            The installer sets the Pi up to feed <a href="https://adsb.lol" target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>adsb.lol</a>, the community-run open network FinalPing draws on. A receiver that feeds for 18 hours a day, on 5 of every 7 days, earns the free feeder plan for as long as it keeps feeding: up to 5 aircraft, with alerts to Discord, email and Slack. A new receiver gets it from its first report. The paid plan covers up to 15 aircraft, with texts and every other channel. Each receiver earns the feeder plan for one account. The Ground Station page shows where you stand.
           </p>
 
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "28px 0 8px" }}>MLAT</h3>
@@ -295,7 +295,7 @@ export default function GroundStationSetupPage() {
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 16px" }}>After setup</h2>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
             {[
-              { title: "Ground Station status", body: "Open finalpingapp.com/app and go to Ground Station. It shows whether the receiver is online, how many aircraft it hears, its range, and where you stand on the free plan for feeding. If it shows Offline, check that the Pi has power and internet." },
+              { title: "Ground Station status", body: "Open finalpingapp.com/app and go to Ground Station. It shows whether the receiver is online, how many aircraft it hears, its range, and where you stand on the feeder plan for feeding. If it shows Offline, check that the Pi has power and internet." },
               { title: "Alerts", body: "Takeoff, approach and landing alerts go out through your FinalPing notification channels: Discord, Slack, SMS, email, or any other you have connected. Nothing extra to configure." },
               { title: "Live Map", body: "The Live Map in the web app shows your aircraft in real time. The range outline is the area your antenna can actually hear. It fills in over time as aircraft are received in different directions." },
               { title: "Changing aircraft or airport", body: "Change them in the web app. The receiver picks the change up within 10 minutes." },

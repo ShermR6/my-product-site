@@ -129,8 +129,8 @@ const sections: Section[] = [
         a: <>Open Ground Station in the web app. It shows one command, with your device key in it, to paste into the Pi. That installs everything and links the receiver to your account. Enter your antenna&apos;s position there first so the command also turns on MLAT. The full guide, including preparing the SD card, is at <A href="/groundstationsetup">finalpingapp.com/groundstationsetup</A>.</>,
       },
       {
-        q: "Can my receiver earn the plan for free?",
-        a: "Yes. Every FinalPing receiver also shares what it hears with adsb.lol. A receiver that feeds for at least 18 hours a day on 5 of the last 7 days earns the full FinalPing plan for free, and a new receiver has it from its first report. One Raspberry Pi earns the plan for one account. The Ground Station page shows how many days count so far.",
+        q: "Can my receiver earn a free plan?",
+        a: "Yes. Every FinalPing receiver also shares what it hears with adsb.lol. A receiver that feeds for at least 18 hours a day on 5 of the last 7 days earns the free feeder plan: up to 5 aircraft, with alerts to Discord, email and Slack. The paid plan covers up to 15 aircraft, with texts and every other channel. A new receiver has the feeder plan from its first report. One Raspberry Pi earns the plan for one account. The Ground Station page shows how many days count so far.",
       },
     ],
   },
