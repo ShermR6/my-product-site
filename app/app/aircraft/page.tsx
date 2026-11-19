@@ -30,11 +30,12 @@ type Draft = {
 };
 
 // What the aircraft broadcasts on, once adsb.lol or a receiver has heard it.
-const LINK_TAG = { "1090": "1090", "978": "978", none: "No ADS-B" } as const;
+const LINK_TAG = { "1090": "1090", "978": "978", not1090: "Not 1090", none: "No ADS-B" } as const;
 const LINK_TITLE = {
   "1090": "Broadcasts ADS-B on 1090 MHz",
   "978": "Broadcasts ADS-B on 978 MHz (UAT). Public coverage of 978 is thinner, especially low and close to the field",
-  none: "Heard with no ADS-B out (transponder only)",
+  not1090: "Never heard on 1090 ADS-B: only MLAT could place it from its transponder. Inside a Mode C veil, where ADS-B Out is required, that means 978 MHz (UAT)",
+  none: "The FAA rebroadcasts it as a radar track with no ADS-B out",
 } as const;
 
 type Lookup = { found: boolean; tail_number?: string; icao24?: string; aircraft_type?: string };

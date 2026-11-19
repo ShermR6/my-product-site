@@ -7,7 +7,7 @@ import React from "react";
 // label adsb.lol gives them. Data from the backend's /api/internal/heard
 // (see heard.py there).
 
-type Link = "1090" | "978" | "none" | "unknown";
+type Link = "1090" | "978" | "not1090" | "none" | "uncaught" | "unknown";
 type Heard = {
   icao24: string; registration: string | null; callsign: string | null; tracked_as: string | null;
   link: Link; kinds: Record<string, number>; first_seen: string; last_seen: string;
@@ -16,9 +16,9 @@ type Heard = {
 type Group = { owner: "network" | "receiver"; name: string; counts: Record<Link, number>; aircraft: Heard[] };
 type Report = { days: number; link_names: Record<Link, string>; groups: Group[] };
 
-const LINKS: Link[] = ["1090", "978", "none", "unknown"];
+const LINKS: Link[] = ["1090", "978", "not1090", "none", "uncaught", "unknown"];
 const SHADE: Record<Link, string> = {
-  "1090": "var(--text)", "978": "var(--text-2)", none: "var(--muted)", unknown: "var(--border)",
+  "1090": "var(--text)", "978": "#A3A3A3", not1090: "#737373", none: "#525252", uncaught: "#333333", unknown: "#262626",
 };
 const KIND_NAMES: Record<string, string> = {
   adsb_icao: "ADS-B", adsb_icao_nt: "ADS-B (non-transponder)", adsb_other: "ADS-B (other address)",
@@ -178,8 +178,9 @@ export default function HeardTab() {
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 4px", color: "var(--text)" }}>Heard aircraft</h2>
           <p style={{ fontSize: 14, color: "var(--muted)", margin: 0, maxWidth: 680 }}>
-            What each aircraft broadcasts on. Receivers listen on 1090 MHz only, so a 978 MHz aircraft shows up only when an
-            FAA ground station rebroadcast it on 1090. 978 aircraft are undercounted here.
+            What each aircraft broadcasts on. Receivers listen on 1090 MHz only: a 978 MHz aircraft is seen when an FAA ground
+            station rebroadcasts it, or as &ldquo;not on 1090&rdquo; when only MLAT could place it. &ldquo;No ADS-B caught&rdquo; means
+            only transponder replies came through, which is what far-off aircraft look like; it says nothing about the aircraft.
           </p>
         </div>
         <div role="group" aria-label="Period" style={{ display: "flex", gap: 4, background: "var(--panel-2)", border: "1px solid var(--border)", borderRadius: 8, padding: 3 }}>
