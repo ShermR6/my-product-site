@@ -29,6 +29,14 @@ type Draft = {
   paint: string;
 };
 
+// What the aircraft broadcasts on, once adsb.lol or a receiver has heard it.
+const LINK_TAG = { "1090": "1090", "978": "978", none: "No ADS-B" } as const;
+const LINK_TITLE = {
+  "1090": "Broadcasts ADS-B on 1090 MHz",
+  "978": "Broadcasts ADS-B on 978 MHz (UAT). Public coverage of 978 is thinner, especially low and close to the field",
+  none: "Heard with no ADS-B out (transponder only)",
+} as const;
+
 type Lookup = { found: boolean; tail_number?: string; icao24?: string; aircraft_type?: string };
 
 const cleanTail = (s: string) => s.toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 10);
@@ -124,7 +132,14 @@ export default function AircraftPage() {
                 <Plane3D className="bleed" tail={a.tail_number} type={a.aircraft_type} color={paint} start={-0.6 - i * 0.45} />
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
-                    <Tail size={22}>{a.tail_number}</Tail>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Tail size={22}>{a.tail_number}</Tail>
+                      {a.link && (
+                        <span className="fa-chip" style={{ height: 22, padding: "0 8px", fontSize: 11.5 }} title={LINK_TITLE[a.link]}>
+                          {LINK_TAG[a.link]}
+                        </span>
+                      )}
+                    </div>
                     <div className="fa-note" style={{ marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {[a.friendly_name, a.aircraft_type].filter(Boolean).join(" · ") || "Type not set"}
                     </div>

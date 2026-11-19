@@ -21,6 +21,8 @@ export type Aircraft = {
   alert_distances: number[] | null;
   /** The colour picked for it, "#RRGGBB", or null for the default. */
   paint_color?: string | null;
+  /** What it broadcasts on, once anything has heard it: 1090 MHz ADS-B, 978 MHz UAT, or no ADS-B out. */
+  link?: "1090" | "978" | "none" | null;
   active: boolean;
   created_at: string;
 };
