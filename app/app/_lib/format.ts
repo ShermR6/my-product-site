@@ -152,13 +152,35 @@ export function recentAlertsFor(tail: string, recent: NotificationLog[], a?: Liv
   let from = latest("takeoff");
   const landed = latest("landing");
   if (a && !a.on_ground && landed && (!from || landed > from) && now - landed.getTime() > AIRBORNE_AFTER_LANDING_MS) from = landed;
+  // An approach only moves inward and takes minutes, not hours. Walking back
+  // from the newest alert, an older ring alert for a ring no bigger than a
+  // newer one, or a long silence, means the rest belong to an earlier flight.
+  // This holds even when the takeoff in between was never reported (seen
+  // 2026-11-20: a 2 nm alert from an earlier lap counted with a new 10 nm one).
+  const after = mine.filter((x) => !from || x.at > from).sort((p, q) => q.at.getTime() - p.at.getTime());
   const out = new Map<string, Date>();
-  for (const x of mine) {
-    if (from && x.at <= from) continue;
-    const prev = out.get(x.type);
-    if (!prev || x.at > prev) out.set(x.type, x.at);
+  let newerRing: number | null = null;
+  let newerAt: Date | null = null;
+  for (const x of after) {
+    if (newerAt && newerAt.getTime() - x.at.getTime() > APPROACH_SILENCE_MS) break;
+    const ring = ringOfAlert(x.type);
+    if (ring !== null) {
+      if (newerRing !== null && ring <= newerRing) break;
+      newerRing = ring;
+    }
+    newerAt = x.at;
+    if (!out.has(x.type)) out.set(x.type, x.at);
   }
   return out;
+}
+
+/** Longest quiet stretch inside one approach: 10 nm to touchdown is about 10 minutes. */
+const APPROACH_SILENCE_MS = 30 * 60 * 1000;
+
+/** The ring an alert type is for ("10nm" is 10), or null for landings and the rest. */
+function ringOfAlert(type: string): number | null {
+  const m = /^(\d+(?:\.\d+)?)\s*nm$/i.exec(type);
+  return m ? Number(m[1]) : null;
 }
 
 export type AlertEvent = {
