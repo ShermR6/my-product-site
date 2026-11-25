@@ -266,7 +266,8 @@ export default function MapGL({
       interactive,
       cooperativeGestures: embedded && window.matchMedia("(pointer: coarse)").matches,
       maxPitch: 75,
-      attributionControl: { compact: true },
+      // FlyItalyADSB's licence (CC BY-SA 4.0) asks for credit wherever its data is shown.
+      attributionControl: { compact: true, customAttribution: 'Flight data: <a href="https://adsb.lol" target="_blank" rel="noreferrer">adsb.lol</a> (ODbL) · <a href="https://flyitalyadsb.com" target="_blank" rel="noreferrer">FlyItalyADSB</a> (CC BY-SA 4.0)' },
       canvasContextAttributes: { antialias: true },
     });
     if (interactive) {

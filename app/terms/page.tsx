@@ -9,7 +9,7 @@ export default function TermsPage() {
   return (
     <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px 80px" }}>
       <h1 style={{ fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>Terms of Service</h1>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "48px" }}>Last Updated: November 14, 2026</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "48px" }}>Last Updated: November 24, 2026</p>
 
       <div className="legal-body">
 
@@ -46,7 +46,7 @@ export default function TermsPage() {
         </ul>
 
         <h2>5. Third-Party Data and Services</h2>
-        <p>FinalPing relies on adsb.lol for publicly available ADS-B flight data. FinalPingApp makes no warranties regarding the accuracy, completeness, timeliness, continuity, or availability of flight data provided by this provider. Data gaps, delays, dropped signals, and inaccuracies are inherent characteristics of ADS-B technology, crowd-sourced receiver networks, and internet-based data delivery.</p>
+        <p>FinalPing relies on adsb.lol and FlyItalyADSB for publicly available ADS-B flight data. FinalPingApp makes no warranties regarding the accuracy, completeness, timeliness, continuity, or availability of flight data provided by these providers. Data gaps, delays, dropped signals, and inaccuracies are inherent characteristics of ADS-B technology, crowd-sourced receiver networks, and internet-based data delivery.</p>
         <p>FinalPingApp is not responsible for outages, rate limiting, policy changes, or discontinuation of service by any third-party data provider. Interruption of third-party services does not entitle you to a refund or credit.</p>
         <p>The Software integrates with third-party platforms (Discord, Slack, Microsoft Teams, Twilio SMS, webhooks, and others) as configured by you. FinalPingApp is not responsible for the availability, reliability, or policies of these platforms.</p>
         <p>Ground Station hardware includes an optional feature to contribute anonymous ADS-B position data to adsb.lol, a community-run receiver network. This feature is opt-in and can be declined during hardware setup or at any time by disabling the relevant service on your device. When enabled, only raw ADS-B position data received by your antenna is shared — no personal information, account data, or FinalPing account activity is transmitted to adsb.lol. FinalPingApp is not responsible for adsb.lol's data handling, privacy practices, or service availability.</p>
@@ -60,7 +60,7 @@ export default function TermsPage() {
         <p>FinalPingApp is not responsible for any consequences, penalties, violations, enforcement actions, or disputes arising from your use of the Software in connection with any regulatory body, including the FAA. You are solely responsible for ensuring your compliance with all applicable aviation regulations.</p>
 
         <h2>8. No Guarantee of Detection or Coverage</h2>
-        <p>FinalPing detects only aircraft equipped with ADS-B transponders that are actively broadcasting and within range of adsb.lol's receiver network. Military aircraft, aircraft operating with transponders off or in standby, and aircraft in areas with sparse receiver coverage may not appear. ADS-B data is subject to delays, gaps, signal loss, and inaccuracies that are inherent to the technology, crowd-sourced receiver networks, and internet-based data delivery. These limitations are outside FinalPingApp's control.</p>
+        <p>FinalPing detects only aircraft equipped with ADS-B transponders that are actively broadcasting and within range of the receiver networks FinalPing uses (adsb.lol and FlyItalyADSB). Military aircraft, aircraft operating with transponders off or in standby, and aircraft in areas with sparse receiver coverage may not appear. ADS-B data is subject to delays, gaps, signal loss, and inaccuracies that are inherent to the technology, crowd-sourced receiver networks, and internet-based data delivery. These limitations are outside FinalPingApp's control.</p>
         <p>FinalPing does not guarantee that any specific aircraft will be detected, that alerts will be delivered within any particular timeframe, or that the Software will provide complete or accurate situational awareness of aircraft in your area. The absence of an alert does not mean no aircraft is present. You should not rely on FinalPing as a sole or primary means of determining aircraft presence or proximity.</p>
 
         <h2>9. Disclaimer of Warranties</h2>

@@ -16,14 +16,18 @@ type Gap = {
 };
 type Report = {
   days: number;
-  fetch: {
-    hours: number; requests: number; ok_first_try: number; ok_after_retry: number; failed: number;
-    median_seconds: number | null; p95_seconds: number | null; errors: Record<string, number>; since: string | null;
-  };
+  fetch: Fetch;
+  /** Request stats per network source (adsb.lol, FlyItalyADSB). Older backends send only `fetch`. */
+  fetch_sources?: Record<string, Fetch>;
   total: { gaps: number; minutes: number };
   by_cause: Tally; by_distance: Tally; by_height: Tally; by_receiver: Tally;
   by_source_before: Tally; by_source_after: Tally; by_tail: Tally; by_account: Tally;
   recent: Gap[];
+};
+
+type Fetch = {
+  hours: number; requests: number; ok_first_try: number; ok_after_retry: number; failed: number;
+  median_seconds: number | null; p95_seconds: number | null; errors: Record<string, number>; since: string | null;
 };
 
 const SOURCE_NAMES: Record<string, string> = {
@@ -100,6 +104,32 @@ function Bars({ title, tally, order, names, limit }: {
   );
 }
 
+function FetchStats({ name, f }: { name: string; f: Fetch }) {
+  const failRate = f.requests ? ((f.failed / f.requests) * 100).toFixed(1) : null;
+  return (
+    <section>
+      <div style={{ ...label, marginBottom: 10 }}>{name} requests, last 24 h{f.since ? ` (since ${utc(f.since).toLocaleString()})` : ""}</div>
+      {f.requests === 0 ? (
+        <div style={{ fontSize: 13, color: "var(--muted)" }}>No requests yet.</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(125px, 1fr))", gap: 10 }}>
+          <Stat value={f.requests} name="Requests" />
+          <Stat value={f.ok_first_try} name="Answered first try" />
+          <Stat value={f.ok_after_retry} name="Answered on a retry" />
+          <Stat value={failRate !== null ? `${f.failed} (${failRate}%)` : f.failed} name="Failed" />
+          <Stat value={f.median_seconds !== null ? `${f.median_seconds}s` : "–"} name="Typical answer time" />
+          <Stat value={f.p95_seconds !== null ? `${f.p95_seconds}s` : "–"} name="Slowest 5%" />
+        </div>
+      )}
+      {Object.keys(f.errors).length > 0 && (
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+          Errors seen: {Object.entries(f.errors).map(([k, v]) => `${k} ${v}`).join(" · ")}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function CoverageTab() {
   const [days, setDays] = React.useState(7);
   const [report, setReport] = React.useState<Report | null>(null);
@@ -119,7 +149,9 @@ export default function CoverageTab() {
   }, [days]);
 
   const f = report?.fetch;
-  const failRate = f && f.requests ? ((f.failed / f.requests) * 100).toFixed(1) : null;
+  const sources: [string, Fetch][] = report
+    ? Object.entries(report.fetch_sources ?? { "adsb.lol": report.fetch })
+    : [];
 
   return (
     <div>
@@ -149,22 +181,7 @@ export default function CoverageTab() {
         <div style={{ color: "var(--muted)", fontSize: 13 }}>Could not load the coverage report.</div>
       ) : report && f ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 28, opacity: loading ? 0.6 : 1, transition: "opacity 0.15s" }}>
-          <section>
-            <div style={{ ...label, marginBottom: 10 }}>adsb.lol requests, last 24 h{f.since ? ` (since ${utc(f.since).toLocaleString()})` : ""}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(125px, 1fr))", gap: 10 }}>
-              <Stat value={f.requests} name="Requests" />
-              <Stat value={f.ok_first_try} name="Answered first try" />
-              <Stat value={f.ok_after_retry} name="Answered on a retry" />
-              <Stat value={failRate !== null ? `${f.failed} (${failRate}%)` : f.failed} name="Failed after retries" />
-              <Stat value={f.median_seconds !== null ? `${f.median_seconds}s` : "–"} name="Typical answer time" />
-              <Stat value={f.p95_seconds !== null ? `${f.p95_seconds}s` : "–"} name="Slowest 5%" />
-            </div>
-            {Object.keys(f.errors).length > 0 && (
-              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
-                Errors seen: {Object.entries(f.errors).map(([k, v]) => `${k} ${v}`).join(" · ")}
-              </div>
-            )}
-          </section>
+          {sources.map(([name, s]) => <FetchStats key={name} name={name} f={s} />)}
 
           <section>
             <div style={{ ...label, marginBottom: 10 }}>Gaps, last {report.days === 1 ? "24 h" : `${report.days} days`}</div>

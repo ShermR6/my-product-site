@@ -62,7 +62,7 @@ const sections: Section[] = [
       },
       {
         q: "Where does the position data come from?",
-        a: <>From adsb.lol, a public network of ADS-B receivers, checked every 30 seconds. Coverage depends on the receivers near your airport, and is often thin close to the ground. With a <a href="#ground-station" style={{ color: "var(--text)" }}>Ground Station</a> at your field, FinalPing also gets positions from your own receiver every few seconds, which is what lets it see landings, takeoffs and taxiing.</>,
+        a: <>From two public networks of ADS-B receivers, <a href="https://adsb.lol" style={{ color: "var(--text)" }}>adsb.lol</a> and <a href="https://flyitalyadsb.com" style={{ color: "var(--text)" }}>FlyItalyADSB</a> (data under CC BY-SA 4.0), checked every 30 seconds. FinalPing uses whichever heard each aircraft most recently. Coverage depends on the receivers near your airport, and is often thin close to the ground. With a <a href="#ground-station" style={{ color: "var(--text)" }}>Ground Station</a> at your field, FinalPing also gets positions from your own receiver every few seconds, which is what lets it see landings, takeoffs and taxiing.</>,
       },
       {
         q: "What does the Live Map show?",

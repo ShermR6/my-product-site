@@ -48,7 +48,7 @@ export default function GroundStationPage() {
     const seen = own?.last_seen_seconds != null;
     return (
       <div className="fa-page">
-        <PageHead title="Ground Station" sub="Your own receiver at the field. Feed adsb.lol with it and the plan is free.">
+        <PageHead title="Ground Station" sub="Your own receiver at the field. Feed adsb.lol with it and earn the free feeder plan.">
           {seen && <span className={`fa-pilltag ${own?.online ? "" : "warn"}`}><span className={`fa-dot ${own?.online ? "" : "warn"}`} />{own?.online ? "Receiver online" : "Receiver offline"}</span>}
         </PageHead>
         <div className="fa-grid fa-cols-2">

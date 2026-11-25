@@ -232,7 +232,7 @@ function Preview() {
             </p>
             <p className="fa-note" style={{ marginTop: 12 }}>The trial needs a card. Nothing is charged until it ends, and you can cancel before then.</p>
             <p className="fa-note" style={{ marginTop: 8 }}>
-              Have an ADS-B receiver? Feed adsb.lol with it and the plan is free.{" "}
+              Have an ADS-B receiver? Feed adsb.lol with it and earn the free feeder plan: 5 aircraft, alerts to Discord, email and Slack.{" "}
               <Link className="fa-link" href="/app/ground-station" onClick={() => setAsking(false)}>Set one up</Link>
             </p>
             {trial.note && <p className="fa-error" role="alert">{trial.note}</p>}
