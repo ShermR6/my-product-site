@@ -144,7 +144,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What does the plan include?",
-        a: <>One plan with everything: up to 15 aircraft, all eight channels, Ground Station support and 100 text messages a month. It is $19.99 a month, or $155.88 a year, which works out to $12.99 a month (35% less). See <A href="/pricing">Pricing</A>.</>,
+        a: <>One plan with everything: up to 15 aircraft, all eight channels, Ground Station support and 100 text messages a month. It is $19.99 a month, or $143.88 a year, which works out to $11.99 a month (40% less). See <A href="/pricing">Pricing</A>.</>,
       },
       {
         q: "Where do I manage billing, or cancel?",
@@ -160,7 +160,7 @@ const sections: Section[] = [
       },
       {
         q: "Can I switch between monthly and yearly billing?",
-        a: "Contact support at aircraftalerts@finalpingapp.com and we will switch your billing cycle. Yearly costs 35% less than monthly.",
+        a: "Contact support at aircraftalerts@finalpingapp.com and we will switch your billing cycle. Yearly costs 40% less than monthly.",
       },
     ],
   },

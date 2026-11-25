@@ -11,10 +11,10 @@ export const PLAN = {
   name: "Personal",
   /** Since 25 November 2026 (was 14.99; existing subscriptions keep their price). */
   monthly: 19.99,
-  /** Charged once a year: 12.99 a month, 35% less than twelve monthly payments (was 107.88). */
-  yearly: 155.88,
-  yearlyPerMonth: 12.99,
-  yearlySaving: 35,
+  /** Charged once a year: 11.99 a month, 40% less than twelve monthly payments (was 107.88). */
+  yearly: 143.88,
+  yearlyPerMonth: 11.99,
+  yearlySaving: 40,
   trialDays: 7,
   /** Money-back window on the first payment. Renewals are not refundable. */
   refundDays: 14,

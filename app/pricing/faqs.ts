@@ -10,7 +10,7 @@ export const faqs = [
   },
   {
     q: "What is the difference between monthly and yearly?",
-    a: "Only the price. Monthly is $19.99 a month. Yearly is $155.88 charged once a year, which works out to $12.99 a month and saves 35%. Both include everything.",
+    a: "Only the price. Monthly is $19.99 a month. Yearly is $143.88 charged once a year, which works out to $11.99 a month and saves 40%. Both include everything.",
   },
   {
     q: "Are there other plans or paid add-ons?",
