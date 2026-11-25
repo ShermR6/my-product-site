@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useTracker } from "../_lib/store";
+import ChannelIcon from "../_components/ChannelIcon";
 import { api, ApiError, errorText } from "../_lib/tracker";
 import { CHANNELS, channelLabel, clock, dayLabel, parseUtc, planOf } from "../_lib/format";
 import type { Integration } from "../_lib/types";
@@ -155,7 +156,7 @@ export default function IntegrationsPage() {
             return (
               <section key={i.id} className="fa-card">
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span className="fa-mark">{CHANNELS[i.type]?.mark ?? "··"}</span>
+                  <span className="fa-mark"><ChannelIcon type={i.type} /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 600 }}>{channelLabel(i.type)}</div>
                     <div className="fa-note" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.enabled ? summary(i) || "Connected" : "Paused"}</div>
@@ -191,7 +192,7 @@ export default function IntegrationsPage() {
               return (
                 <section key={type} className="fa-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span className="fa-mark dim">{CHANNELS[type].mark}</span>
+                    <span className="fa-mark dim"><ChannelIcon type={type} /></span>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{CHANNELS[type].name}</span>
                   </div>
                   <p className="fa-note" style={{ flex: 1 }}>{SPECS[type].blurb}</p>
