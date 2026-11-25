@@ -406,3 +406,26 @@ b .fa-token, strong .fa-token, .fa-token:has(b, strong) { font-weight: 700; bord
 @media (max-width: 380px) {
   .fa-brand span { display: none; }
 }
+
+/* Replay on the Live Map: the control bar takes the dock's place. */
+.fa-replay-bar { left: 50%; bottom: 22px; transform: translateX(-50%); width: min(880px, calc(100% - 140px)); display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+.fa-replay-time { font-size: 13px; font-weight: 600; min-width: 64px; }
+.fa-replay-end { font-size: 12px; }
+.fa-replay-track { position: relative; flex: 1; min-width: 120px; height: 28px; }
+.fa-replay-rail, .fa-replay-fill, .fa-replay-gap { position: absolute; top: 12px; height: 4px; border-radius: 2px; pointer-events: none; }
+.fa-replay-rail { left: 0; right: 0; background: #2A2A2A; }
+.fa-replay-fill { left: 0; background: var(--text); }
+.fa-replay-gap { background: repeating-linear-gradient(90deg, #5A5A5A 0 3px, transparent 3px 6px); }
+.fa-replay-tick { position: absolute; top: 6px; width: 2px; height: 16px; margin-left: -1px; border-radius: 1px; background: var(--text-2); pointer-events: none; }
+.fa-replay-track input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.fa-replay-track:has(input:focus-visible) .fa-replay-rail { outline: 2px solid var(--text-2); outline-offset: 4px; }
+.fa-replay-flight, .fa-replay-alert { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; margin: 2px 0; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.fa-replay-flight:hover:not(:disabled), .fa-replay-alert:hover { background: rgba(255, 255, 255, 0.05); border-color: #2A2A2A; }
+.fa-replay-flight:disabled { cursor: wait; opacity: 0.7; }
+.fa-replay-alert[aria-pressed="false"] { color: var(--muted); }
+@media (max-width: 860px) {
+  .fa-replay-bar { left: 10px; right: 10px; bottom: 10px; transform: none; width: auto; flex-wrap: wrap; gap: 8px 10px; }
+  .fa-replay-track { order: 5; flex-basis: 100%; }
+  .fa-replay-end { margin-left: auto; }
+  .fa-map-sheet.replaying { bottom: 150px; max-height: 44%; }
+}

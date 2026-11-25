@@ -47,6 +47,31 @@ export type LiveAircraft = {
 };
 
 /** One aircraft's flight so far, as the backend recorded it. */
+/** One recorded flight of the last 48 hours, as listed for replay. */
+export type RecordedFlight = {
+  id: number;
+  tail: string;
+  icao24: string;
+  started_at: string;
+  last_at: string;
+  in_progress: boolean;
+  minutes: number;
+  max_alt_ft: number | null;
+  points: number;
+};
+
+/** [unix seconds, lat, lon, altitude ft MSL or null, speed kt or null,
+ *  track or null, on the ground 0/1, source: a adsb.lol, f FlyItalyADSB,
+ *  r receiver, h FlyItalyADSB's track]. Oldest first. */
+export type FlightPoint = [number, number, number, number | null, number | null, number | null, number, string];
+
+/** A recorded flight with every point, for replay. */
+export type RecordedFlightDetail = Omit<RecordedFlight, "points"> & {
+  points: FlightPoint[];
+  alerts: { type: string; at: string }[];
+  filled_from_history: boolean;
+};
+
 export type FlightTrail = {
   tail: string;
   /** When this flight's trail began. null when there is none. */

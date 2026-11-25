@@ -4,6 +4,7 @@
 // edit, give one its own alert rings, remove.
 
 import { useState } from "react";
+import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api, errorText } from "../_lib/tracker";
@@ -194,7 +195,10 @@ export default function AircraftPage() {
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, paddingTop: 12, borderTop: "1px solid #1E1E1E" }}>
                   <PaintSwatches small tail={a.tail_number} value={paint} onPick={(hex) => setPaint(a.tail_number, hex)} />
-                  <Btn small onClick={() => edit(a)}>Edit</Btn>
+                  <span style={{ display: "flex", gap: 8 }}>
+                    <Link className="fa-btn small" href={`/app/map?tail=${encodeURIComponent(a.tail_number)}`} title="Replay this aircraft's flights of the last 48 hours">Flights</Link>
+                    <Btn small onClick={() => edit(a)}>Edit</Btn>
+                  </span>
                 </div>
               </section>
             );

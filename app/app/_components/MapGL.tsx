@@ -74,6 +74,9 @@ type Props = {
   runways?: Runway[] | null;
   /** Landing headings that alerts are limited to; each gets its approach path drawn. */
   approach?: number[];
+  /** Replay: positions arrive many times a second along a recorded path, so
+   *  aircraft follow them closely instead of gliding ahead and easing in. */
+  snappy?: boolean;
 };
 
 // The worker is a file of its own; scripts/copy-map-worker.mjs keeps this copy in step with the package.
@@ -237,7 +240,7 @@ const FOLLOW_EASE_MS = 700;      // how long the camera takes to get onto the ai
 
 export default function MapGL({
   center, code, rings, planes = [], selected, onSelect, showRings = true, coverage, fitSeq = 0, interactive = true, embedded = false, tilt = false,
-  runways, approach, flight, follow = false, onFollowEnd, followInsetBottom = 0,
+  runways, approach, flight, follow = false, onFollowEnd, followInsetBottom = 0, snappy = false,
 }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
@@ -250,6 +253,8 @@ export default function MapGL({
   const selectedRef = useRef(selected);
   useEffect(() => { selectedRef.current = selected; stage.current?.drawTrails(); }, [selected]);
   const followRef = useRef(follow);
+  const snappyRef = useRef(snappy);
+  useEffect(() => { snappyRef.current = snappy; }, [snappy]);
   const onFollowEndRef = useRef(onFollowEnd);
   useEffect(() => { onFollowEndRef.current = onFollowEnd; }, [onFollowEnd]);
 
@@ -548,7 +553,7 @@ export default function MapGL({
           // On the ground too: a landing roll or a taxi glides between the
           // receiver's reports instead of hopping from one to the next.
           const flying = !p.dim && underway(p);
-          const moving = !calm && underway(p) && p.heading != null && tr.moves > 0;
+          const moving = !calm && !snappyRef.current && underway(p) && p.heading != null && tr.moves > 0;
           const age = Math.min((now - tr.fixAt) / 1000, tr.gap * 1.25);
           const hr = ((p.heading ?? tr.hdg) * PI) / 180;
           const run = moving ? (p.speedKt as number) * KT * age : 0;
@@ -564,7 +569,7 @@ export default function MapGL({
               if (on.along != null) toHdg = on.along;
             }
           }
-          const k = calm ? 1 : 1 - Math.exp(-dt / 0.45);
+          const k = calm ? 1 : 1 - Math.exp(-dt / (snappyRef.current ? 0.08 : 0.45));
           const wasX = tr.x, wasZ = tr.z;
           tr.x += (tx - tr.x) * k;
           tr.z += (tz - tr.z) * k;

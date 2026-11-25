@@ -68,6 +68,10 @@ const sections: Section[] = [
         q: "What does the Live Map show?",
         a: "Every tracked aircraft in view, drawn as a 3D model of its type in the colour you picked. Click one to see its details and the whole flight it is on. Follow keeps the map on that aircraft while you zoom or tilt. The 3D button tilts the map and shows the terrain. An aircraft lost from view low and close to the airport is shown as landed.",
       },
+      {
+        q: "Can I replay a flight?",
+        a: "Yes, any flight from the last 48 hours. Pick the aircraft on the Live Map (or press Flights on its card on the Aircraft page) and choose a flight under Recent flights. It plays back on the map from takeoff to landing at 1, 10, 30 or 60 times real speed. Drag the timeline to jump anywhere, or pick an alert to see exactly where the aircraft was when it was sent. A dashed stretch on the timeline is a gap in coverage, where no source heard the aircraft. Flights are kept for 48 hours, then deleted.",
+      },
     ],
   },
   {
