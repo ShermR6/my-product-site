@@ -25,9 +25,9 @@ const appJsonLd = {
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "USD",
-    lowPrice: "14.99",
-    highPrice: "49.99",
-    offerCount: "3",
+    lowPrice: "12.99",
+    highPrice: "19.99",
+    offerCount: "2",
   },
 };
 
