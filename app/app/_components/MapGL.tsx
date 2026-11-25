@@ -663,6 +663,23 @@ export default function MapGL({
       setReady(true);
     });
 
+    // The browser can take the map's WebGL context away (it keeps only so many,
+    // and a GPU reset does it too). MapLibre then rebuilds its style, but not
+    // this layer ("cannot be restored after WebGL context loss"): without this
+    // the aircraft would vanish until the page is reloaded. It announces the
+    // restore before the rebuilt style has loaded, so wait for that. The
+    // three.js renderer belonged to the lost context: it is made again on adding.
+    const restoreAircraft = () => {
+      try {
+        renderer = null;
+        if (!map.getLayer("fp-aircraft")) map.addLayer(layer);
+        map.triggerRepaint();
+      } catch {
+        map.once("style.load", restoreAircraft);
+      }
+    };
+    map.on("webglcontextrestored", restoreAircraft);
+
     // Keep the map drawing while something is moving: about 30 frames a second.
     let raf = 0;
     let odd = false;

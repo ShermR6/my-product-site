@@ -17,8 +17,13 @@ const DEM = {
   maxzoom: 13,
 };
 
-/** OpenFreeMap's tile list (TileJSON). MapGL asks for it again if it comes back broken. */
-export const BASEMAP_URL = "https://tiles.openfreemap.org/planet";
+/** OpenFreeMap's tile list (TileJSON), served through our own /api/basemap:
+ *  OpenFreeMap has answered browsers' requests for it with an empty 204 while
+ *  answering servers normally (2026-11-25). MapGL asks again if it comes back
+ *  broken. (The map is drawn only in the browser; the fallback is for builds.) */
+export const BASEMAP_URL = typeof window !== "undefined"
+  ? `${window.location.origin}/api/basemap`
+  : "https://tiles.openfreemap.org/planet";
 
 export const MAP_STYLE: StyleSpecification = {
   version: 8,
