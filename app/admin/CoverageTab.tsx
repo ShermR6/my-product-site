@@ -1,6 +1,10 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
+import type { GapPoint } from "./GapMap";
+
+const GapMap = dynamic(() => import("./GapMap"), { ssr: false, loading: () => <div style={{ height: 460 }} /> });
 
 // Coverage gaps: every time a tracked aircraft near its airport went unheard
 // by every source, plus how the adsb.lol requests went. Data from the
@@ -23,6 +27,8 @@ type Report = {
   by_cause: Tally; by_distance: Tally; by_height: Tally; by_receiver: Tally;
   by_source_before: Tally; by_source_after: Tally; by_tail: Tally; by_account: Tally;
   recent: Gap[];
+  /** Every gap with a position, for the map (newer backends). */
+  points?: GapPoint[];
 };
 
 type Fetch = {
@@ -194,6 +200,13 @@ export default function CoverageTab() {
                 No gaps logged in this period. Logging started with backend f5213d0 on Nov 18.
               </div>
             ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {report.points && (
+                <div style={card}>
+                  <div style={{ ...label, marginBottom: 12 }}>Where gaps happen</div>
+                  <GapMap points={report.points} />
+                </div>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 10 }}>
                 <Bars title="What happened" tally={report.by_cause} names={cap} />
                 <Bars title="Distance from the airport when it went quiet" tally={report.by_distance} order={ORDER.by_distance} />
@@ -203,6 +216,7 @@ export default function CoverageTab() {
                 <Bars title="Heard by, after the gap" tally={report.by_source_after} names={sourceName} />
                 <Bars title="Aircraft" tally={report.by_tail} limit={10} />
                 <Bars title="Account" tally={report.by_account} limit={10} />
+              </div>
               </div>
             )}
           </section>
