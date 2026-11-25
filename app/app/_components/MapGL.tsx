@@ -15,6 +15,7 @@ import { endHeading, headingGap } from "../_lib/format";
 import type { Runway } from "../_lib/types";
 import { BASEMAP_URL, MAP_STYLE } from "../_lib/mapStyle";
 import { trailOf } from "../_lib/trails";
+import { smoothLine } from "../_lib/smooth";
 
 export type MapPlane = {
   tail: string;
@@ -448,7 +449,8 @@ export default function MapGL({
         // Only the picked aircraft has a line: nothing is drawn until one is
         // picked. The line fades a little towards its older end.
         const picked = selectedRef.current ?? null;
-        const fade = (pts: [number, number][], color: string, full: boolean) => {
+        const fade = (raw: [number, number][], color: string, full: boolean) => {
+          const pts = smoothLine(raw); // turns as curves, not corners, where positions are far apart
           const n = pts.length - 1;
           const bands = Math.min(14, n);
           const floor = full ? 0.42 : 0.08;
