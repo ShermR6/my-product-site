@@ -429,3 +429,36 @@ b .fa-token, strong .fa-token, .fa-token:has(b, strong) { font-weight: 700; bord
   .fa-replay-end { margin-left: auto; }
   .fa-map-sheet.replaying { bottom: 150px; max-height: 44%; }
 }
+
+/* Logs: a heading per day, flights (or every alert) as cards of rows. */
+.fa-log-days { display: flex; flex-direction: column; gap: 26px; }
+.fa-log-view { margin-left: auto; flex: none; }
+.fa-log-day { display: flex; flex-direction: column; gap: 10px; }
+.fa-log-dayhead { display: flex; align-items: baseline; gap: 12px; padding: 4px 2px 6px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; background: var(--bg); }
+.fa-log-dayhead h2 { font-size: 15px; font-weight: 600; margin: 0; }
+.fa-log-dayhead span { font-family: var(--mono); font-size: 11.5px; color: var(--faint); letter-spacing: 0.4px; }
+.fa-log-flight { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.fa-log-flighthead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.fa-log-tail { display: inline-flex; align-items: center; gap: 8px; }
+.fa-log-span { margin-left: auto; font-size: 12px; color: var(--faint); }
+.fa-log-row { display: grid; grid-template-columns: 56px 150px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 9px 16px; font-size: 13.5px; }
+.fa-log-row.all { grid-template-columns: 56px 100px 150px minmax(0, 1fr) auto; }
+.fa-log-row + .fa-log-row { border-top: 1px solid #1A1A1A; }
+.fa-log-row.failed { background: var(--bad-bg); }
+.fa-log-time { font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.fa-log-event { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; white-space: nowrap; }
+.fa-log-event svg { flex: none; color: var(--muted); }
+.fa-log-event.strong svg { color: var(--text); }
+.fa-log-detail { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.fa-log-sends { display: inline-flex; gap: 12px; justify-content: flex-end; }
+.fa-log-send { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+.fa-log-send.failed { color: var(--bad); font-size: 12.5px; font-weight: 500; }
+@media (max-width: 700px) {
+  .fa-log-row, .fa-log-row.all { grid-template-columns: 48px minmax(0, 1fr) auto; row-gap: 2px; }
+  .fa-log-row .fa-log-detail { grid-column: 2 / 4; grid-row: 2; }
+  .fa-log-row.all .fa-log-tail { grid-column: 2; }
+  .fa-log-row.all .fa-log-event { grid-column: 2; grid-row: 3; }
+  .fa-log-span { margin-left: 0; flex-basis: 100%; }
+  .fa-log-view { order: -1; margin-left: 0; flex-basis: 100%; }
+  .fa-log-view button { flex: 1; }
+}

@@ -1,14 +1,20 @@
 "use client";
 
-// Logs: every alert FinalPing has sent, newest first.
+// Logs: every alert FinalPing has sent, newest first, under a heading per
+// day. "By flight" groups each aircraft's alerts into flights (a takeoff
+// starts one, a landing ends one, half an hour of quiet splits them); "Every
+// alert" is the plain list. One alert sent to several channels is one entry
+// with each channel's logo, and only a failed delivery stands out.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download } from "lucide-react";
+import { CircleAlert, Check, Download, PlaneLanding, PlaneTakeoff, Target } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api, errorText } from "../_lib/tracker";
-import { airportRings, CHANNELS, channelLabel, clockSeconds, dayLabel, eventLabel, parseUtc, ringKey } from "../_lib/format";
+import { airportRings, CHANNELS, channelLabel, clock, dayLabel, eventLabel, parseUtc, ringKey } from "../_lib/format";
 import type { LogsPage, NotificationLog } from "../_lib/types";
 import { Btn, Empty, PageHead, Tail } from "../_components/kit";
+import ChannelIcon from "../_components/ChannelIcon";
+import { paintOf, usePaints } from "../_lib/paint";
 
 const PAGE = 50;
 const delivered = (n: NotificationLog) => ["sent", "success"].includes(String(n.status).toLowerCase());
@@ -19,6 +25,126 @@ function queryOf(page: number, limit: number, f: { aircraft: string; event: stri
   if (f.event) p.set("alert_type", f.event);
   if (f.channel) p.set("integration", f.channel);
   return `notifications/logs?${p.toString()}`;
+}
+
+/** One alert: the same aircraft, event and moment, whichever channels it went to. */
+type Alert = { key: string; at: Date; tail: string; type: string; message: string; sends: { channel: string; ok: boolean }[] };
+type Flight = { key: string; tail: string; alerts: Alert[] };
+type Day = { key: string; title: string; alerts: Alert[] };
+
+function alertsOf(rows: NotificationLog[]): Alert[] {
+  const map = new Map<string, Alert>();
+  const out: Alert[] = [];
+  for (const n of rows) {
+    const at = parseUtc(n.sent_at);
+    if (!at) continue;
+    // A fan-out to several channels lands within a few seconds: two minutes is one alert.
+    const key = `${n.aircraft_tail}|${n.alert_type}|${Math.floor(at.getTime() / 120_000)}`;
+    let a = map.get(key);
+    if (!a) {
+      a = { key, at, tail: n.aircraft_tail, type: n.alert_type, message: n.message ?? "", sends: [] };
+      map.set(key, a);
+      out.push(a);
+    }
+    if (!a.sends.some((x) => x.channel === n.integration_type)) a.sends.push({ channel: n.integration_type, ok: delivered(n) });
+  }
+  return out;
+}
+
+function daysOf(alerts: Alert[]): Day[] {
+  const out: Day[] = [];
+  for (const a of alerts) {
+    const key = a.at.toDateString();
+    let d = out[out.length - 1];
+    if (!d || d.key !== key) {
+      const label = dayLabel(a.at);
+      const date = a.at.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+      d = { key, title: label === "Today" || label === "Yesterday" ? `${label} · ${date}` : date, alerts: [] };
+      out.push(d);
+    }
+    d.alerts.push(a);
+  }
+  return out;
+}
+
+const FLIGHT_QUIET_MS = 30 * 60_000;
+
+/** One day's alerts as flights, newest first. */
+function flightsOf(alerts: Alert[]): Flight[] {
+  const open = new Map<string, Flight>();
+  const out: Flight[] = [];
+  for (const a of [...alerts].reverse()) {
+    let f = open.get(a.tail);
+    const last = f?.alerts[f.alerts.length - 1];
+    const quiet = last ? a.at.getTime() - last.at.getTime() : 0;
+    if (!f || a.type === "takeoff" || (quiet > FLIGHT_QUIET_MS && a.type !== "landing")) {
+      f = { key: a.key, tail: a.tail, alerts: [] };
+      open.set(a.tail, f);
+      out.push(f);
+    }
+    f.alerts.push(a);
+    if (a.type === "landing") open.delete(a.tail);
+  }
+  for (const f of out) f.alerts.reverse();
+  return out.reverse();
+}
+
+function lasted(from: Date, to: Date): string {
+  const m = Math.round((to.getTime() - from.getTime()) / 60_000);
+  return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+}
+
+function flightSummary(f: Flight): { text: string; span: string } {
+  const old = f.alerts[f.alerts.length - 1], neu = f.alerts[0];
+  const up = f.alerts.find((a) => a.type === "takeoff");
+  const down = f.alerts.find((a) => a.type === "landing");
+  const rings = [...f.alerts].reverse().filter((a) => /nm$/.test(a.type)).map((a) => eventLabel(a.type).replace("Crossed ", ""));
+  let text: string;
+  if (up && down) text = `Took off ${clock(up.at)}, landed ${clock(down.at)}`;
+  else if (up) text = `Took off ${clock(up.at)}` + (rings.length ? `, inbound again: ${rings.join(", ")}` : "");
+  else if (down) text = (rings.length ? `Inbound ${rings.join(", ")}, ` : "") + `landed ${clock(down.at)}`;
+  else text = rings.length ? `Inbound: ${rings.join(", ")}, no landing logged` : eventLabel(neu.type);
+  const span = clock(old.at) === clock(neu.at) ? clock(old.at) : `${clock(old.at)}–${clock(neu.at)} · ${lasted(old.at, neu.at)}`;
+  return { text, span };
+}
+
+const EMOJI = /[\p{Extended_Pictographic}️‍]/gu;
+
+/** The useful part of the alert text: ETA, height, speed, airport. Falls back to
+ *  the text itself (without emoji) when a custom wording does not say them. */
+function detailOf(a: Alert): string {
+  const m = a.message.replace(/\*\*/g, "");
+  const eta = /ETA\s*~?\s*(\d+)\s*min/i.exec(m)?.[1];
+  const alt = /Alt(?:itude)?\s*([\d,]+)\s*ft/i.exec(m)?.[1];
+  const kt = /(\d+)\s*kts?\b/i.exec(m)?.[1];
+  const field = /\b(?:at|from)\s+([A-Z0-9]{3,4})\b/.exec(m)?.[1];
+  const ft = alt ? `${Number(alt.replace(/,/g, "")).toLocaleString()} ft` : null;
+  if (a.type === "landing" && field) return `At ${field}`;
+  if (a.type === "takeoff" && (field || ft)) return [field && `From ${field}`, ft, kt && `${kt} kt`].filter(Boolean).join(" · ");
+  if (eta || ft) return [eta && `ETA ~${eta} min`, ft].filter(Boolean).join(" · ");
+  return m.replace(EMOJI, "").replace(/\s*\n\s*/g, " · ").trim();
+}
+
+function EventBadge({ type }: { type: string }) {
+  const Icon = type === "landing" ? PlaneLanding : type === "takeoff" ? PlaneTakeoff : Target;
+  return (
+    <span className={`fa-log-event${type === "landing" || type === "takeoff" ? " strong" : ""}`}>
+      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />{eventLabel(type)}
+    </span>
+  );
+}
+
+function Sends({ sends }: { sends: Alert["sends"] }) {
+  return (
+    <span className="fa-log-sends">
+      {sends.map((x) => (
+        <span key={x.channel} className={`fa-log-send${x.ok ? "" : " failed"}`} title={`${channelLabel(x.channel)}: ${x.ok ? "delivered" : "failed"}`}>
+          <ChannelIcon type={x.channel} size={15} />
+          {x.ok ? <Check size={13} aria-label="delivered" /> : <><CircleAlert size={13} aria-hidden="true" />Failed</>}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function csvCell(v: string) {
@@ -40,6 +166,19 @@ export default function LogsPageView() {
   const [err, setErr] = useState("");
   const [stats, setStats] = useState<{ today: number; this_week: number; total: number } | null>(null);
   const [exporting, setExporting] = useState(false);
+  const paints = usePaints();
+  const [view, setViewState] = useState<"flight" | "all">("flight");
+  // The view last picked, kept in this browser only.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("fp-logs-view") === "all") setViewState("all");
+    } catch { /* a convenience only */ }
+  }, []);
+  const setView = (v: "flight" | "all") => {
+    setViewState(v);
+    try { window.localStorage.setItem("fp-logs-view", v); } catch { /* a convenience only */ }
+  };
+  const days = useMemo(() => (rows ? daysOf(alertsOf(rows)) : []), [rows]);
 
   const filters = useMemo(() => ({ aircraft, event, channel }), [aircraft, event, channel]);
 
@@ -131,50 +270,70 @@ export default function LogsPageView() {
           {channelTypes.map((x) => <option key={x} value={x}>{channelLabel(x)}</option>)}
         </select>
         {filtered && <button className="fa-link fa-note" onClick={() => { setAircraft(""); setEvent(""); setChannel(""); }}>Clear filters</button>}
+        <div className="fa-seg fa-log-view" role="group" aria-label="View">
+          <button aria-pressed={view === "flight"} onClick={() => setView("flight")}>By flight</button>
+          <button aria-pressed={view === "all"} onClick={() => setView("all")}>Every alert</button>
+        </div>
       </div>
 
       {err && <div className="fa-banner bad" role="alert">{err}</div>}
 
-      <div className="fa-table-wrap">
-        {rows === null ? (
-          <Empty title="Loading…" />
-        ) : rows.length === 0 ? (
+      {rows === null ? (
+        <div className="fa-table-wrap"><Empty title="Loading…" /></div>
+      ) : rows.length === 0 ? (
+        <div className="fa-table-wrap">
           <Empty title={filtered ? "Nothing matches" : "No alerts yet"}>{filtered ? "Try a wider filter." : "Alerts show up here as soon as the first one goes out."}</Empty>
-        ) : (
-          <div className="fa-table-scroll">
-            <table className="fa-table">
-              <thead>
-                <tr><th>Time</th><th>Aircraft</th><th>Event</th><th>Channel</th><th>Status</th><th>Message</th></tr>
-              </thead>
-              <tbody>
-                {rows.map((n) => {
-                  const at = parseUtc(n.sent_at);
-                  const ok = delivered(n);
+        </div>
+      ) : (
+        <div className="fa-log-days">
+          {days.map((d) => {
+            const flights = view === "flight" ? flightsOf(d.alerts) : null;
+            return (
+              <section key={d.key} className="fa-log-day" aria-label={d.title}>
+                <div className="fa-log-dayhead">
+                  <h2>{d.title}</h2>
+                  <span>{d.alerts.length} {d.alerts.length === 1 ? "alert" : "alerts"}{flights ? ` · ${flights.length} ${flights.length === 1 ? "flight" : "flights"}` : ""}</span>
+                </div>
+                {flights ? flights.map((f) => {
+                  const sum = flightSummary(f);
                   return (
-                    <tr key={n.id} className={ok ? undefined : "failed"}>
-                      <td className="mono" style={{ whiteSpace: "nowrap", color: "var(--muted)", fontSize: 12.5 }}>
-                        <span style={{ color: "var(--faint)" }}>{dayLabel(at)}</span> {clockSeconds(at)}
-                      </td>
-                      <td><Tail>{n.aircraft_tail}</Tail></td>
-                      <td style={{ whiteSpace: "nowrap" }}>{eventLabel(n.alert_type)}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{channelLabel(n.integration_type)}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: ok ? "var(--text-2)" : "var(--warn)" }}>
-                          <span className={`fa-dot ${ok ? "" : "warn"}`} style={{ width: 6, height: 6 }} />{ok ? "Delivered" : "Failed"}
-                        </span>
-                      </td>
-                      <td style={{ color: "var(--muted)", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={n.message}>
-                        {(n.message ?? "").replace(/\*\*/g, "").replace(/\s*\n\s*/g, " · ")}
-                      </td>
-                    </tr>
+                    <article key={f.key} className="fa-log-flight">
+                      <div className="fa-log-flighthead">
+                        <span className="fa-log-tail"><span className="fa-paint-dot" style={{ background: paintOf(f.tail, paints) }} /><Tail>{f.tail}</Tail></span>
+                        <span className="fa-note">{sum.text}</span>
+                        <span className="mono fa-log-span">{sum.span}</span>
+                      </div>
+                      {f.alerts.map((a) => (
+                        <div key={a.key} className={`fa-log-row${a.sends.every((x) => x.ok) ? "" : " failed"}`}>
+                          <span className="mono fa-log-time">{clock(a.at)}</span>
+                          <EventBadge type={a.type} />
+                          <span className="fa-log-detail" title={a.message.replace(/\*\*/g, "")}>{detailOf(a)}</span>
+                          <Sends sends={a.sends} />
+                        </div>
+                      ))}
+                    </article>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                }) : (
+                  <div className="fa-log-flight">
+                    {d.alerts.map((a) => (
+                      <div key={a.key} className={`fa-log-row all${a.sends.every((x) => x.ok) ? "" : " failed"}`}>
+                        <span className="mono fa-log-time">{clock(a.at)}</span>
+                        <span className="fa-log-tail"><span className="fa-paint-dot" style={{ background: paintOf(a.tail, paints) }} /><Tail>{a.tail}</Tail></span>
+                        <EventBadge type={a.type} />
+                        <span className="fa-log-detail" title={a.message.replace(/\*\*/g, "")}>{detailOf(a)}</span>
+                        <Sends sends={a.sends} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
+      <div>
         {rows && rows.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 22px", borderTop: "1px solid #1E1E1E" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 2px" }}>
             <span className="fa-note">Showing {rows.length.toLocaleString()} of {total.toLocaleString()}</span>
             {page < pages && <Btn small disabled={busy} onClick={() => load(page + 1, filters, true)}>{busy ? "Loading…" : "Load more"}</Btn>}
           </div>
