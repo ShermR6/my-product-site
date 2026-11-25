@@ -17,6 +17,9 @@ const DEM = {
   maxzoom: 13,
 };
 
+/** OpenFreeMap's tile list (TileJSON). MapGL asks for it again if it comes back broken. */
+export const BASEMAP_URL = "https://tiles.openfreemap.org/planet";
+
 export const MAP_STYLE: StyleSpecification = {
   version: 8,
   name: "FinalPing dark",
@@ -24,7 +27,7 @@ export const MAP_STYLE: StyleSpecification = {
   sources: {
     omt: {
       type: "vector",
-      url: "https://tiles.openfreemap.org/planet",
+      url: BASEMAP_URL,
       attribution: '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
     },
     // Two copies on purpose: MapLibre wants shading and relief on separate sources.

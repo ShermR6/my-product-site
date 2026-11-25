@@ -13,7 +13,7 @@ import { destroyModel, lightScene, loadReal, makeModel, type Model } from "../_l
 import { familyOf, modelOf, type Family } from "../_lib/paint";
 import { endHeading, headingGap } from "../_lib/format";
 import type { Runway } from "../_lib/types";
-import { MAP_STYLE } from "../_lib/mapStyle";
+import { BASEMAP_URL, MAP_STYLE } from "../_lib/mapStyle";
 import { trailOf } from "../_lib/trails";
 
 export type MapPlane = {
@@ -606,6 +606,22 @@ export default function MapGL({
         if (now - lastTrail > 500) { lastTrail = now; S.drawTrails(); }
       },
     };
+
+    // OpenFreeMap's tile list can come back empty (seen 2026-11-24: "Unexpected
+    // end of JSON input"). MapLibre then marks the source as loaded anyway and
+    // never asks again, so the map has terrain and rings but no roads, towns or
+    // water. The tell is that the source never got its tile addresses. Check
+    // after 3 s, then 6, 9, 12 and 15 s more, and ask again each time, with a
+    // tag so no cached bad answer is reused.
+    const checkBasemap = (tries: number) => window.setTimeout(() => {
+      try {
+        const src = map.getSource("omt") as ml.VectorTileSource | undefined;
+        if (!src || src.tiles?.length) return;
+        src.setUrl(`${BASEMAP_URL}?retry=${tries}`);
+        if (tries < 5) checkBasemap(tries + 1);
+      } catch { /* the map was closed meanwhile */ }
+    }, 3000 * tries);
+    checkBasemap(1);
 
     map.on("load", () => {
       map.addSource("fp-coverage", { type: "geojson", data: EMPTY });
