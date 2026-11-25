@@ -75,6 +75,7 @@ export default function AirportPage() {
   const [locations, setLocations] = useState<SavedLocation[] | null>(null);
   const [locErr, setLocErr] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<SavedLocation | null>(null);
   const [fitSeq, setFitSeq] = useState(0);
 
   // Follow the saved settings until the person starts editing.
@@ -165,9 +166,43 @@ export default function AirportPage() {
     }
   }
 
+  // The home airport, when it is not one of the saved locations yet.
+  const homeUnsaved = !!t.airport && locations !== null && !locations.some((l) => l.is_active);
+
+  async function saveHome() {
+    const a = t.airport;
+    if (!a) return;
+    await api("locations", {
+      method: "POST",
+      body: {
+        name: a.airport_name || a.airport_code || "Home airport", airport_code: a.airport_code ?? "",
+        latitude: String(a.latitude), longitude: String(a.longitude), elevation_ft_msl: a.elevation_ft_msl ?? 0,
+      },
+    });
+  }
+
+  async function saveHomeNow() {
+    setLocErr("");
+    try { await saveHome(); await loadLocations(); } catch (e) { setLocErr(errorText(e)); }
+  }
+
+  async function editLocation(loc: SavedLocation, a: AirportMatch) {
+    setLocErr("");
+    try {
+      await api(`locations/${loc.id}`, { method: "PUT", body: { name: a.name, airport_code: a.icao, latitude: String(a.lat), longitude: String(a.lon), elevation_ft_msl: a.elev } });
+      setEditing(null);
+      await loadLocations();
+    } catch (e) {
+      setEditing(null);
+      setLocErr(errorText(e));
+    }
+  }
+
   async function switchTo(loc: SavedLocation) {
     setBusy(true); setLocErr("");
     try {
+      // Keep the airport being left in the list, so switching back is one click.
+      if (homeUnsaved) await saveHome();
       await api(`locations/${loc.id}/activate`, { method: "POST" });
       // Activating moves the airport's position; fill in its name and runways too.
       const match = loc.airport_code ? (await findAirports(loc.airport_code)).find((m) => m.icao === loc.airport_code) : undefined;
@@ -291,16 +326,28 @@ export default function AirportPage() {
             <Card title="Saved locations" note={<button className="fa-link" onClick={() => { setLocErr(""); setAdding(true); }}>+ Add location</button>}>
               {locErr && <div className="fa-error" role="alert" style={{ marginBottom: 8 }}>{locErr}</div>}
               {locations === null && <div className="fa-row fa-note">Loading…</div>}
-              {locations?.length === 0 && <div className="fa-row fa-note">Save a second airport here to switch between them in one click.</div>}
+              {locations?.length === 0 && !homeUnsaved && <div className="fa-row fa-note">Save a second airport here to switch between them in one click.</div>}
+              {homeUnsaved && t.airport && (
+                <div className="fa-row">
+                  <span className="mono" style={{ width: 58, fontWeight: 600 }}>{t.airport.airport_code || "—"}</span>
+                  <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {t.airport.airport_name || "Home airport"}
+                    <span className="fa-note" style={{ display: "block" }}>Your home airport, not saved yet</span>
+                  </span>
+                  <span className="fa-pilltag">Active</span>
+                  <Btn small disabled={busy} onClick={saveHomeNow}>Save</Btn>
+                </div>
+              )}
               {locations?.map((loc) => (
                 <div key={loc.id} className="fa-row">
                   <span className="mono" style={{ width: 58, fontWeight: 600 }}>{loc.airport_code || "—"}</span>
                   <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loc.name}</span>
                   {loc.is_active ? (
-                    <span className="fa-pilltag">Active</span>
+                    <span className="fa-pilltag" title="Your home airport. Change it with Change above.">Active</span>
                   ) : (
                     <>
                       <Btn small disabled={busy} onClick={() => switchTo(loc)}>Switch</Btn>
+                      <button className="fa-link fa-note" onClick={() => { setLocErr(""); setEditing(loc); }} aria-label={`Edit ${loc.name}`}>Edit</button>
                       <button className="fa-link fa-note" onClick={() => removeLocation(loc)} aria-label={`Remove ${loc.name}`}>Remove</button>
                     </>
                   )}
@@ -325,6 +372,12 @@ export default function AirportPage() {
         <Modal title="Change airport" sub="Your rings stay as they are. Runway choices reset." onClose={() => setChanging(false)}>
           <AirportSearch onPick={pick} autoFocus />
           <div className="fa-modal-actions"><Btn onClick={() => setChanging(false)}>Cancel</Btn></div>
+        </Modal>
+      )}
+      {editing && (
+        <Modal title={`Change ${editing.airport_code || editing.name}`} onClose={() => setEditing(null)}>
+          <AirportSearch onPick={(a) => editLocation(editing, a)} autoFocus />
+          <div className="fa-modal-actions"><Btn onClick={() => setEditing(null)}>Cancel</Btn></div>
         </Modal>
       )}
       {adding && (
