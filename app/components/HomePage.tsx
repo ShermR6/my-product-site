@@ -4,8 +4,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight, Check, Clock, Code, Hash, Mail, MessageCircle, MessageSquare, Moon, Plus, Send, Smartphone, Users,
+  ArrowRight, Check, Clock, Moon, Plus,
 } from "lucide-react";
+import ChannelIcon from "../app/_components/ChannelIcon";
 import "../home.css";
 import HeroGlobe from "./HeroGlobe";
 
@@ -18,15 +19,16 @@ const ALERT_ROWS = [
   { title: "20 nm alert", sub: "Aircraft within 20 nautical miles", on: false },
 ];
 
+// The same marks as the web app's Integrations page (ChannelIcon).
 const CHANNELS = [
-  { icon: Hash, name: "Discord", desc: "Post to a channel via webhook" },
-  { icon: Mail, name: "Email", desc: "Alert emails to any address" },
-  { icon: Smartphone, name: "SMS", desc: "Text alerts to any phone number" },
-  { icon: MessageCircle, name: "Slack", desc: "Post to a Slack channel" },
-  { icon: Users, name: "Microsoft Teams", desc: "Send to a Teams channel" },
-  { icon: MessageSquare, name: "Google Chat", desc: "Post to a Google Chat space" },
-  { icon: Send, name: "Telegram", desc: "Send to a bot or channel" },
-  { icon: Code, name: "Webhook", desc: "POST alert data to any endpoint" },
+  { type: "discord", name: "Discord", desc: "Post to a channel via webhook" },
+  { type: "email", name: "Email", desc: "Alert emails to any address" },
+  { type: "sms", name: "SMS", desc: "Text alerts to any phone number" },
+  { type: "slack", name: "Slack", desc: "Post to a Slack channel" },
+  { type: "teams", name: "Microsoft Teams", desc: "Send to a Teams channel" },
+  { type: "google_chat", name: "Google Chat", desc: "Post to a Google Chat space" },
+  { type: "telegram", name: "Telegram", desc: "Send to a bot or channel" },
+  { type: "webhook", name: "Webhook", desc: "POST alert data to any endpoint" },
 ];
 
 const LOG_ROWS = [
@@ -136,7 +138,7 @@ export default function HomePage() {
             <div className="fh-channels">
               {CHANNELS.map((c) => (
                 <div key={c.name} className="fh-channel">
-                  <c.icon size={22} strokeWidth={2} aria-hidden="true" />
+                  <ChannelIcon type={c.type} size={22} />
                   <div className="fh-channel-name">{c.name}</div>
                   <div className="fh-channel-desc">{c.desc}</div>
                 </div>
@@ -166,7 +168,7 @@ export default function HomePage() {
             <div className="fh-card" style={{ gap: 8 }}>
               <div className="fh-card-head" style={{ paddingBottom: 10 }}>
                 <span className="fh-card-title">Aircraft</span>
-                <span className="fh-card-meta">3 of 7 used</span>
+                <span className="fh-card-meta">3 of 15 used</span>
               </div>
               <div className="fh-row">
                 <div className="fh-ac">

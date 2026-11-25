@@ -7,23 +7,25 @@
 // with each channel's logo, and only a failed delivery stands out.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CircleAlert, Check, Download, PlaneLanding, PlaneTakeoff, Target } from "lucide-react";
+import { CircleAlert, Check, Download, PlaneLanding, PlaneTakeoff, Target, X } from "lucide-react";
 import { useTracker } from "../_lib/store";
 import { api, errorText } from "../_lib/tracker";
 import { airportRings, CHANNELS, channelLabel, clock, dayLabel, eventLabel, parseUtc, ringKey } from "../_lib/format";
 import type { LogsPage, NotificationLog } from "../_lib/types";
 import { Btn, Empty, PageHead, Tail } from "../_components/kit";
 import ChannelIcon from "../_components/ChannelIcon";
+import MultiSelect from "../_components/MultiSelect";
 import { paintOf, usePaints } from "../_lib/paint";
 
 const PAGE = 50;
 const delivered = (n: NotificationLog) => ["sent", "success"].includes(String(n.status).toLowerCase());
 
-function queryOf(page: number, limit: number, f: { aircraft: string; event: string; channel: string }) {
+function queryOf(page: number, limit: number, f: { aircraft: string[]; event: string[]; channel: string[] }) {
   const p = new URLSearchParams({ page: String(page), limit: String(limit) });
-  if (f.aircraft) p.set("aircraft", f.aircraft);
-  if (f.event) p.set("alert_type", f.event);
-  if (f.channel) p.set("integration", f.channel);
+  // Each filter can hold several values; the backend takes them comma-separated.
+  if (f.aircraft.length) p.set("aircraft", f.aircraft.join(","));
+  if (f.event.length) p.set("alert_type", f.event.join(","));
+  if (f.channel.length) p.set("integration", f.channel.join(","));
   return `notifications/logs?${p.toString()}`;
 }
 
@@ -155,9 +157,9 @@ function csvCell(v: string) {
 
 export default function LogsPageView() {
   const t = useTracker();
-  const [aircraft, setAircraft] = useState("");
-  const [event, setEvent] = useState("");
-  const [channel, setChannel] = useState("");
+  const [aircraft, setAircraft] = useState<string[]>([]);
+  const [event, setEvent] = useState<string[]>([]);
+  const [channel, setChannel] = useState<string[]>([]);
   const [rows, setRows] = useState<NotificationLog[] | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -181,6 +183,10 @@ export default function LogsPageView() {
   const days = useMemo(() => (rows ? daysOf(alertsOf(rows)) : []), [rows]);
 
   const filters = useMemo(() => ({ aircraft, event, channel }), [aircraft, event, channel]);
+  const filterIcon = (type: string) => {
+    const Icon = type === "landing" ? PlaneLanding : type === "takeoff" ? PlaneTakeoff : Target;
+    return <Icon size={15} strokeWidth={1.9} aria-hidden="true" />;
+  };
 
   const load = useCallback(async (p: number, f: typeof filters, append: boolean) => {
     setBusy(true); setErr("");
@@ -243,7 +249,12 @@ export default function LogsPageView() {
     }
   }
 
-  const filtered = aircraft || event || channel;
+  const filtered = aircraft.length > 0 || event.length > 0 || channel.length > 0;
+  const picked = [
+    ...aircraft.map((v) => ({ key: `a:${v}`, label: v, drop: () => setAircraft(aircraft.filter((x) => x !== v)) })),
+    ...event.map((v) => ({ key: `e:${v}`, label: eventLabel(v), drop: () => setEvent(event.filter((x) => x !== v)) })),
+    ...channel.map((v) => ({ key: `c:${v}`, label: channelLabel(v), drop: () => setChannel(channel.filter((x) => x !== v)) })),
+  ];
 
   return (
     <div className="fa-page">
@@ -257,23 +268,27 @@ export default function LogsPageView() {
       </PageHead>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-        <select className="fa-input fa-filter" aria-label="Filter by aircraft" value={aircraft} onChange={(e) => setAircraft(e.target.value)}>
-          <option value="">All aircraft</option>
-          {tails.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
-        <select className="fa-input fa-filter" aria-label="Filter by event" value={event} onChange={(e) => setEvent(e.target.value)}>
-          <option value="">All events</option>
-          {eventTypes.map((x) => <option key={x} value={x}>{eventLabel(x)}</option>)}
-        </select>
-        <select className="fa-input fa-filter" aria-label="Filter by channel" value={channel} onChange={(e) => setChannel(e.target.value)}>
-          <option value="">All channels</option>
-          {channelTypes.map((x) => <option key={x} value={x}>{channelLabel(x)}</option>)}
-        </select>
-        {filtered && <button className="fa-link fa-note" onClick={() => { setAircraft(""); setEvent(""); setChannel(""); }}>Clear filters</button>}
+        <MultiSelect allLabel="All aircraft" unit="aircraft" selected={aircraft} onChange={setAircraft}
+          options={tails.map((x) => ({ value: x, label: x, icon: <span className="fa-paint-dot" style={{ background: paintOf(x, paints) }} /> }))} />
+        <MultiSelect allLabel="All events" unit="events" selected={event} onChange={setEvent}
+          options={eventTypes.map((x) => ({ value: x, label: eventLabel(x), icon: filterIcon(x) }))} />
+        <MultiSelect allLabel="All channels" unit="channels" selected={channel} onChange={setChannel}
+          options={channelTypes.map((x) => ({ value: x, label: channelLabel(x), icon: <ChannelIcon type={x} size={15} /> }))} />
+        {filtered && <button className="fa-link fa-note" onClick={() => { setAircraft([]); setEvent([]); setChannel([]); }}>Clear filters</button>}
         <div className="fa-seg fa-log-view" role="group" aria-label="View">
           <button aria-pressed={view === "flight"} onClick={() => setView("flight")}>By flight</button>
           <button aria-pressed={view === "all"} onClick={() => setView("all")}>Every alert</button>
         </div>
+        {picked.length > 0 && (
+          <div className="fa-ms-picked">
+            Showing only:
+            {picked.map((p) => (
+              <span key={p.key} className="fa-ms-chip">{p.label}
+                <button type="button" aria-label={`Stop filtering by ${p.label}`} onClick={p.drop}><X size={13} aria-hidden="true" /></button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {err && <div className="fa-banner bad" role="alert">{err}</div>}

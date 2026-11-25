@@ -80,7 +80,7 @@ export function Check({ on, onChange, label, disabled }: { on: boolean; onChange
       type="button" role="checkbox" className="fa-check" aria-checked={on} aria-label={label}
       disabled={disabled} onClick={() => onChange?.(!on)}
     >
-      {on && <CheckGlyph size={14} strokeWidth={3} aria-hidden="true" />}
+      <CheckGlyph size={14} strokeWidth={3} aria-hidden="true" />
     </button>
   );
 }

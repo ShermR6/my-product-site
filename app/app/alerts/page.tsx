@@ -9,7 +9,8 @@ import { api, errorText } from "../_lib/tracker";
 import { Plus, X } from "lucide-react";
 import { airportRings, channelLabel, planOf, ringKey } from "../_lib/format";
 import type { AlertSetting, Routing } from "../_lib/types";
-import { Btn, Card, Check, PageHead, Toggle } from "../_components/kit";
+import { Btn, Card, PageHead, Toggle } from "../_components/kit";
+import ChannelIcon from "../_components/ChannelIcon";
 import MessageEditor, { MESSAGE_FIELD_KEYS } from "../_components/MessageEditor";
 import { RING_MAX, RING_MIN } from "../_components/RingEditor";
 
@@ -140,7 +141,7 @@ export default function AlertsPage() {
   }
 
   async function save() {
-    if (ringsDirty && rings.length === 0) { setErr("Keep at least one distance alert. To silence one, untick its boxes."); return; }
+    if (ringsDirty && rings.length === 0) { setErr("Keep at least one distance alert. To silence one, switch it off for every channel."); return; }
     setBusy(true); setErr(""); setOk("");
     try {
       // Rings first: saving them drops the routing of any ring that was removed.
@@ -237,7 +238,7 @@ export default function AlertsPage() {
           <div>
             <span className="fa-card-title">Alerts</span>
             <div className="fa-card-note" style={{ marginTop: 2 }}>
-              {cols.length ? "Untick a box to keep that alert out of that channel." : "One alert each time a tracked aircraft crosses a distance inbound."}
+              {cols.length ? "Switch one off to keep that alert out of that channel." : "One alert each time a tracked aircraft crosses a distance inbound."}
             </div>
           </div>
           {t.hasAirport !== false && (adding ? (
@@ -268,7 +269,11 @@ export default function AlertsPage() {
                 <tr>
                   <th>Alert</th>
                   {cols.map((c) => (
-                    <th key={c.id} className="ch">{channelLabel(c.type)}{!c.enabled && " (off)"}</th>
+                    <th key={c.id} className="ch">
+                      <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                        <ChannelIcon type={c.type} size={15} />{channelLabel(c.type)}{!c.enabled && " (off)"}
+                      </span>
+                    </th>
                   ))}
                   <th className="fa-rm" aria-label="Remove" />
                 </tr>
@@ -284,7 +289,7 @@ export default function AlertsPage() {
                       </td>
                       {cols.map((c) => (
                         <td key={c.id} style={{ textAlign: "center" }}>
-                          <Check on={c.enabled && isOn(ev.type, c.id)} disabled={!c.enabled || routing === null}
+                          <Toggle on={c.enabled && isOn(ev.type, c.id)} disabled={!c.enabled || routing === null}
                             label={`Send “${ev.label}” to ${channelLabel(c.type)}`} onChange={(on) => toggle(ev.type, c.id, on)} />
                         </td>
                       ))}
@@ -307,7 +312,7 @@ export default function AlertsPage() {
           <div className="fa-note" style={{ padding: "12px 22px 16px", borderTop: "1px solid #1E1E1E" }}>
             {cols.length === 0
               ? <>These have nowhere to go yet. <Link className="fa-link" href="/app/integrations">Connect a channel</Link></>
-              : <>Landed and Took off are always listed; untick them to switch them off.</>}
+              : <>Landed and Took off are always listed; switch them off where you do not want them.</>}
           </div>
         )}
         {t.hasAirport !== false && customRings.length > 0 && (
