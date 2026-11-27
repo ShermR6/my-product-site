@@ -2,7 +2,8 @@
 
 // Logs: every alert FinalPing has sent, newest first, under a heading per
 // day. "By flight" groups each aircraft's alerts into flights (a takeoff
-// starts one, a landing ends one, half an hour of quiet splits them); "Every
+// starts one and it stays open, however long the aircraft is away, until it
+// lands; without a takeoff, half an hour of quiet splits them); "Every
 // alert" is the plain list. One alert sent to several channels is one entry
 // with each channel's logo, and only a failed delivery stands out.
 
@@ -70,8 +71,11 @@ function daysOf(alerts: Alert[]): Day[] {
 }
 
 const FLIGHT_QUIET_MS = 30 * 60_000;
+/** After a takeoff the flight waits this long for its inbound alerts and landing:
+ *  a lesson or cross-country is often an hour or more away from the rings. */
+const FLIGHT_AWAY_MS = 10 * 60 * 60_000;
 
-/** One day's alerts as flights, newest first. */
+/** One day's alerts as flights, the one with the latest alert first. */
 function flightsOf(alerts: Alert[]): Flight[] {
   const open = new Map<string, Flight>();
   const out: Flight[] = [];
@@ -79,7 +83,8 @@ function flightsOf(alerts: Alert[]): Flight[] {
     let f = open.get(a.tail);
     const last = f?.alerts[f.alerts.length - 1];
     const quiet = last ? a.at.getTime() - last.at.getTime() : 0;
-    if (!f || a.type === "takeoff" || (quiet > FLIGHT_QUIET_MS && a.type !== "landing")) {
+    const away = f?.alerts.some((x) => x.type === "takeoff") ? FLIGHT_AWAY_MS : FLIGHT_QUIET_MS;
+    if (!f || a.type === "takeoff" || (quiet > away && a.type !== "landing")) {
       f = { key: a.key, tail: a.tail, alerts: [] };
       open.set(a.tail, f);
       out.push(f);
@@ -88,7 +93,9 @@ function flightsOf(alerts: Alert[]): Flight[] {
     if (a.type === "landing") open.delete(a.tail);
   }
   for (const f of out) f.alerts.reverse();
-  return out.reverse();
+  // Newest activity first: a flight that has just landed sits above one that
+  // took off earlier and is still away.
+  return out.sort((x, y) => y.alerts[0].at.getTime() - x.alerts[0].at.getTime());
 }
 
 function lasted(from: Date, to: Date): string {
@@ -102,8 +109,9 @@ function flightSummary(f: Flight): { text: string; span: string } {
   const down = f.alerts.find((a) => a.type === "landing");
   const rings = [...f.alerts].reverse().filter((a) => /nm$/.test(a.type)).map((a) => eventLabel(a.type).replace("Crossed ", ""));
   let text: string;
-  if (up && down) text = `Took off ${clock(up.at)}, landed ${clock(down.at)}`;
-  else if (up) text = `Took off ${clock(up.at)}` + (rings.length ? `, inbound again: ${rings.join(", ")}` : "");
+  const inbound = rings.length ? `, inbound ${rings.join(", ")}` : "";
+  if (up && down) text = `Took off ${clock(up.at)}${inbound}, landed ${clock(down.at)}`;
+  else if (up) text = `Took off ${clock(up.at)}${inbound}`;
   else if (down) text = (rings.length ? `Inbound ${rings.join(", ")}, ` : "") + `landed ${clock(down.at)}`;
   else text = rings.length ? `Inbound: ${rings.join(", ")}, no landing logged` : eventLabel(neu.type);
   const span = clock(old.at) === clock(neu.at) ? clock(old.at) : `${clock(old.at)}–${clock(neu.at)} · ${lasted(old.at, neu.at)}`;
